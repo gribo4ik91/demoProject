@@ -12,7 +12,7 @@ services:
       DB_URL: jdbc:postgresql://ecotracker-postgres:5432/ecotracker_db
       DB_USERNAME: eco_user
       DB_PASSWORD: eco_password
-      APP_AUTH_ENABLED: "false"
+      APP_AUTH_ENABLED: "true"
     networks:
       - ecotracker-network
 
