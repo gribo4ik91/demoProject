@@ -13,7 +13,10 @@ pipeline {
                 dir('sql') {
                     script {
                         if (isUnix()) {
-                            sh 'docker compose up -d'
+                            sh '''
+          docker compose up -d
+          docker ps -a
+        '''
                         } else {
                             bat 'docker compose up -d'
                         }
@@ -26,7 +29,19 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
+                        sh '''
+          for i in {1..30}; do
+            docker exec ecotracker-postgres pg_isready -h localhost -p 5432 -U eco_user -d ecotracker_db && exit 0
+            echo "Waiting for PostgreSQL... attempt $i"
+            sleep 2
+          done
+
+          echo "Database is not ready"
+          docker ps -a
+          docker logs ecotracker-postgres || true
+          exit 1
+        '''
+//                        sh 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
                     } else {
                         bat 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
                     }
