@@ -1,61 +1,41 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    parameters {
+        choice(
+                name: 'ACTION',
+                choices: ['up', 'down', 'stop', 'logs', 'ps'],
+                description: 'Docker compose action'
+        )
+    }
 
-        stage('Start Database') {
+    stages {
+        stage('SQL Control') {
             steps {
                 dir('sql') {
                     script {
-                        if (isUnix()) {
-                            sh '''
-          docker compose up -d
-          docker ps -a
-        '''
-                        } else {
-                            bat 'docker compose up -d'
+                        if (params.ACTION == 'up') {
+                            sh 'docker compose up -d'
+                        }
+
+                        if (params.ACTION == 'stop') {
+                            sh 'docker compose stop'
+                        }
+
+                        if (params.ACTION == 'down') {
+                            sh 'docker compose down'
+                        }
+
+                        if (params.ACTION == 'logs') {
+                            sh 'docker compose logs --no-color'
+                        }
+
+                        if (params.ACTION == 'ps') {
+                            sh 'docker compose ps'
                         }
                     }
                 }
             }
-        }
-
-        stage('Verify Database') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-          for i in {1..30}; do
-            docker exec ecotracker-postgres pg_isready -h localhost -p 5432 -U eco_user -d ecotracker_db && exit 0
-            echo "Waiting for PostgreSQL... attempt $i"
-            sleep 2
-          done
-
-          echo "Database is not ready"
-          docker ps -a
-          docker logs ecotracker-postgres || true
-          exit 1
-        '''
-//                        sh 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
-                    } else {
-                        bat 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Database job finished successfully. PostgreSQL is running.'
-        }
-        failure {
-            echo 'Database job failed. Check Docker and PostgreSQL logs.'
         }
     }
 }
