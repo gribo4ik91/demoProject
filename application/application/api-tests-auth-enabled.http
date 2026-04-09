@@ -1,0 +1,216 @@
+@baseUrl = http://localhost:8085
+@displayName = Demo Gardener
+@username = demo_user_auth
+@firstName = Demo
+@lastName = Gardener
+@email = demo_user_auth@example.com
+@location = Chisinau
+@bio = Building calm terrarium routines and logging daily ecosystem changes.
+@password = secret123
+@ecosystemId = e4da4f8c-8537-420a-bfb8-aa009162e16b
+@taskId = 00000000-0000-0000-0000-000000000000
+
+### Auth status before login
+GET {{baseUrl}}/api/v1/auth/status
+
+### Register a new user
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "displayName": "{{displayName}}",
+  "username": "{{username}}",
+  "firstName": "{{firstName}}",
+  "lastName": "{{lastName}}",
+  "email": "{{email}}",
+  "location": "{{location}}",
+  "bio": "{{bio}}",
+  "password": "{{password}}"
+}
+
+### Open register page
+GET {{baseUrl}}/register
+
+### Login with form auth
+POST {{baseUrl}}/login
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}&password={{password}}
+
+### Auth status after login
+GET {{baseUrl}}/api/v1/auth/status
+
+### Get current profile
+GET {{baseUrl}}/api/v1/auth/profile
+
+### Update current profile
+PUT {{baseUrl}}/api/v1/auth/profile
+Content-Type: application/json
+
+{
+  "displayName": "Demo Gardener Updated",
+  "firstName": "Demo",
+  "lastName": "Keeper",
+  "email": "demo_user_auth_updated@example.com",
+  "location": "Chisinau Center",
+  "bio": "Updated profile for EcoTracker manual testing."
+}
+
+### Open login page
+GET {{baseUrl}}/login
+
+### Open profile page
+GET {{baseUrl}}/profile
+
+### Create an ecosystem
+POST {{baseUrl}}/api/v1/ecosystems
+Content-Type: application/json
+
+{
+  "name": "Rainforest Capsule",
+  "type": "FLORARIUM",
+  "description": "High humidity setup for moss, ferns, and tropical cuttings."
+}
+
+> {%
+client.global.set("ecosystemId", response.body.id);
+%}
+
+### List all ecosystems
+GET {{baseUrl}}/api/v1/ecosystems
+
+### Get one ecosystem by ID
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}
+
+### Get ecosystem summary
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/summary
+
+### Add an observation log
+POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
+Content-Type: application/json
+
+{
+  "temperatureC": 23.4,
+  "humidityPercent": 58,
+  "eventType": "OBSERVATION",
+  "notes": "Condensation on the glass is stable and fern growth looks healthy."
+}
+
+### Add a watering log
+POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
+Content-Type: application/json
+
+{
+  "temperatureC": 24.1,
+  "humidityPercent": 61,
+  "eventType": "WATERING",
+  "notes": "Light misting after the substrate started drying near the front panel."
+}
+
+### Add a feeding log
+POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
+Content-Type: application/json
+
+{
+  "temperatureC": 23.0,
+  "humidityPercent": 57,
+  "eventType": "FEEDING",
+  "notes": "Fed the cleanup crew and recorded activity."
+}
+
+### List logs for one ecosystem
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
+
+### List logs filtered by event type
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs?eventType=WATERING
+
+### List logs with pagination
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs?page=0&size=3
+
+### List logs with filtering and pagination
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs?eventType=OBSERVATION&page=0&size=2
+
+### Example log validation failure
+POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
+Content-Type: application/json
+
+{
+  "temperatureC": 21.0,
+  "humidityPercent": 180,
+  "eventType": "",
+  "notes": "This request should fail validation."
+}
+
+### Create a manual maintenance task
+POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Inspect moss moisture",
+  "taskType": "INSPECTION",
+  "dueDate": "2026-04-20"
+}
+
+> {%
+client.global.set("taskId", response.body.id);
+%}
+
+### List all maintenance tasks
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks
+
+### List open maintenance tasks
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=OPEN
+
+### List done maintenance tasks
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=DONE
+
+### List overdue maintenance tasks
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=OVERDUE
+
+### List dismissed maintenance tasks
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=DISMISSED
+
+### Example unsupported task filter
+GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=SOMETHING_ELSE
+
+### Mark a maintenance task as done
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks/{{taskId}}/status
+Content-Type: application/json
+
+{
+  "status": "DONE"
+}
+
+### Re-open a maintenance task
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks/{{taskId}}/status
+Content-Type: application/json
+
+{
+  "status": "OPEN"
+}
+
+### Dismiss a suggested maintenance task
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks/{{taskId}}/status
+Content-Type: application/json
+
+{
+  "status": "DISMISSED",
+  "dismissalReason": "ALREADY_HANDLED"
+}
+
+### Example invalid dismissal request
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks/{{taskId}}/status
+Content-Type: application/json
+
+{
+  "status": "DISMISSED"
+}
+
+### Delete an ecosystem
+DELETE {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}
+
+### Logout
+POST {{baseUrl}}/logout
+
+### Auth status after logout
+GET {{baseUrl}}/api/v1/auth/status

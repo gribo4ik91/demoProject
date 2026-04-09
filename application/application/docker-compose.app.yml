@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  app:
+    container_name: ecotracker-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      DB_URL: jdbc:postgresql://ecotracker-postgres:5432/ecotracker_db
+      DB_USERNAME: eco_user
+      DB_PASSWORD: eco_password
+      APP_AUTH_ENABLED: "false"
+    networks:
+      - ecotracker-network
+
+networks:
+  ecotracker-network:
+    name: ecotracker-network

@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ecosystem Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --surface-border: #d9e2dc;
+            --surface-muted: #6c757d;
+            --pill-open-bg: #fff4cc;
+            --pill-open-text: #8a6116;
+            --pill-open-border: #f1da8a;
+            --pill-done-bg: #dff5e8;
+            --pill-done-text: #1f6b49;
+            --pill-done-border: #a8ddc1;
+            --pill-suggested-bg: #e1f0ff;
+            --pill-suggested-text: #245f99;
+            --pill-suggested-border: #b6d6f5;
+            --pill-dismissed-bg: #eef2f0;
+            --pill-dismissed-text: #556964;
+            --pill-dismissed-border: #d4dcda;
+            --summary-stable-bg: #e3f4ea;
+            --summary-stable-border: #b9dcc8;
+            --summary-stable-text: #1f6b49;
+            --summary-warning-bg: #fff4d6;
+            --summary-warning-border: #efd79a;
+            --summary-warning-text: #8a6116;
+            --summary-neutral-bg: #f3f5f4;
+            --summary-neutral-border: #d7ddd9;
+            --summary-neutral-text: #52605d;
+        }
+
+        #tasks-container {
+            transition: opacity 180ms ease, transform 180ms ease;
+        }
+
+        #summary-container {
+            transition: opacity 180ms ease, transform 180ms ease;
+        }
+
+        #tasks-container.is-loading {
+            opacity: 0.55;
+            transform: translateY(4px);
+        }
+
+        #summary-container.is-loading {
+            opacity: 0.55;
+            transform: translateY(4px);
+        }
+
+        .task-card {
+            animation: taskCardIn 220ms ease both;
+        }
+
+        .summary-card {
+            animation: summaryCardIn 260ms ease both;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.22rem 0.55rem;
+            border: 1px solid transparent;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .status-pill-open {
+            background: var(--pill-open-bg);
+            color: var(--pill-open-text);
+            border-color: var(--pill-open-border);
+        }
+
+        .status-pill-done {
+            background: var(--pill-done-bg);
+            color: var(--pill-done-text);
+            border-color: var(--pill-done-border);
+        }
+
+        .status-pill-suggested {
+            background: var(--pill-suggested-bg);
+            color: var(--pill-suggested-text);
+            border-color: var(--pill-suggested-border);
+        }
+
+        .status-pill-dismissed {
+            background: var(--pill-dismissed-bg);
+            color: var(--pill-dismissed-text);
+            border-color: var(--pill-dismissed-border);
+        }
+
+        .task-action-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .task-action-select {
+            min-width: 12rem;
+        }
+
+        .task-filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .task-filter-group .btn {
+            white-space: nowrap;
+            font-size: 0.92rem;
+            flex: 0 0 auto;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            border-radius: 0.5rem !important;
+        }
+
+        .task-filter-group > .btn + .btn {
+            margin-left: 0;
+        }
+
+        .summary-panel {
+            border-width: 1px;
+            border-style: solid;
+            border-color: var(--surface-border);
+            border-radius: 1rem;
+        }
+
+        .summary-panel-status-stable {
+            background: var(--summary-stable-bg);
+            border-color: var(--summary-stable-border);
+            color: var(--summary-stable-text);
+        }
+
+        .summary-panel-status-warning {
+            background: var(--summary-warning-bg);
+            border-color: var(--summary-warning-border);
+            color: var(--summary-warning-text);
+        }
+
+        .summary-panel-status-neutral {
+            background: var(--summary-neutral-bg);
+            border-color: var(--summary-neutral-border);
+            color: var(--summary-neutral-text);
+        }
+
+        .summary-panel-muted {
+            color: var(--surface-muted);
+        }
+
+        .log-card {
+            border: 1px solid var(--surface-border);
+            border-radius: 1rem;
+            background: #fff;
+            padding: 1rem;
+            animation: taskCardIn 220ms ease both;
+        }
+
+        .log-meta-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            color: var(--surface-muted);
+            font-size: 0.88rem;
+        }
+
+        .log-event-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.28rem 0.6rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            line-height: 1;
+            border: 1px solid transparent;
+        }
+
+        .log-event-observation {
+            background: #eef2f0;
+            color: #4c615b;
+            border-color: #d8dfdb;
+        }
+
+        .log-event-feeding {
+            background: #e8f1ff;
+            color: #245f99;
+            border-color: #c5daf6;
+        }
+
+        .log-event-watering {
+            background: #e2f6f3;
+            color: #1d6b63;
+            border-color: #b8e2db;
+        }
+
+        @keyframes taskCardIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes summaryCardIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #tasks-container,
+            #summary-container {
+                transition: none;
+            }
+
+            .task-card,
+            .summary-card {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div id="page-alert" class="alert d-none" role="alert"></div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html" class="text-success">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page" id="bc-name">Loading...</li>
+        </ol>
+    </nav>
+
+    <div id="auth-controls" class="d-none justify-content-end align-items-center gap-3 mb-3">
+        <span id="auth-user" class="text-muted small"></span>
+        <a href="/profile" class="btn btn-outline-success btn-sm">My Profile</a>
+        <form action="/logout" method="post" class="mb-0">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
+        </form>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 id="page-title" class="text-success">Loading...</h2>
+        <button class="btn btn-danger" onclick="deleteEcosystem()">Delete Ecosystem</button>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Dashboard Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div id="summary-container" class="row g-3">
+                        <div class="col-12 text-muted">Loading summary...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Maintenance Tasks</h5>
+                </div>
+                <div class="card-body">
+                    <form id="add-task-form" class="mb-4" onsubmit="submitTask(event)">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="text" class="form-control" id="task-title" placeholder="Task title" required>
+                            </div>
+                            <div class="col-md-5">
+                                <select class="form-select" id="task-type" required>
+                                    <option value="WATERING">Watering</option>
+                                    <option value="FEEDING">Feeding</option>
+                                    <option value="CLEANING">Cleaning</option>
+                                    <option value="INSPECTION">Inspection</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="date" class="form-control" id="task-due-date">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-success w-100">Add Task</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="mb-3">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-1">Filter tasks</label>
+                            <div class="task-filter-group" role="group" aria-label="Filter tasks">
+                                <input type="radio" class="btn-check" name="task-filter" id="task-filter-all" value="ALL" checked onchange="loadTasks()">
+                                <label class="btn btn-outline-secondary" for="task-filter-all"><span id="task-filter-all-label">All</span></label>
+
+                                <input type="radio" class="btn-check" name="task-filter" id="task-filter-open" value="OPEN" onchange="loadTasks()">
+                                <label class="btn btn-outline-secondary" for="task-filter-open"><span id="task-filter-open-label">Open</span></label>
+
+                                <input type="radio" class="btn-check" name="task-filter" id="task-filter-done" value="DONE" onchange="loadTasks()">
+                                <label class="btn btn-outline-secondary" for="task-filter-done"><span id="task-filter-done-label">Done</span></label>
+
+                                <input type="radio" class="btn-check" name="task-filter" id="task-filter-overdue" value="OVERDUE" onchange="loadTasks()">
+                                <label class="btn btn-outline-secondary" for="task-filter-overdue"><span id="task-filter-overdue-label">Overdue</span></label>
+
+                                <input type="radio" class="btn-check" name="task-filter" id="task-filter-dismissed" value="DISMISSED" onchange="loadTasks()">
+                                <label class="btn btn-outline-secondary" for="task-filter-dismissed"><span id="task-filter-dismissed-label">Dismissed</span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="task-source-filter" class="form-label small text-muted mb-1">Task source</label>
+                            <select class="form-select" id="task-source-filter" onchange="loadTasks()">
+                                <option value="ALL">All sources</option>
+                                <option value="MANUAL">Manual</option>
+                                <option value="SUGGESTED">Suggested</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <p id="tasks-meta" class="text-muted small mb-3">Loading maintenance tasks...</p>
+
+                    <div id="tasks-container">
+                        <div class="text-muted">Loading maintenance tasks...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Activity Logs</h5>
+                </div>
+                <div class="card-body">
+                    <form id="add-log-form" class="mb-4" onsubmit="submitLog(event)">
+                        <div class="row g-2">
+                            <div class="col-md-2"><input type="number" step="0.1" class="form-control" id="log-temp" placeholder="Temp C"></div>
+                            <div class="col-md-2"><input type="number" class="form-control" id="log-humidity" placeholder="Humidity %"></div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="log-event" required>
+                                    <option value="OBSERVATION">Observation</option>
+                                    <option value="FEEDING">Feeding</option>
+                                    <option value="WATERING">Watering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5"><input type="text" class="form-control" id="log-notes" placeholder="Notes"></div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-md-4">
+                            <label for="log-filter-event" class="form-label small text-muted mb-1">Filter by event</label>
+                            <select class="form-select" id="log-filter-event" onchange="applyLogFilters()">
+                                <option value="">All events</option>
+                                <option value="OBSERVATION">Observation</option>
+                                <option value="FEEDING">Feeding</option>
+                                <option value="WATERING">Watering</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 d-flex justify-content-md-end align-items-end">
+                            <p id="logs-meta" class="text-muted small mb-0">Loading activity logs...</p>
+                        </div>
+                    </div>
+
+                    <div id="logs-container" class="list-group">
+                        <div class="text-muted">Loading activity logs...</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button id="logs-prev-button" class="btn btn-outline-secondary btn-sm" onclick="changeLogPage(-1)" disabled>Previous</button>
+                        <span id="logs-page-indicator" class="text-muted small">Page 1</span>
+                        <button id="logs-next-button" class="btn btn-outline-secondary btn-sm" onclick="changeLogPage(1)" disabled>Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ecosystemId = urlParams.get('id');
+    let currentLogPage = 0;
+    const logPageSize = 5;
+
+    window.onload = async () => {
+        if (!ecosystemId) {
+            alert('No ecosystem ID provided in URL.');
+            window.location.href = 'index.html';
+            return;
+        }
+        await loadAuthStatus();
+        await loadDetails();
+        await Promise.all([loadSummary(), loadTasks(), loadLogs()]);
+    };
+
+    async function loadAuthStatus() {
+        try {
+            const response = await fetch('/api/v1/auth/status');
+            if (!response.ok) {
+                return;
+            }
+
+            const status = await response.json();
+            if (!status.enabled || !status.authenticated) {
+                return;
+            }
+
+            const controls = document.getElementById('auth-controls');
+            controls.classList.remove('d-none');
+            controls.classList.add('d-flex');
+            document.getElementById('auth-user').textContent = `Signed in as ${status.displayName || status.username}`;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function loadDetails() {
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}`);
+            if (!response.ok) {
+                throw new Error('Ecosystem not found.');
+            }
+
+            const eco = await response.json();
+            document.getElementById('page-title').innerText = eco.name;
+            document.getElementById('bc-name').innerText = eco.name;
+            hideAlert();
+        } catch (error) {
+            alert(error.message || 'Could not load ecosystem details.');
+            window.location.href = 'index.html';
+        }
+    }
+
+    async function loadSummary() {
+        const container = document.getElementById('summary-container');
+        setSummaryLoading(true);
+        container.innerHTML = '<div class="col-12 text-muted">Loading summary...</div>';
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/summary`);
+            if (!response.ok) {
+                throw new Error('Failed to load ecosystem summary.');
+            }
+
+            const summary = await response.json();
+            const statusMeta = resolveStatusMeta(summary.status);
+            const lastRecorded = summary.lastRecordedAt
+                ? new Date(summary.lastRecordedAt).toLocaleString()
+                : 'No data yet';
+            const taskMessage = summary.overdueTasks > 0
+                ? `${summary.overdueTasks} overdue`
+                : `${summary.openTasks} open`;
+
+            container.innerHTML = `
+                <div class="col-md-3 summary-card">
+                    <div class="summary-panel p-3 h-100 ${statusMeta.panelClass}">
+                        <p class="summary-panel-muted small mb-2">Status</p>
+                        <h5 class="mb-1">${statusMeta.label}</h5>
+                        <p class="mb-0 small">${statusMeta.description}</p>
+                    </div>
+                </div>
+                <div class="col-md-3 summary-card">
+                    <div class="summary-panel p-3 h-100 bg-white">
+                        <p class="summary-panel-muted small mb-2">Current Reading</p>
+                        <h5 class="mb-1">${formatMetric(summary.currentTemperatureC, 'C')} / ${formatMetric(summary.currentHumidityPercent, '%')}</h5>
+                        <p class="mb-0 small text-muted">Latest event: ${escapeHtml(summary.latestEventType || 'No activity yet')}</p>
+                    </div>
+                </div>
+                <div class="col-md-3 summary-card">
+                    <div class="summary-panel p-3 h-100 bg-white">
+                        <p class="summary-panel-muted small mb-2">Recent Trend</p>
+                        <h5 class="mb-1">${formatMetric(summary.averageTemperatureC, 'C')} / ${formatMetric(summary.averageHumidityPercent, '%')}</h5>
+                        <p class="mb-0 small text-muted">Average across the latest measurable logs</p>
+                    </div>
+                </div>
+                <div class="col-md-3 summary-card">
+                    <div class="summary-panel p-3 h-100 bg-white">
+                        <p class="summary-panel-muted small mb-2">Care Queue</p>
+                        <h5 class="mb-1">${taskMessage}</h5>
+                        <p class="mb-1 small text-muted">${summary.logsLast7Days} logs in 7 days</p>
+                        <small class="text-muted">Last update: ${lastRecorded}</small>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="col-12 summary-card">
+                    <div class="border rounded-3 p-3 bg-danger-subtle text-danger-emphasis">
+                        Could not load ecosystem summary.
+                    </div>
+                </div>
+            `;
+            showAlert(error.message || 'Failed to load summary.', 'danger');
+        } finally {
+            setSummaryLoading(false);
+        }
+    }
+
+    async function loadTasks() {
+        const container = document.getElementById('tasks-container');
+        const tasksMeta = document.getElementById('tasks-meta');
+        const filter = document.querySelector('input[name="task-filter"]:checked').value;
+        const sourceFilter = document.getElementById('task-source-filter').value;
+        setTaskListLoading(true);
+        container.innerHTML = '<div class="text-muted">Loading maintenance tasks...</div>';
+        tasksMeta.textContent = 'Loading maintenance tasks...';
+
+        try {
+            const [filteredResponse, allTasksResponse] = await Promise.all([
+                fetch(`/api/v1/ecosystems/${ecosystemId}/tasks?filter=${encodeURIComponent(filter)}`),
+                filter === 'ALL'
+                    ? Promise.resolve(null)
+                    : fetch(`/api/v1/ecosystems/${ecosystemId}/tasks?filter=ALL`)
+            ]);
+
+            if (!filteredResponse.ok) {
+                throw new Error('Failed to load maintenance tasks.');
+            }
+
+            if (allTasksResponse && !allTasksResponse.ok) {
+                throw new Error('Failed to load maintenance task counters.');
+            }
+
+            const tasks = await filteredResponse.json();
+            const allTasks = allTasksResponse ? await allTasksResponse.json() : tasks;
+            updateTaskFilterCounts(allTasks, sourceFilter);
+            const visibleTasks = tasks.filter(task => matchesTaskSourceFilter(task, sourceFilter));
+            if (visibleTasks.length === 0) {
+                tasksMeta.textContent = tasks.length === 0
+                    ? '0 tasks returned for the current status filter'
+                    : `Showing 0 of ${tasks.length} tasks`;
+                container.innerHTML = `
+                    <div class="border rounded-3 p-4 text-center bg-light-subtle text-muted task-card">
+                        No maintenance tasks match the current filter.
+                    </div>
+                `;
+                return;
+            }
+
+            tasksMeta.textContent = visibleTasks.length === tasks.length
+                ? `Showing all ${visibleTasks.length} tasks`
+                : `Showing ${visibleTasks.length} of ${tasks.length} tasks`;
+
+            container.innerHTML = visibleTasks.map(task => {
+                const statusBadge = resolveTaskStatusBadge(task.status);
+                const sourceBadge = task.autoCreated
+                    ? '<span class="status-pill status-pill-suggested">Suggested</span>'
+                    : '';
+                const taskTypeLabel = formatTaskType(task.taskType);
+                const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date';
+                const actions = buildTaskActions(task);
+                const dismissalReason = task.dismissalReason
+                    ? ` | Reason: ${formatDismissalReason(task.dismissalReason)}`
+                    : '';
+
+                return `
+                    <div class="border rounded-3 p-3 mb-2 task-card">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <strong>${escapeHtml(task.title)}</strong>
+                                    ${statusBadge}
+                                    ${sourceBadge}
+                                </div>
+                                <p class="mb-1 small text-muted">${escapeHtml(taskTypeLabel)} | Due: ${dueDate}${escapeHtml(dismissalReason)}</p>
+                            </div>
+                            <div class="task-action-group">
+                                ${actions}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            resetTaskFilterCounts();
+            tasksMeta.textContent = 'Failed to load tasks';
+            container.innerHTML = `
+                <div class="border rounded-3 p-3 bg-danger-subtle text-danger-emphasis task-card">
+                    Could not load maintenance tasks.
+                </div>
+            `;
+            showAlert(error.message || 'Failed to load maintenance tasks.', 'danger');
+        } finally {
+            setTaskListLoading(false);
+        }
+    }
+
+    async function loadLogs() {
+        const container = document.getElementById('logs-container');
+        const logsMeta = document.getElementById('logs-meta');
+        const pageIndicator = document.getElementById('logs-page-indicator');
+        const prevButton = document.getElementById('logs-prev-button');
+        const nextButton = document.getElementById('logs-next-button');
+        const eventType = document.getElementById('log-filter-event').value;
+
+        container.innerHTML = '<div class="text-muted">Loading activity logs...</div>';
+        logsMeta.textContent = 'Loading activity logs...';
+        pageIndicator.textContent = `Page ${currentLogPage + 1}`;
+        prevButton.disabled = true;
+        nextButton.disabled = true;
+
+        try {
+            const params = new URLSearchParams({
+                page: String(currentLogPage),
+                size: String(logPageSize)
+            });
+
+            if (eventType) {
+                params.set('eventType', eventType);
+            }
+
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/logs?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error('Failed to load activity logs.');
+            }
+
+            const result = await response.json();
+            const logs = result.items;
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="log-card text-center text-muted py-4">
+                        No logs match the current filter yet.
+                    </div>
+                `;
+                logsMeta.textContent = '0 matching logs';
+                pageIndicator.textContent = `Page ${result.page + 1}`;
+                return;
+            }
+
+            container.innerHTML = logs.map(log => {
+                const date = new Date(log.recordedAt).toLocaleString();
+                const temperature = log.temperatureC ?? '--';
+                const humidity = log.humidityPercent ?? '--';
+                const eventLabel = formatLogEventType(log.eventType);
+                const eventClass = resolveLogEventClass(log.eventType);
+
+                return `
+                    <div class="log-card">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="log-event-pill ${eventClass}">${escapeHtml(eventLabel)}</span>
+                            </div>
+                            <small class="text-muted">${date}</small>
+                        </div>
+                        <div class="log-meta-row mt-2 mb-2">
+                            <span>Temp: ${temperature} C</span>
+                            <span>Humidity: ${humidity}%</span>
+                        </div>
+                        <small class="text-muted">${escapeHtml(log.notes || 'No notes')}</small>
+                    </div>
+                `;
+            }).join('');
+
+            const startItem = result.totalElements === 0 ? 0 : result.page * result.size + 1;
+            const endItem = Math.min(result.totalElements, startItem + logs.length - 1);
+            logsMeta.textContent = `Showing ${startItem}-${endItem} of ${result.totalElements} logs`;
+            pageIndicator.textContent = `Page ${result.page + 1} of ${Math.max(result.totalPages, 1)}`;
+            prevButton.disabled = !result.hasPrevious;
+            nextButton.disabled = !result.hasNext;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="log-card text-center text-danger-emphasis bg-danger-subtle py-4">
+                    Could not load activity logs.
+                </div>
+            `;
+            logsMeta.textContent = 'Failed to load logs';
+            showAlert(error.message || 'Failed to load logs.', 'danger');
+        }
+    }
+
+    async function submitTask(event) {
+        event.preventDefault();
+        const submitButton = event.submitter;
+        const data = {
+            title: document.getElementById('task-title').value,
+            taskType: document.getElementById('task-type').value,
+            dueDate: document.getElementById('task-due-date').value || null
+        };
+
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(error?.message || 'Failed to create maintenance task.');
+            }
+
+            document.getElementById('add-task-form').reset();
+            showAlert('Maintenance task created successfully.', 'success');
+            await loadSummary();
+            await loadTasks();
+        } catch (error) {
+            showAlert(error.message || 'Failed to create maintenance task.', 'danger');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    async function updateTaskStatus(taskId, status, dismissalReason = null) {
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/tasks/${taskId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, dismissalReason })
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(error?.message || 'Failed to update maintenance task.');
+            }
+
+            showAlert('Maintenance task updated successfully.', 'success');
+            await loadSummary();
+            await loadTasks();
+        } catch (error) {
+            showAlert(error.message || 'Failed to update maintenance task.', 'danger');
+        }
+    }
+
+    function dismissSuggestedTask(taskId, selectId) {
+        const dismissalReason = document.getElementById(selectId)?.value;
+        updateTaskStatus(taskId, 'DISMISSED', dismissalReason);
+    }
+
+    async function submitLog(event) {
+        event.preventDefault();
+        const submitButton = event.submitter;
+        const data = {
+            temperatureC: document.getElementById('log-temp').value || null,
+            humidityPercent: document.getElementById('log-humidity').value || null,
+            eventType: document.getElementById('log-event').value,
+            notes: document.getElementById('log-notes').value || null
+        };
+
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/logs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(error?.message || 'Failed to add log entry.');
+            }
+
+            document.getElementById('add-log-form').reset();
+            currentLogPage = 0;
+            showAlert('Log entry added successfully.', 'success');
+            await loadSummary();
+            await loadLogs();
+        } catch (error) {
+            showAlert(error.message || 'Failed to add log entry.', 'danger');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    async function deleteEcosystem() {
+        if (confirm('Are you sure you want to delete this ecosystem and all its logs? This action cannot be undone.')) {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                window.location.href = 'index.html';
+            } else {
+                showAlert('Failed to delete ecosystem.', 'danger');
+            }
+        }
+    }
+
+    function applyLogFilters() {
+        currentLogPage = 0;
+        loadLogs();
+    }
+
+    function changeLogPage(delta) {
+        currentLogPage = Math.max(0, currentLogPage + delta);
+        loadLogs();
+    }
+
+    function showAlert(message, type) {
+        const alert = document.getElementById('page-alert');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+    }
+
+    function hideAlert() {
+        const alert = document.getElementById('page-alert');
+        alert.className = 'alert d-none';
+        alert.textContent = '';
+    }
+
+    function resolveStatusMeta(status) {
+        if (status === 'STABLE') {
+            return {
+                label: 'Stable',
+                description: 'Recent readings look healthy and active.',
+                panelClass: 'summary-panel-status-stable'
+            };
+        }
+
+        if (status === 'NEEDS_ATTENTION') {
+            return {
+                label: 'Needs Attention',
+                description: 'Recent readings suggest the setup may need intervention.',
+                panelClass: 'summary-panel-status-warning'
+            };
+        }
+
+        return {
+            label: 'No Recent Data',
+            description: 'Add a few observations to unlock a live summary.',
+            panelClass: 'summary-panel-status-neutral'
+        };
+    }
+
+    function formatMetric(value, suffix) {
+        return value === null || value === undefined ? `-- ${suffix}` : `${value} ${suffix}`;
+    }
+
+    function formatTaskType(taskType) {
+        const labels = {
+            WATERING: 'Watering',
+            FEEDING: 'Feeding',
+            CLEANING: 'Cleaning',
+            INSPECTION: 'Inspection'
+        };
+
+        return labels[taskType] || taskType;
+    }
+
+    function resolveTaskStatusBadge(status) {
+        if (status === 'DONE') {
+            return '<span class="status-pill status-pill-done">Done</span>';
+        }
+
+        if (status === 'DISMISSED') {
+            return '<span class="status-pill status-pill-dismissed">Dismissed</span>';
+        }
+
+        return '<span class="status-pill status-pill-open">Open</span>';
+    }
+
+    function buildTaskActions(task) {
+        if (task.status === 'OPEN' && task.autoCreated) {
+            const reasonSelectId = `dismiss-reason-${task.id}`;
+            return `
+                <select id="${reasonSelectId}" class="form-select form-select-sm task-action-select" aria-label="Dismissal reason">
+                    <option value="TOO_SOON">Too soon</option>
+                    <option value="NOT_RELEVANT">Not relevant</option>
+                    <option value="ALREADY_HANDLED">Already handled</option>
+                </select>
+                <button class="btn btn-outline-success btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Done</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="dismissSuggestedTask('${task.id}', '${reasonSelectId}')">Dismiss</button>
+            `;
+        }
+
+        if (task.status === 'OPEN') {
+            return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Mark Done</button>`;
+        }
+
+        if (task.status === 'DISMISSED') {
+            return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Restore</button>`;
+        }
+
+        return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Reopen</button>`;
+    }
+
+    function formatDismissalReason(reason) {
+        const labels = {
+            TOO_SOON: 'Too soon',
+            NOT_RELEVANT: 'Not relevant',
+            ALREADY_HANDLED: 'Already handled'
+        };
+
+        return labels[reason] || reason;
+    }
+
+    function formatLogEventType(eventType) {
+        const labels = {
+            OBSERVATION: 'Observation',
+            FEEDING: 'Feeding',
+            WATERING: 'Watering'
+        };
+
+        return labels[eventType] || eventType;
+    }
+
+    function resolveLogEventClass(eventType) {
+        const classes = {
+            OBSERVATION: 'log-event-observation',
+            FEEDING: 'log-event-feeding',
+            WATERING: 'log-event-watering'
+        };
+
+        return classes[eventType] || 'log-event-observation';
+    }
+
+    function matchesTaskSourceFilter(task, sourceFilter) {
+        if (sourceFilter === 'MANUAL') {
+            return !task.autoCreated;
+        }
+
+        if (sourceFilter === 'SUGGESTED') {
+            return task.autoCreated;
+        }
+
+        return true;
+    }
+
+    function updateTaskFilterCounts(allTasks, sourceFilter) {
+        const visibleTasks = allTasks.filter(task => matchesTaskSourceFilter(task, sourceFilter));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const counts = {
+            ALL: visibleTasks.length,
+            OPEN: visibleTasks.filter(task => task.status === 'OPEN').length,
+            DONE: visibleTasks.filter(task => task.status === 'DONE').length,
+            DISMISSED: visibleTasks.filter(task => task.status === 'DISMISSED').length,
+            OVERDUE: visibleTasks.filter(task => {
+                if (task.status !== 'OPEN' || !task.dueDate) {
+                    return false;
+                }
+
+                const dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate < today;
+            }).length
+        };
+
+        document.getElementById('task-filter-all-label').textContent = `All (${counts.ALL})`;
+        document.getElementById('task-filter-open-label').textContent = `Open (${counts.OPEN})`;
+        document.getElementById('task-filter-done-label').textContent = `Done (${counts.DONE})`;
+        document.getElementById('task-filter-dismissed-label').textContent = `Dismissed (${counts.DISMISSED})`;
+        document.getElementById('task-filter-overdue-label').textContent = `Overdue (${counts.OVERDUE})`;
+    }
+
+    function resetTaskFilterCounts() {
+        document.getElementById('task-filter-all-label').textContent = 'All';
+        document.getElementById('task-filter-open-label').textContent = 'Open';
+        document.getElementById('task-filter-done-label').textContent = 'Done';
+        document.getElementById('task-filter-dismissed-label').textContent = 'Dismissed';
+        document.getElementById('task-filter-overdue-label').textContent = 'Overdue';
+    }
+
+    function setTaskListLoading(isLoading) {
+        const container = document.getElementById('tasks-container');
+        container.classList.toggle('is-loading', isLoading);
+    }
+
+    function setSummaryLoading(isLoading) {
+        const container = document.getElementById('summary-container');
+        container.classList.toggle('is-loading', isLoading);
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+</script>
+</body>
+</html>

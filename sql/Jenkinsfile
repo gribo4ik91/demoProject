@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Start Database') {
+            steps {
+                dir('sql') {
+                    script {
+                        if (isUnix()) {
+                            sh 'docker compose up -d'
+                        } else {
+                            bat 'docker compose up -d'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Verify Database') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
+                    } else {
+                        bat 'docker exec ecotracker-postgres pg_isready -U eco_user -d ecotracker_db'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Database job finished successfully. PostgreSQL is running.'
+        }
+        failure {
+            echo 'Database job failed. Check Docker and PostgreSQL logs.'
+        }
+    }
+}

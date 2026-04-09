@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EcoTracker | Create Account</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(117, 181, 136, 0.22), transparent 35%),
+                linear-gradient(140deg, #f5faf5 0%, #edf6ef 45%, #f9fcf8 100%);
+        }
+
+        .register-shell {
+            max-width: 980px;
+        }
+
+        .register-card {
+            border: 0;
+            border-radius: 1.25rem;
+            box-shadow: 0 22px 50px rgba(49, 72, 62, 0.08);
+            background: rgba(255, 255, 255, 0.96);
+        }
+    </style>
+</head>
+<body class="d-flex align-items-center py-5">
+<div class="container register-shell">
+    <div id="page-alert" class="alert d-none mb-4" role="alert"></div>
+
+    <div class="register-card p-4 p-lg-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <p class="text-uppercase text-success fw-semibold mb-2">EcoTracker Account</p>
+                <h1 class="h3 mb-2">Create a new user profile</h1>
+                <p class="text-muted mb-0">The display name will be shown on the main page after login. The login field is used to sign in.</p>
+            </div>
+            <a href="/login" class="btn btn-outline-secondary">Back to Login</a>
+        </div>
+
+        <form id="register-form" onsubmit="registerUser(event)">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="register-display-name" class="form-label">Display name</label>
+                    <input id="register-display-name" class="form-control" minlength="3" maxlength="60" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-username" class="form-label">Login</label>
+                    <input id="register-username" class="form-control" minlength="3" maxlength="40" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-first-name" class="form-label">First name</label>
+                    <input id="register-first-name" class="form-control" minlength="2" maxlength="60" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-last-name" class="form-label">Last name</label>
+                    <input id="register-last-name" class="form-control" minlength="2" maxlength="60" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-email" class="form-label">Email</label>
+                    <input id="register-email" type="email" class="form-control" maxlength="120" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-location" class="form-label">Location</label>
+                    <input id="register-location" class="form-control" maxlength="80">
+                </div>
+                <div class="col-12">
+                    <label for="register-bio" class="form-label">Bio</label>
+                    <textarea id="register-bio" class="form-control" rows="4" maxlength="500"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label for="register-password" class="form-label">Password</label>
+                    <input id="register-password" type="password" class="form-control" minlength="6" maxlength="72" required>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
+                <p class="text-muted small mb-0">After registration you will be redirected back to login and can sign in with your login and password.</p>
+                <button type="submit" class="btn btn-success px-4">Create Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    window.onload = async () => {
+        try {
+            const response = await fetch('/api/v1/auth/status');
+            if (!response.ok) {
+                return;
+            }
+
+            const status = await response.json();
+            if (!status.enabled) {
+                showAlert('Authentication is disabled right now, so account creation is optional.', 'info');
+            } else if (status.authenticated) {
+                window.location.href = '/';
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    async function registerUser(event) {
+        event.preventDefault();
+        const button = event.submitter;
+        const payload = {
+            displayName: document.getElementById('register-display-name').value.trim(),
+            username: document.getElementById('register-username').value.trim(),
+            firstName: document.getElementById('register-first-name').value.trim(),
+            lastName: document.getElementById('register-last-name').value.trim(),
+            email: document.getElementById('register-email').value.trim(),
+            location: document.getElementById('register-location').value.trim() || null,
+            bio: document.getElementById('register-bio').value.trim() || null,
+            password: document.getElementById('register-password').value
+        };
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(error?.message || 'Could not create the user.');
+            }
+
+            window.location.href = `/login?registered=${encodeURIComponent(payload.username)}`;
+        } catch (error) {
+            showAlert(error.message || 'Could not create the user.', 'danger');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function showAlert(message, type) {
+        const alert = document.getElementById('page-alert');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+    }
+</script>
+</body>
+</html>
