@@ -6,6 +6,14 @@ pipeline {
         APP_COMPOSE_FILE = 'docker-compose.app.yml'
     }
 
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['full', 'build', 'test', 'jar', 'image', 'up', 'down', 'restart', 'logs', 'ps'],
+            description: 'Select what application-build should do'
+        )
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,43 +21,92 @@ pipeline {
             }
         }
 
-        stage('Build And Test') {
+        stage('Application Control') {
             steps {
                 dir("${APP_DIR}") {
                     script {
-                        if (isUnix()) {
-                            sh 'chmod +x gradlew'
-                            sh './gradlew clean test bootJar'
-                        } else {
-                            bat '.\\gradlew.bat clean test bootJar'
-                        }
-                    }
-                }
-            }
-        }
+                        def action = params.ACTION ?: 'full'
 
-        stage('Build Docker Image') {
-            steps {
-                dir("${APP_DIR}") {
-                    script {
                         if (isUnix()) {
-                            sh 'docker compose -f ${APP_COMPOSE_FILE} build'
+                            switch (action) {
+                                case 'build':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean build -x test'
+                                    break
+                                case 'test':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew test'
+                                    break
+                                case 'jar':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean bootJar'
+                                    break
+                                case 'image':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} build'
+                                    break
+                                case 'up':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} up -d'
+                                    break
+                                case 'down':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} down'
+                                    break
+                                case 'restart':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} down'
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} up -d'
+                                    break
+                                case 'logs':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} logs --tail=200 --no-color'
+                                    break
+                                case 'ps':
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} ps'
+                                    break
+                                case 'full':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean test bootJar'
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} build'
+                                    sh 'docker compose -f ${APP_COMPOSE_FILE} up -d'
+                                    break
+                                default:
+                                    error "Unsupported ACTION: ${action}"
+                            }
                         } else {
-                            bat "docker compose -f ${APP_COMPOSE_FILE} build"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Run Application Container') {
-            steps {
-                dir("${APP_DIR}") {
-                    script {
-                        if (isUnix()) {
-                            sh 'docker compose -f ${APP_COMPOSE_FILE} up -d'
-                        } else {
-                            bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                            switch (action) {
+                                case 'build':
+                                    bat '.\\gradlew.bat clean build -x test'
+                                    break
+                                case 'test':
+                                    bat '.\\gradlew.bat test'
+                                    break
+                                case 'jar':
+                                    bat '.\\gradlew.bat clean bootJar'
+                                    break
+                                case 'image':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    break
+                                case 'up':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    break
+                                case 'down':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} down"
+                                    break
+                                case 'restart':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} down"
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    break
+                                case 'logs':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} logs --tail=200 --no-color"
+                                    break
+                                case 'ps':
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} ps"
+                                    break
+                                case 'full':
+                                    bat '.\\gradlew.bat clean test bootJar'
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    break
+                                default:
+                                    error "Unsupported ACTION: ${action}"
+                            }
                         }
                     }
                 }
@@ -57,6 +114,9 @@ pipeline {
         }
 
         stage('Smoke Test') {
+            when {
+                expression { params.ACTION == 'full' }
+            }
             steps {
                 script {
                     if (isUnix()) {
@@ -90,22 +150,24 @@ pipeline {
 
     post {
         always {
-            dir("${APP_DIR}") {
-                script {
-                    if (isUnix()) {
-                        sh 'docker compose -f ${APP_COMPOSE_FILE} down'
-                    } else {
-                        bat "docker compose -f ${APP_COMPOSE_FILE} down"
+            script {
+                if (params.ACTION == 'full') {
+                    dir("${APP_DIR}") {
+                        if (isUnix()) {
+                            sh 'docker compose -f ${APP_COMPOSE_FILE} down'
+                        } else {
+                            bat "docker compose -f ${APP_COMPOSE_FILE} down"
+                        }
                     }
                 }
             }
-            junit testResults: 'application/application/build/test-results/test/*.xml', allowEmptyResults: false
+            junit testResults: 'application/application/build/test-results/test/*.xml', allowEmptyResults: true
         }
         success {
-            echo 'Application job finished successfully.'
+            echo "Application job finished successfully. ACTION=${params.ACTION}"
         }
         failure {
-            echo 'Application job failed. Check build, container, or smoke test logs.'
+            echo "Application job failed. ACTION=${params.ACTION}. Check build, container, or smoke test logs."
         }
     }
 }
