@@ -22,6 +22,21 @@ restart - recreate the application container
 logs    - show the latest container logs
 ps      - show current container status'''
         )
+        booleanParam(
+            name: 'APP_RESPONSE_DELAY_ENABLED',
+            defaultValue: false,
+            description: 'Enable random API response delay in the application container.'
+        )
+        string(
+            name: 'APP_RESPONSE_DELAY_MIN_MS',
+            defaultValue: '0',
+            description: 'Minimum API response delay in milliseconds.'
+        )
+        string(
+            name: 'APP_RESPONSE_DELAY_MAX_MS',
+            defaultValue: '5000',
+            description: 'Maximum API response delay in milliseconds.'
+        )
     }
 
     stages {
@@ -52,17 +67,35 @@ ps      - show current container status'''
                                     sh './gradlew clean bootJar'
                                     break
                                 case 'image':
-                                    sh "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    }
                                     break
                                 case 'up':
-                                    sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 case 'down':
                                     sh "docker compose -f ${APP_COMPOSE_FILE} down"
                                     break
                                 case 'restart':
                                     sh "docker compose -f ${APP_COMPOSE_FILE} down"
-                                    sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 case 'logs':
                                     sh "docker compose -f ${APP_COMPOSE_FILE} logs --tail=200 --no-color"
@@ -73,8 +106,14 @@ ps      - show current container status'''
                                 case 'full':
                                     sh 'chmod +x gradlew'
                                     sh './gradlew clean test bootJar'
-                                    sh "docker compose -f ${APP_COMPOSE_FILE} build"
-                                    sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} build"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 default:
                                     error "Unsupported ACTION: ${action}"
@@ -91,17 +130,35 @@ ps      - show current container status'''
                                     bat '.\\gradlew.bat clean bootJar'
                                     break
                                 case 'image':
-                                    bat "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} build"
+                                    }
                                     break
                                 case 'up':
-                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 case 'down':
                                     bat "docker compose -f ${APP_COMPOSE_FILE} down"
                                     break
                                 case 'restart':
                                     bat "docker compose -f ${APP_COMPOSE_FILE} down"
-                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 case 'logs':
                                     bat "docker compose -f ${APP_COMPOSE_FILE} logs --tail=200 --no-color"
@@ -111,8 +168,14 @@ ps      - show current container status'''
                                     break
                                 case 'full':
                                     bat '.\\gradlew.bat clean test bootJar'
-                                    bat "docker compose -f ${APP_COMPOSE_FILE} build"
-                                    bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    withEnv([
+                                        "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
+                                        "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
+                                        "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
+                                    ]) {
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} build"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                    }
                                     break
                                 default:
                                     error "Unsupported ACTION: ${action}"
