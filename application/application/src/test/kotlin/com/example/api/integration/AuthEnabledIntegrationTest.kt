@@ -17,6 +17,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+/**
+ * Verifies login-protected behavior and authenticated profile flows.
+ */
 @SpringBootTest(
     properties = [
         "spring.profiles.active=test",
@@ -32,6 +35,9 @@ class AuthEnabledIntegrationTest {
     @Autowired
     private lateinit var appUserRepository: AppUserRepository
 
+    /**
+     * Removes existing test users before each authentication scenario.
+     */
     @BeforeEach
     fun cleanUsers() {
         appUserRepository.deleteAll()

@@ -20,11 +20,17 @@ import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 import java.util.UUID
 
+/**
+ * Covers controller-level request validation and error handling for ecosystem endpoints.
+ */
 class EcosystemControllerTest {
 
     private lateinit var ecosystemService: EcosystemService
     private lateinit var mockMvc: MockMvc
 
+    /**
+     * Builds a standalone MockMvc setup around the ecosystem controller.
+     */
     @BeforeEach
     fun setUp() {
         ecosystemService = Mockito.mock(EcosystemService::class.java)

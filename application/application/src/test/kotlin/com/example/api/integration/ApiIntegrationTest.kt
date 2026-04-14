@@ -18,6 +18,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * Exercises the main ecosystem, log, summary, and maintenance task flows end to end.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -35,6 +38,9 @@ class ApiIntegrationTest {
     @Autowired
     private lateinit var maintenanceTaskRepository: MaintenanceTaskRepository
 
+    /**
+     * Clears persisted test data before each integration scenario.
+     */
     @BeforeEach
     fun cleanDatabase() {
         maintenanceTaskRepository.deleteAll()
@@ -665,6 +671,9 @@ class ApiIntegrationTest {
             .andExpect(jsonPath("$[0].status").value("OPEN"))
     }
 
+    /**
+     * Creates a persisted ecosystem fixture and returns its generated identifier.
+     */
     private fun createEcosystem(): java.util.UUID {
         val ecosystem = ecosystemRepository.save(
             com.example.api.model.Ecosystem(
@@ -677,6 +686,9 @@ class ApiIntegrationTest {
         return ecosystem.id ?: error("Expected generated ecosystem id")
     }
 
+    /**
+     * Posts a log payload for the supplied ecosystem and expects successful creation.
+     */
     private fun addLog(ecosystemId: java.util.UUID, payload: String) {
         mockMvc.perform(
             post("/api/v1/ecosystems/$ecosystemId/logs")
