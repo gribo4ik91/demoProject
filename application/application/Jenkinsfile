@@ -10,7 +10,17 @@ pipeline {
         choice(
             name: 'ACTION',
             choices: ['full', 'build', 'test', 'jar', 'image', 'up', 'down', 'restart', 'logs', 'ps'],
-            description: 'Select what application-build should do'
+            description: '''Select what application-build should do.
+full    - run tests, build jar, build Docker image, start container, and run smoke test
+build   - compile and build the application without tests
+test    - run automated tests only
+jar     - build the Spring Boot jar only
+image   - build the Docker image only
+up      - start the application container and keep it running
+down    - stop and remove the application container
+restart - recreate the application container
+logs    - show the latest container logs
+ps      - show current container status'''
         )
     }
 

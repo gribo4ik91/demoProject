@@ -5,7 +5,12 @@ pipeline {
         choice(
                 name: 'ACTION',
                 choices: ['up', 'down', 'stop', 'logs', 'ps'],
-                description: 'Docker compose action'
+                description: '''Select what sql-build should do.
+up    - start the PostgreSQL container and keep it running
+down  - stop and remove the PostgreSQL container
+stop  - stop the PostgreSQL container without removing it
+logs  - show the latest database container logs
+ps    - show current database container status'''
         )
     }
 
