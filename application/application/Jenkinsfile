@@ -81,7 +81,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 case 'down':
@@ -94,7 +94,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 case 'logs':
@@ -112,7 +112,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
                                         sh "docker compose -f ${APP_COMPOSE_FILE} build"
-                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 default:
@@ -144,7 +144,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 case 'down':
@@ -157,7 +157,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 case 'logs':
@@ -174,7 +174,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
                                         bat "docker compose -f ${APP_COMPOSE_FILE} build"
-                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
                                     }
                                     break
                                 default:
@@ -195,7 +195,7 @@ ps      - show current container status'''
                     if (isUnix()) {
                         sh '''
                             for i in 1 2 3 4 5; do
-                              if curl --fail --silent http://localhost:8085/api-docs > /dev/null; then
+                              if curl --fail --silent http://localhost:8085/api/v1/auth/status > /dev/null; then
                                 exit 0
                               fi
                               sleep 5
@@ -207,7 +207,7 @@ ps      - show current container status'''
                             $attempts = 5
                             for ($i = 0; $i -lt $attempts; $i++) {
                                 try {
-                                    Invoke-WebRequest -UseBasicParsing http://localhost:8085/api-docs -TimeoutSec 10 | Out-Null
+                                    Invoke-WebRequest -UseBasicParsing http://localhost:8085/api/v1/auth/status -TimeoutSec 10 | Out-Null
                                     exit 0
                                 } catch {
                                     Start-Sleep -Seconds 5
