@@ -6,8 +6,8 @@ app:
     enabled: ${APP_AUTH_ENABLED:true}
   response-delay:
     enabled: ${APP_RESPONSE_DELAY_ENABLED:true}
-    min-ms: ${APP_RESPONSE_DELAY_MIN_MS:0}
-    max-ms: ${APP_RESPONSE_DELAY_MAX_MS:5000}
+    min-ms: ${APP_RESPONSE_DELAY_MIN_MS:1000}
+    max-ms: ${APP_RESPONSE_DELAY_MAX_MS:10000}
 
 springdoc:
   api-docs:
