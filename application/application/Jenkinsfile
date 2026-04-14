@@ -27,6 +27,11 @@ ps      - show current container status'''
             defaultValue: false,
             description: 'Enable random API response delay in the application container.'
         )
+        booleanParam(
+            name: 'APP_AUTH_ENABLED',
+            defaultValue: true,
+            description: 'Enable authentication in the application container.'
+        )
         string(
             name: 'APP_RESPONSE_DELAY_MIN_MS',
             defaultValue: '0',
@@ -68,6 +73,7 @@ ps      - show current container status'''
                                     break
                                 case 'image':
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -77,6 +83,7 @@ ps      - show current container status'''
                                     break
                                 case 'up':
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -90,6 +97,7 @@ ps      - show current container status'''
                                 case 'restart':
                                     sh "docker compose -f ${APP_COMPOSE_FILE} down"
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -107,6 +115,7 @@ ps      - show current container status'''
                                     sh 'chmod +x gradlew'
                                     sh './gradlew clean test bootJar'
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -131,6 +140,7 @@ ps      - show current container status'''
                                     break
                                 case 'image':
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -140,6 +150,7 @@ ps      - show current container status'''
                                     break
                                 case 'up':
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -153,6 +164,7 @@ ps      - show current container status'''
                                 case 'restart':
                                     bat "docker compose -f ${APP_COMPOSE_FILE} down"
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
@@ -169,6 +181,7 @@ ps      - show current container status'''
                                 case 'full':
                                     bat '.\\gradlew.bat clean test bootJar'
                                     withEnv([
+                                        "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_RESPONSE_DELAY_ENABLED=${params.APP_RESPONSE_DELAY_ENABLED}",
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
