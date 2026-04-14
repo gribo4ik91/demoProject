@@ -65,21 +65,35 @@ Request flow:
 
 ## Run Locally
 
+### Prerequisites
+
+- Java 21
+- Docker with Compose support
+
 ### Start PostgreSQL
 
 ```powershell
-cd C:\Endava\EndevLocal\demoProject\sql
+cd path\to\demoProject\sql
 docker compose up -d
 ```
 
 ### Start the application
 
 ```powershell
-cd C:\Endava\EndevLocal\demoProject\application\application
+cd path\to\demoProject\application\application
 .\gradlew.bat bootRun
 ```
 
 The app runs at `http://localhost:8085`.
+
+### Startup Sequence
+
+1. Start PostgreSQL from the `sql` module
+2. Start the Spring Boot application with Gradle
+3. Spring Boot connects to PostgreSQL using the configured datasource
+4. Flyway runs the migrations from `src/main/resources/db/migration`
+5. Security configuration is applied
+6. The static frontend becomes available through the backend
 
 ## Configuration
 
@@ -93,35 +107,47 @@ Authentication can be toggled with:
 
 - `APP_AUTH_ENABLED`
 
-Default local values are defined in [`application.yml`](C:/Endava/EndevLocal/demoProject/application/application/src/main/resources/application.yml).
+Response delay can be toggled with:
 
-### Optional Login Flow
+- `APP_RESPONSE_DELAY_ENABLED`
+- `APP_RESPONSE_DELAY_MIN_MS`
+- `APP_RESPONSE_DELAY_MAX_MS`
 
-The application stays open by default:
+Default local values are defined in [`application.yml`](src/main/resources/application.yml).
+
+### Authentication Mode
+
+Authentication is enabled by default:
 
 ```yaml
 app:
   auth:
-    enabled: false
+    enabled: ${APP_AUTH_ENABLED:true}
 ```
 
-To enable the login and registration flow, set:
+If you want to run the application without login, set:
 
 ```powershell
-$env:APP_AUTH_ENABLED="true"
+$env:APP_AUTH_ENABLED="false"
 .\gradlew.bat bootRun
 ```
 
-When enabled:
+When authentication is enabled:
 
 - unauthenticated users are redirected to `/login`
 - a local user can be created from the sign-up form
 - the app uses a server-side session after form login
 - the user store is persisted in the `app_user` table
 
+When authentication is disabled:
+
+- all requests are allowed without login
+- the home page opens directly
+- the registration and profile flow is not required for local use
+
 ## Database Strategy
 
-The runtime schema is managed by Flyway in [`V1__init_schema.sql`](C:/Endava/EndevLocal/demoProject/application/application/src/main/resources/db/migration/V1__init_schema.sql).
+The runtime schema is managed by Flyway in [`V1__init_schema.sql`](src/main/resources/db/migration/V1__init_schema.sql).
 
 This means:
 - schema changes are explicit and versioned
@@ -180,7 +206,7 @@ Example validation error:
 Run all tests:
 
 ```powershell
-cd C:\Endava\EndevLocal\demoProject\application\application
+cd path\to\demoProject\application\application
 .\gradlew.bat test
 ```
 
