@@ -8,6 +8,7 @@
 @bio = Building calm terrarium routines and logging daily ecosystem changes.
 @password = secret123
 @ecosystemId = 067621a4-4873-4f79-95fb-637e914e8653
+@logId = 067621a4-4873-4f79-95fb-637e914e8653
 @taskId = 00000000-0000-0000-0000-000000000000
 
 ### Auth status before login
@@ -82,6 +83,16 @@ GET {{baseUrl}}/api/v1/ecosystems
 ### Get one ecosystem by ID
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}
 
+### Update ecosystem metadata
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}
+Content-Type: application/json
+
+{
+  "name": "Rainforest Capsule Updated",
+  "type": "FLORARIUM",
+  "description": "Updated description after a dashboard edit flow pass."
+}
+
 ### Get ecosystem summary
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/summary
 
@@ -95,6 +106,10 @@ Content-Type: application/json
   "eventType": "OBSERVATION",
   "notes": "Condensation on the glass is stable and fern growth looks healthy."
 }
+
+> {%
+client.global.set("logId", response.body.id);
+%}
 
 ### Add a watering log
 POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
@@ -130,6 +145,17 @@ GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs?page=0&size=3
 ### List logs with filtering and pagination
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs?eventType=OBSERVATION&page=0&size=2
 
+### Update a log entry
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs/{{logId}}
+Content-Type: application/json
+
+{
+  "temperatureC": 24.6,
+  "humidityPercent": 59,
+  "eventType": "WATERING",
+  "notes": "Updated note after reviewing the recorded measurements."
+}
+
 ### Example log validation failure
 POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
 Content-Type: application/json
@@ -157,6 +183,16 @@ client.global.set("taskId", response.body.id);
 
 ### List all maintenance tasks
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks
+
+### Update a manual maintenance task
+PATCH {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "title": "Inspect moss moisture and vents",
+  "taskType": "INSPECTION",
+  "dueDate": "2026-04-22"
+}
 
 ### List open maintenance tasks
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/tasks?filter=OPEN

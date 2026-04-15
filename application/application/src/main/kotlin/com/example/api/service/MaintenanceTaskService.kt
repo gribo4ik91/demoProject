@@ -2,6 +2,7 @@ package com.example.api.service
 
 import com.example.api.dto.CreateMaintenanceTaskRequest
 import com.example.api.dto.MaintenanceTaskResponse
+import com.example.api.dto.UpdateMaintenanceTaskRequest
 import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.mapper.toResponse
 import com.example.api.model.Ecosystem
@@ -79,6 +80,35 @@ class MaintenanceTaskService(
         )
 
         return maintenanceTaskRepository.save(task).toResponse()
+    }
+
+    /**
+     * Updates a manual maintenance task for the selected ecosystem.
+     */
+    @Transactional
+    fun updateTask(
+        ecosystemId: UUID,
+        taskId: UUID,
+        request: UpdateMaintenanceTaskRequest
+    ): MaintenanceTaskResponse {
+        if (!ecosystemRepository.existsById(ecosystemId)) {
+            throw ecosystemNotFound()
+        }
+
+        val existing = maintenanceTaskRepository.findByIdAndEcosystemId(taskId, ecosystemId)
+            ?: throw taskNotFound()
+
+        if (existing.autoCreated) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Suggested tasks cannot be edited manually")
+        }
+
+        val updatedTask = existing.copy(
+            title = request.title.trim(),
+            taskType = request.taskType.trim(),
+            dueDate = request.dueDate
+        )
+
+        return maintenanceTaskRepository.save(updatedTask).toResponse()
     }
 
     /**

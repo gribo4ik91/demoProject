@@ -3,6 +3,8 @@ package com.example.api.service
 import com.example.api.dto.CreateEcosystemRequest
 import com.example.api.dto.EcosystemResponse
 import com.example.api.dto.EcosystemSummaryResponse
+import com.example.api.dto.UpdateEcosystemRequest
+import com.example.api.mapper.applyTo
 import com.example.api.mapper.toEntity
 import com.example.api.mapper.toResponse
 import com.example.api.repository.EcosystemLogRepository
@@ -34,6 +36,17 @@ class EcosystemService(
         ecosystemRepository.save(request.toEntity()).toResponse()
 
     /**
+     * Updates and persists an existing ecosystem.
+     */
+    @Transactional
+    fun updateEcosystem(id: UUID, request: UpdateEcosystemRequest): EcosystemResponse {
+        val existing = ecosystemRepository.findById(id)
+            .orElseThrow { notFound() }
+
+        return ecosystemRepository.save(request.applyTo(existing)).toResponse()
+    }
+
+    /**
      * Returns all stored ecosystems mapped to API responses.
      */
     @Transactional(readOnly = true)
@@ -59,13 +72,24 @@ class EcosystemService(
         }
 
         val latestLog = ecosystemLogRepository.findTopByEcosystemIdOrderByRecordedAtDesc(id)
+        val allLogs = ecosystemLogRepository.findByEcosystemIdOrderByRecordedAtDesc(id)
         val recentLogs = ecosystemLogRepository.findTop5ByEcosystemIdOrderByRecordedAtDesc(id)
         val logsLast7Days = ecosystemLogRepository.countByEcosystemIdAndRecordedAtAfter(id, LocalDateTime.now().minusDays(7))
+        val logsLast30Days = ecosystemLogRepository.countByEcosystemIdAndRecordedAtAfter(id, LocalDateTime.now().minusDays(30))
         val openTasks = maintenanceTaskRepository.countByEcosystemIdAndStatus(id, "OPEN")
         val overdueTasks = maintenanceTaskRepository.countByEcosystemIdAndStatusAndDueDateBefore(id, "OPEN", LocalDate.now())
 
         val averageTemperature = recentLogs.mapNotNull { it.temperatureC }.average().takeIf { !it.isNaN() }
         val averageHumidity = recentLogs.mapNotNull { it.humidityPercent?.toDouble() }.average().takeIf { !it.isNaN() }
+        val activeDaysLast30Days = allLogs
+            .asSequence()
+            .filter { it.recordedAt.isAfter(LocalDateTime.now().minusDays(30)) }
+            .map { it.recordedAt.toLocalDate() }
+            .distinct()
+            .count()
+        val loggingStreakDays = calculateLoggingStreakDays(allLogs)
+        val temperatureTrendDelta = calculateWindowedDelta(allLogs.mapNotNull { it.temperatureC })
+        val humidityTrendDelta = calculateWindowedDelta(allLogs.mapNotNull { it.humidityPercent?.toDouble() })
 
         return EcosystemSummaryResponse(
             ecosystemId = id,
@@ -77,6 +101,11 @@ class EcosystemService(
             averageTemperatureC = averageTemperature?.let { roundToSingleDecimal(it) },
             averageHumidityPercent = averageHumidity?.let { roundToSingleDecimal(it) },
             logsLast7Days = logsLast7Days,
+            logsLast30Days = logsLast30Days,
+            activeDaysLast30Days = activeDaysLast30Days,
+            loggingStreakDays = loggingStreakDays,
+            temperatureTrendDeltaC = temperatureTrendDelta?.let { roundToSingleDecimal(it) },
+            humidityTrendDeltaPercent = humidityTrendDelta?.let { roundToSingleDecimal(it) },
             openTasks = openTasks,
             overdueTasks = overdueTasks
         )
@@ -131,4 +160,34 @@ class EcosystemService(
      */
     private fun roundToSingleDecimal(value: Double): Double =
         kotlin.math.round(value * 10.0) / 10.0
+
+    /**
+     * Calculates a simple trend delta between the latest measurable window and the previous one.
+     */
+    private fun calculateWindowedDelta(values: List<Double>, windowSize: Int = 3): Double? {
+        if (values.size < windowSize * 2) {
+            return null
+        }
+
+        val currentWindowAverage = values.take(windowSize).average()
+        val previousWindowAverage = values.drop(windowSize).take(windowSize).average()
+        return currentWindowAverage - previousWindowAverage
+    }
+
+    /**
+     * Counts the current consecutive-day logging streak based on the latest recorded day.
+     */
+    private fun calculateLoggingStreakDays(logs: List<com.example.api.model.EcosystemLog>): Int {
+        val loggedDays = logs.map { it.recordedAt.toLocalDate() }.toSet()
+        val latestDay = logs.firstOrNull()?.recordedAt?.toLocalDate() ?: return 0
+        var streak = 0
+        var cursor = latestDay
+
+        while (cursor in loggedDays) {
+            streak += 1
+            cursor = cursor.minusDays(1)
+        }
+
+        return streak
+    }
 }

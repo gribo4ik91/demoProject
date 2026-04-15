@@ -5,7 +5,7 @@ app:
   auth:
     enabled: ${APP_AUTH_ENABLED:true}
   response-delay:
-    enabled: ${APP_RESPONSE_DELAY_ENABLED:true}
+    enabled: ${APP_RESPONSE_DELAY_ENABLED:false}
     min-ms: ${APP_RESPONSE_DELAY_MIN_MS:1000}
     max-ms: ${APP_RESPONSE_DELAY_MAX_MS:10000}
 

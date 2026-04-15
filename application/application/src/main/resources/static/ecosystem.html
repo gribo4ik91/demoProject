@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ecosystem Details</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -102,10 +103,70 @@
             flex-wrap: wrap;
             justify-content: flex-end;
             align-items: center;
+            margin-left: auto;
+            flex: 0 1 auto;
+        }
+
+        .task-card-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .task-title {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .task-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .task-meta-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            min-width: 0;
+            flex: 1 1 15rem;
+        }
+
+        .task-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .task-detail-text {
+            margin: 0;
+            min-width: 0;
+        }
+
+        .task-actions-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.4rem;
+            width: auto;
+        }
+
+        .task-actions-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            width: auto;
         }
 
         .task-action-select {
-            min-width: 12rem;
+            min-width: 9.5rem;
+            max-width: 11rem;
         }
 
         .task-filter-group {
@@ -204,6 +265,86 @@
             border-color: #b8e2db;
         }
 
+        .edit-panel {
+            border: 1px solid var(--surface-border);
+            border-radius: 1rem;
+            background: #fff;
+        }
+
+        .form-error {
+            border-radius: 0.75rem;
+        }
+
+        .toast-stack {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1080;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: min(24rem, calc(100vw - 2rem));
+            pointer-events: none;
+        }
+
+        .toast-card {
+            pointer-events: auto;
+            border-radius: 1rem;
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 14px 30px rgba(32, 52, 46, 0.14);
+            overflow: hidden;
+            animation: toastIn 180ms ease both;
+        }
+
+        .toast-card.is-leaving {
+            animation: toastOut 160ms ease forwards;
+        }
+
+        .toast-card-success {
+            border-color: var(--pill-done-border);
+        }
+
+        .toast-card-danger {
+            border-color: #f0b8bf;
+        }
+
+        .toast-card-warning {
+            border-color: var(--pill-open-border);
+        }
+
+        .toast-card-info {
+            border-color: var(--pill-suggested-border);
+        }
+
+        .toast-accent {
+            height: 0.35rem;
+        }
+
+        .toast-accent-success {
+            background: #2c8b5f;
+        }
+
+        .toast-accent-danger {
+            background: #c95a6b;
+        }
+
+        .toast-accent-warning {
+            background: #d3a236;
+        }
+
+        .toast-accent-info {
+            background: #3c7bbb;
+        }
+
+        .toast-close {
+            border: 0;
+            background: transparent;
+            color: var(--surface-muted);
+            line-height: 1;
+            font-size: 1.1rem;
+        }
+
         @keyframes taskCardIn {
             from {
                 opacity: 0;
@@ -228,6 +369,30 @@
             }
         }
 
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.98);
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             #tasks-container,
             #summary-container {
@@ -235,16 +400,45 @@
             }
 
             .task-card,
-            .summary-card {
+            .summary-card,
+            .toast-card,
+            .toast-card.is-leaving {
                 animation: none;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .task-detail-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .task-action-group,
+            .task-actions-panel {
+                width: auto;
+            }
+
+            .task-actions-panel {
+                align-items: flex-end;
+                align-self: flex-end;
+            }
+
+            .task-actions-row {
+                flex-direction: row;
+            }
+
+            .task-action-select {
+                width: min(100%, 11rem);
+            }
+
+            .task-actions-row .btn {
+                width: auto;
             }
         }
     </style>
 </head>
 <body class="bg-light">
 <div class="container mt-5">
-    <div id="page-alert" class="alert d-none" role="alert"></div>
-
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.html" class="text-success">Home</a></li>
@@ -260,9 +454,60 @@
         </form>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 id="page-title" class="text-success">Loading...</h2>
-        <button class="btn btn-danger" onclick="deleteEcosystem()">Delete Ecosystem</button>
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+        <h2 id="page-title" class="text-success mb-0">Loading...</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-success" onclick="editEcosystem()">Edit Ecosystem</button>
+            <button class="btn btn-danger" onclick="deleteEcosystem()">Delete Ecosystem</button>
+        </div>
+    </div>
+
+    <div id="ecosystem-edit-panel" class="edit-panel p-3 mb-4 d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+            <div>
+                <h5 class="mb-1">Edit Ecosystem</h5>
+                <p class="text-muted small mb-0">Update the main ecosystem details without leaving the dashboard.</p>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelEcosystemEdit()">Cancel</button>
+        </div>
+        <form id="edit-ecosystem-form" onsubmit="submitEcosystemEdit(event)">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="edit-eco-name" placeholder="Name" required>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="edit-eco-type" required>
+                        <option value="FORMICARIUM">Formicarium</option>
+                        <option value="FLORARIUM">Florarium</option>
+                        <option value="INDOOR_PLANTS">Indoor Plants</option>
+                        <option value="DIY_INCUBATOR">DIY Incubator</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="edit-eco-desc" placeholder="Description">
+                </div>
+                <div class="col-12">
+                    <div id="edit-eco-error" class="alert alert-danger small py-2 px-3 mb-0 d-none form-error" role="alert"></div>
+                </div>
+                <div class="col-12 d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" onclick="cancelEcosystemEdit()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="delete-confirm-panel" class="alert alert-warning d-none" role="alert">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <strong>Delete this ecosystem?</strong>
+                <div class="small">This will remove the ecosystem together with its logs and tasks.</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelDeleteEcosystem()">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteEcosystem()">Delete Permanently</button>
+            </div>
+        </div>
     </div>
 
     <div class="row">
@@ -306,6 +551,41 @@
                             </div>
                         </div>
                     </form>
+
+                    <div id="task-edit-panel" class="edit-panel p-3 mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                            <div>
+                                <h6 class="mb-1">Edit Task</h6>
+                                <p class="text-muted small mb-0">This is available for manually created maintenance tasks.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelTaskEdit()">Cancel</button>
+                        </div>
+                        <form id="edit-task-form" onsubmit="submitTaskEdit(event)">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <input type="text" class="form-control" id="edit-task-title" placeholder="Task title" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <select class="form-select" id="edit-task-type" required>
+                                        <option value="WATERING">Watering</option>
+                                        <option value="FEEDING">Feeding</option>
+                                        <option value="CLEANING">Cleaning</option>
+                                        <option value="INSPECTION">Inspection</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="date" class="form-control" id="edit-task-due-date">
+                                </div>
+                                <div class="col-12">
+                                    <div id="edit-task-error" class="alert alert-danger small py-2 px-3 mb-0 d-none form-error" role="alert"></div>
+                                </div>
+                                <div class="col-md-3 d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="cancelTaskEdit()">Cancel</button>
+                                    <button type="submit" class="btn btn-success w-100">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <div class="mb-3">
                         <div class="mb-3">
@@ -370,6 +650,43 @@
                         </div>
                     </form>
 
+                    <div id="log-edit-panel" class="edit-panel p-3 mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                            <div>
+                                <h6 class="mb-1">Edit Log Entry</h6>
+                                <p class="text-muted small mb-0">Adjust measurements or notes for an existing activity record.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelLogEdit()">Cancel</button>
+                        </div>
+                        <form id="edit-log-form" onsubmit="submitLogEdit(event)">
+                            <div class="row g-2">
+                                <div class="col-md-2">
+                                    <input type="number" step="0.1" class="form-control" id="edit-log-temp" placeholder="Temp C">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control" id="edit-log-humidity" placeholder="Humidity %">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="edit-log-event" required>
+                                        <option value="OBSERVATION">Observation</option>
+                                        <option value="FEEDING">Feeding</option>
+                                        <option value="WATERING">Watering</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control" id="edit-log-notes" placeholder="Notes">
+                                </div>
+                                <div class="col-12">
+                                    <div id="edit-log-error" class="alert alert-danger small py-2 px-3 mb-0 d-none form-error" role="alert"></div>
+                                </div>
+                                <div class="col-12 d-flex gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="cancelLogEdit()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="row g-2 align-items-center mb-3">
                         <div class="col-md-4">
                             <label for="log-filter-event" class="form-label small text-muted mb-1">Filter by event</label>
@@ -400,16 +717,22 @@
     </div>
 </div>
 
+<div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const ecosystemId = urlParams.get('id');
     let currentLogPage = 0;
+    let currentEcosystem = null;
+    let editingTaskId = null;
+    let editingLogId = null;
+    let toastCounter = 0;
     const logPageSize = 5;
 
     window.onload = async () => {
         if (!ecosystemId) {
-            alert('No ecosystem ID provided in URL.');
-            window.location.href = 'index.html';
+            showAlert('No ecosystem ID provided in URL. Redirecting to the home page.', 'warning', 'Missing identifier');
+            redirectToHome();
             return;
         }
         await loadAuthStatus();
@@ -446,12 +769,13 @@
             }
 
             const eco = await response.json();
+            currentEcosystem = eco;
             document.getElementById('page-title').innerText = eco.name;
             document.getElementById('bc-name').innerText = eco.name;
             hideAlert();
         } catch (error) {
-            alert(error.message || 'Could not load ecosystem details.');
-            window.location.href = 'index.html';
+            showAlert(error.message || 'Could not load ecosystem details. Returning to the home page.', 'danger', 'Details unavailable');
+            redirectToHome();
         }
     }
 
@@ -474,6 +798,8 @@
             const taskMessage = summary.overdueTasks > 0
                 ? `${summary.overdueTasks} overdue`
                 : `${summary.openTasks} open`;
+            const temperatureDelta = formatTrendDelta(summary.temperatureTrendDeltaC, 'C');
+            const humidityDelta = formatTrendDelta(summary.humidityTrendDeltaPercent, '%');
 
             container.innerHTML = `
                 <div class="col-md-3 summary-card">
@@ -494,7 +820,7 @@
                     <div class="summary-panel p-3 h-100 bg-white">
                         <p class="summary-panel-muted small mb-2">Recent Trend</p>
                         <h5 class="mb-1">${formatMetric(summary.averageTemperatureC, 'C')} / ${formatMetric(summary.averageHumidityPercent, '%')}</h5>
-                        <p class="mb-0 small text-muted">Average across the latest measurable logs</p>
+                        <p class="mb-0 small text-muted">Temp ${temperatureDelta} | Humidity ${humidityDelta}</p>
                     </div>
                 </div>
                 <div class="col-md-3 summary-card">
@@ -503,6 +829,14 @@
                         <h5 class="mb-1">${taskMessage}</h5>
                         <p class="mb-1 small text-muted">${summary.logsLast7Days} logs in 7 days</p>
                         <small class="text-muted">Last update: ${lastRecorded}</small>
+                    </div>
+                </div>
+                <div class="col-md-4 summary-card">
+                    <div class="summary-panel p-3 h-100 bg-white">
+                        <p class="summary-panel-muted small mb-2">30-Day Activity</p>
+                        <h5 class="mb-1">${summary.logsLast30Days} logs</h5>
+                        <p class="mb-1 small text-muted">${summary.activeDaysLast30Days} active days in the last month</p>
+                        <small class="text-muted">${summary.loggingStreakDays}-day logging streak</small>
                     </div>
                 </div>
             `;
@@ -514,7 +848,7 @@
                     </div>
                 </div>
             `;
-            showAlert(error.message || 'Failed to load summary.', 'danger');
+            showAlert(error.message || 'Failed to load summary.', 'danger', 'Summary failed');
         } finally {
             setSummaryLoading(false);
         }
@@ -579,17 +913,19 @@
 
                 return `
                     <div class="border rounded-3 p-3 mb-2 task-card">
-                        <div class="d-flex justify-content-between align-items-start gap-3">
-                            <div>
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <strong>${escapeHtml(task.title)}</strong>
+                        <div class="task-card-layout">
+                            <strong class="task-title">${escapeHtml(task.title)}</strong>
+                            <div class="task-detail-row">
+                                <div class="task-meta-group">
+                                    <div class="task-badge-row">
                                     ${statusBadge}
                                     ${sourceBadge}
+                                    </div>
+                                    <p class="small text-muted task-detail-text">${escapeHtml(taskTypeLabel)} | Due: ${dueDate}${escapeHtml(dismissalReason)}</p>
                                 </div>
-                                <p class="mb-1 small text-muted">${escapeHtml(taskTypeLabel)} | Due: ${dueDate}${escapeHtml(dismissalReason)}</p>
-                            </div>
-                            <div class="task-action-group">
-                                ${actions}
+                                <div class="task-action-group">
+                                    ${actions}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -603,7 +939,7 @@
                     Could not load maintenance tasks.
                 </div>
             `;
-            showAlert(error.message || 'Failed to load maintenance tasks.', 'danger');
+            showAlert(error.message || 'Failed to load maintenance tasks.', 'danger', 'Tasks failed');
         } finally {
             setTaskListLoading(false);
         }
@@ -671,7 +1007,8 @@
                             <span>Temp: ${temperature} C</span>
                             <span>Humidity: ${humidity}%</span>
                         </div>
-                        <small class="text-muted">${escapeHtml(log.notes || 'No notes')}</small>
+                        <small class="text-muted d-block mb-2">${escapeHtml(log.notes || 'No notes')}</small>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="editLog('${encodeURIComponent(JSON.stringify(log))}')">Edit</button>
                     </div>
                 `;
             }).join('');
@@ -689,7 +1026,7 @@
                 </div>
             `;
             logsMeta.textContent = 'Failed to load logs';
-            showAlert(error.message || 'Failed to load logs.', 'danger');
+            showAlert(error.message || 'Failed to load logs.', 'danger', 'Logs failed');
         }
     }
 
@@ -717,11 +1054,57 @@
             }
 
             document.getElementById('add-task-form').reset();
-            showAlert('Maintenance task created successfully.', 'success');
+            showAlert('Maintenance task created successfully.', 'success', 'Task created');
             await loadSummary();
             await loadTasks();
         } catch (error) {
-            showAlert(error.message || 'Failed to create maintenance task.', 'danger');
+            showAlert(error.message || 'Failed to create maintenance task.', 'danger', 'Task creation failed');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    async function submitTaskEdit(event) {
+        event.preventDefault();
+        if (!editingTaskId) {
+            return;
+        }
+
+        const validationError = validateTaskForm(
+            document.getElementById('edit-task-title').value,
+            document.getElementById('edit-task-due-date').value
+        );
+        if (validationError) {
+            showFormError('edit-task-error', validationError);
+            return;
+        }
+
+        const submitButton = event.submitter;
+        submitButton.disabled = true;
+        clearFormError('edit-task-error');
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/tasks/${editingTaskId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: document.getElementById('edit-task-title').value,
+                    taskType: document.getElementById('edit-task-type').value,
+                    dueDate: document.getElementById('edit-task-due-date').value || null
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(resolveApiErrorMessage(error, 'Failed to update maintenance task.'));
+            }
+
+            cancelTaskEdit();
+            showAlert('Maintenance task updated successfully.', 'success', 'Task saved');
+            await loadSummary();
+            await loadTasks();
+        } catch (error) {
+            showFormError('edit-task-error', error.message || 'Failed to update maintenance task.');
         } finally {
             submitButton.disabled = false;
         }
@@ -740,16 +1123,31 @@
                 throw new Error(error?.message || 'Failed to update maintenance task.');
             }
 
-            showAlert('Maintenance task updated successfully.', 'success');
+            showAlert('Maintenance task updated successfully.', 'success', 'Task updated');
             await loadSummary();
             await loadTasks();
         } catch (error) {
-            showAlert(error.message || 'Failed to update maintenance task.', 'danger');
+            showAlert(error.message || 'Failed to update maintenance task.', 'danger', 'Task update failed');
         }
+    }
+
+    function editTask(taskData) {
+        const task = parseEncodedPayload(taskData);
+        editingTaskId = task.id;
+        clearFormError('edit-task-error');
+        document.getElementById('edit-task-title').value = task.title || '';
+        document.getElementById('edit-task-type').value = task.taskType || 'WATERING';
+        document.getElementById('edit-task-due-date').value = task.dueDate || '';
+        document.getElementById('task-edit-panel').classList.remove('d-none');
+        document.getElementById('task-edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function dismissSuggestedTask(taskId, selectId) {
         const dismissalReason = document.getElementById(selectId)?.value;
+        if (!dismissalReason) {
+            showAlert('Choose a dismissal reason so the system knows when to suggest this task again.', 'warning', 'Dismiss reason required');
+            return;
+        }
         updateTaskStatus(taskId, 'DISMISSED', dismissalReason);
     }
 
@@ -779,27 +1177,154 @@
 
             document.getElementById('add-log-form').reset();
             currentLogPage = 0;
-            showAlert('Log entry added successfully.', 'success');
+            showAlert('Log entry added successfully.', 'success', 'Log created');
             await loadSummary();
             await loadLogs();
         } catch (error) {
-            showAlert(error.message || 'Failed to add log entry.', 'danger');
+            showAlert(error.message || 'Failed to add log entry.', 'danger', 'Log creation failed');
         } finally {
             submitButton.disabled = false;
         }
     }
 
-    async function deleteEcosystem() {
-        if (confirm('Are you sure you want to delete this ecosystem and all its logs? This action cannot be undone.')) {
-            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                window.location.href = 'index.html';
-            } else {
-                showAlert('Failed to delete ecosystem.', 'danger');
-            }
+    async function submitLogEdit(event) {
+        event.preventDefault();
+        if (!editingLogId) {
+            return;
         }
+
+        const validationError = validateLogForm(
+            document.getElementById('edit-log-temp').value,
+            document.getElementById('edit-log-humidity').value,
+            document.getElementById('edit-log-event').value,
+            document.getElementById('edit-log-notes').value
+        );
+        if (validationError) {
+            showFormError('edit-log-error', validationError);
+            return;
+        }
+
+        const submitButton = event.submitter;
+        submitButton.disabled = true;
+        clearFormError('edit-log-error');
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}/logs/${editingLogId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    temperatureC: parseNullableNumber(document.getElementById('edit-log-temp').value),
+                    humidityPercent: parseNullableInteger(document.getElementById('edit-log-humidity').value),
+                    eventType: document.getElementById('edit-log-event').value,
+                    notes: document.getElementById('edit-log-notes').value || null
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(resolveApiErrorMessage(error, 'Failed to update log entry.'));
+            }
+
+            cancelLogEdit();
+            showAlert('Log entry updated successfully.', 'success', 'Log saved');
+            await loadSummary();
+            await loadLogs();
+        } catch (error) {
+            showFormError('edit-log-error', error.message || 'Failed to update log entry.');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    function editLog(logData) {
+        const log = parseEncodedPayload(logData);
+        editingLogId = log.id;
+        clearFormError('edit-log-error');
+        document.getElementById('edit-log-temp').value = valueToText(log.temperatureC);
+        document.getElementById('edit-log-humidity').value = valueToText(log.humidityPercent);
+        document.getElementById('edit-log-event').value = log.eventType || 'OBSERVATION';
+        document.getElementById('edit-log-notes').value = log.notes || '';
+        document.getElementById('log-edit-panel').classList.remove('d-none');
+        document.getElementById('log-edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function deleteEcosystem() {
+        document.getElementById('delete-confirm-panel').classList.remove('d-none');
+        document.getElementById('delete-confirm-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function cancelDeleteEcosystem() {
+        document.getElementById('delete-confirm-panel').classList.add('d-none');
+    }
+
+    async function confirmDeleteEcosystem() {
+        const response = await fetch(`/api/v1/ecosystems/${ecosystemId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showAlert('Ecosystem deleted successfully. Redirecting to the home page.', 'success', 'Ecosystem deleted');
+            redirectToHome();
+            return;
+        }
+
+        showAlert('Failed to delete ecosystem.', 'danger', 'Delete failed');
+    }
+
+    async function submitEcosystemEdit(event) {
+        event.preventDefault();
+        const validationError = validateEcosystemForm(
+            document.getElementById('edit-eco-name').value,
+            document.getElementById('edit-eco-desc').value
+        );
+        if (validationError) {
+            showFormError('edit-eco-error', validationError);
+            return;
+        }
+
+        const submitButton = event.submitter;
+        submitButton.disabled = true;
+        clearFormError('edit-eco-error');
+
+        try {
+            const response = await fetch(`/api/v1/ecosystems/${ecosystemId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('edit-eco-name').value,
+                    type: document.getElementById('edit-eco-type').value,
+                    description: document.getElementById('edit-eco-desc').value || null
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => null);
+                throw new Error(resolveApiErrorMessage(error, 'Failed to update ecosystem.'));
+            }
+
+            cancelEcosystemEdit();
+            showAlert('Ecosystem updated successfully.', 'success', 'Ecosystem saved');
+            await loadDetails();
+            await loadSummary();
+        } catch (error) {
+            showFormError('edit-eco-error', error.message || 'Failed to update ecosystem.');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    function editEcosystem() {
+        if (!currentEcosystem) {
+            showAlert('Ecosystem details are still loading.', 'warning', 'Please wait');
+            return;
+        }
+
+        clearFormError('edit-eco-error');
+        document.getElementById('edit-eco-name').value = currentEcosystem.name || '';
+        document.getElementById('edit-eco-type').value = currentEcosystem.type || 'FORMICARIUM';
+        document.getElementById('edit-eco-desc').value = currentEcosystem.description || '';
+        document.getElementById('ecosystem-edit-panel').classList.remove('d-none');
+        document.getElementById('ecosystem-edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function applyLogFilters() {
@@ -812,16 +1337,63 @@
         loadLogs();
     }
 
-    function showAlert(message, type) {
-        const alert = document.getElementById('page-alert');
-        alert.className = `alert alert-${type}`;
-        alert.textContent = message;
+    function cancelEcosystemEdit() {
+        document.getElementById('edit-ecosystem-form').reset();
+        clearFormError('edit-eco-error');
+        document.getElementById('ecosystem-edit-panel').classList.add('d-none');
+    }
+
+    function cancelTaskEdit() {
+        editingTaskId = null;
+        document.getElementById('edit-task-form').reset();
+        clearFormError('edit-task-error');
+        document.getElementById('task-edit-panel').classList.add('d-none');
+    }
+
+    function cancelLogEdit() {
+        editingLogId = null;
+        document.getElementById('edit-log-form').reset();
+        clearFormError('edit-log-error');
+        document.getElementById('log-edit-panel').classList.add('d-none');
+    }
+
+    function redirectToHome(delayMs = 900) {
+        window.setTimeout(() => {
+            window.location.href = 'index.html';
+        }, delayMs);
+    }
+
+    function showAlert(message, type, title = null) {
+        const stack = document.getElementById('toast-stack');
+        const toastId = `toast-${++toastCounter}`;
+        const variant = normalizeToastType(type);
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast-card toast-card-${variant}`;
+        toast.setAttribute('role', 'status');
+        toast.innerHTML = `
+            <div class="toast-accent toast-accent-${variant}"></div>
+            <div class="p-3">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="fw-semibold">${escapeHtml(title || toastTitleForType(variant))}</div>
+                        <div class="small text-muted mt-1">${escapeHtml(message)}</div>
+                    </div>
+                    <button type="button" class="toast-close" aria-label="Close notification" onclick="dismissToast('${toastId}')">x</button>
+                </div>
+            </div>
+        `;
+
+        stack.appendChild(toast);
+
+        if (variant !== 'danger') {
+            window.setTimeout(() => dismissToast(toastId), 3200);
+        }
     }
 
     function hideAlert() {
-        const alert = document.getElementById('page-alert');
-        alert.className = 'alert d-none';
-        alert.textContent = '';
+        const stack = document.getElementById('toast-stack');
+        stack.innerHTML = '';
     }
 
     function resolveStatusMeta(status) {
@@ -852,6 +1424,20 @@
         return value === null || value === undefined ? `-- ${suffix}` : `${value} ${suffix}`;
     }
 
+    function formatTrendDelta(value, suffix) {
+        if (value === null || value === undefined) {
+            return 'not enough data';
+        }
+
+        if (value === 0) {
+            return `stable (0 ${suffix})`;
+        }
+
+        const direction = value > 0 ? 'up' : 'down';
+        const magnitude = Math.abs(value);
+        return `${direction} ${magnitude} ${suffix}`;
+    }
+
     function formatTaskType(taskType) {
         const labels = {
             WATERING: 'Watering',
@@ -879,25 +1465,44 @@
         if (task.status === 'OPEN' && task.autoCreated) {
             const reasonSelectId = `dismiss-reason-${task.id}`;
             return `
-                <select id="${reasonSelectId}" class="form-select form-select-sm task-action-select" aria-label="Dismissal reason">
-                    <option value="TOO_SOON">Too soon</option>
-                    <option value="NOT_RELEVANT">Not relevant</option>
-                    <option value="ALREADY_HANDLED">Already handled</option>
-                </select>
-                <button class="btn btn-outline-success btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Done</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="dismissSuggestedTask('${task.id}', '${reasonSelectId}')">Dismiss</button>
+                <div class="task-actions-panel">
+                    <select id="${reasonSelectId}" class="form-select form-select-sm task-action-select" aria-label="Dismissal reason" title="This reason controls when the suggestion can appear again.">
+                        <option value="" selected disabled>Dismiss reason</option>
+                        <option value="TOO_SOON">Too soon</option>
+                        <option value="NOT_RELEVANT">Not relevant</option>
+                        <option value="ALREADY_HANDLED">Already handled</option>
+                    </select>
+                    <div class="task-actions-row">
+                        <button class="btn btn-outline-success btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Done</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="dismissSuggestedTask('${task.id}', '${reasonSelectId}')">Dismiss</button>
+                    </div>
+                </div>
             `;
         }
 
         if (task.status === 'OPEN') {
-            return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Mark Done</button>`;
+            return `
+                <div class="task-actions-row">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="editTask('${encodeURIComponent(JSON.stringify(task))}')">Edit</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'DONE')">Mark Done</button>
+                </div>
+            `;
         }
 
         if (task.status === 'DISMISSED') {
-            return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Restore</button>`;
+            return `<div class="task-actions-row"><button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Restore</button></div>`;
         }
 
-        return `<button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Reopen</button>`;
+        if (task.autoCreated) {
+            return `<div class="task-actions-row"><button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Reopen</button></div>`;
+        }
+
+        return `
+            <div class="task-actions-row">
+                <button class="btn btn-outline-secondary btn-sm" onclick="editTask('${encodeURIComponent(JSON.stringify(task))}')">Edit</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="updateTaskStatus('${task.id}', 'OPEN')">Reopen</button>
+            </div>
+        `;
     }
 
     function formatDismissalReason(reason) {
@@ -995,6 +1600,155 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
+    }
+
+    function parseEncodedPayload(value) {
+        return JSON.parse(decodeURIComponent(value));
+    }
+
+    function valueToText(value) {
+        return value === null || value === undefined ? '' : String(value);
+    }
+
+    function parseNullableNumber(value) {
+        const trimmed = value.trim();
+        return trimmed ? Number(trimmed) : null;
+    }
+
+    function parseNullableInteger(value) {
+        const trimmed = value.trim();
+        return trimmed ? Number.parseInt(trimmed, 10) : null;
+    }
+
+    function dismissToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (!toast) {
+            return;
+        }
+
+        toast.classList.add('is-leaving');
+        window.setTimeout(() => {
+            toast.remove();
+        }, 180);
+    }
+
+    function normalizeToastType(type) {
+        if (type === 'success' || type === 'danger' || type === 'warning') {
+            return type;
+        }
+
+        return 'info';
+    }
+
+    function toastTitleForType(type) {
+        if (type === 'success') {
+            return 'Saved';
+        }
+
+        if (type === 'danger') {
+            return 'Something went wrong';
+        }
+
+        if (type === 'warning') {
+            return 'Heads up';
+        }
+
+        return 'Update';
+    }
+
+    function showFormError(elementId, message) {
+        const error = document.getElementById(elementId);
+        if (!error) {
+            return;
+        }
+
+        error.textContent = message;
+        error.classList.remove('d-none');
+    }
+
+    function clearFormError(elementId) {
+        const error = document.getElementById(elementId);
+        if (!error) {
+            return;
+        }
+
+        error.textContent = '';
+        error.classList.add('d-none');
+    }
+
+    function validateEcosystemForm(name, description) {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            return 'Name is required.';
+        }
+
+        if (trimmedName.length > 100) {
+            return 'Name must be 100 characters or fewer.';
+        }
+
+        if (description.trim().length > 500) {
+            return 'Description must be 500 characters or fewer.';
+        }
+
+        return null;
+    }
+
+    function validateTaskForm(title, dueDate) {
+        const trimmedTitle = title.trim();
+        if (!trimmedTitle) {
+            return 'Task title is required.';
+        }
+
+        if (trimmedTitle.length > 120) {
+            return 'Task title must be 120 characters or fewer.';
+        }
+
+        if (dueDate && Number.isNaN(Date.parse(dueDate))) {
+            return 'Due date must be a valid date.';
+        }
+
+        return null;
+    }
+
+    function validateLogForm(temperature, humidity, eventType, notes) {
+        if (!eventType.trim()) {
+            return 'Event type is required.';
+        }
+
+        if (temperature.trim()) {
+            const temperatureValue = Number(temperature);
+            if (Number.isNaN(temperatureValue) || temperatureValue < -100 || temperatureValue > 100) {
+                return 'Temperature must be between -100 and 100.';
+            }
+        }
+
+        if (humidity.trim()) {
+            const humidityValue = Number(humidity);
+            if (!Number.isInteger(humidityValue) || humidityValue < 0 || humidityValue > 100) {
+                return 'Humidity must be a whole number between 0 and 100.';
+            }
+        }
+
+        if (notes.trim().length > 500) {
+            return 'Notes must be 500 characters or fewer.';
+        }
+
+        return null;
+    }
+
+    function resolveApiErrorMessage(error, fallbackMessage) {
+        if (!error) {
+            return fallbackMessage;
+        }
+
+        if (error.validationErrors) {
+            const firstValidationMessage = Object.values(error.validationErrors)[0];
+            if (firstValidationMessage) {
+                return String(firstValidationMessage);
+            }
+        }
+
+        return error.message || fallbackMessage;
     }
 </script>
 </body>

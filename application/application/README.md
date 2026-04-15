@@ -26,18 +26,21 @@ The project demonstrates a complete vertical slice:
 - Spring Data JPA
 - PostgreSQL
 - Flyway
-- H2 for isolated tests
+- Testcontainers + PostgreSQL for integration tests
 - Gradle Kotlin DSL
 - Bootstrap 5
 
 ## Features
 
 - Create and browse ecosystems
+- Edit ecosystem metadata directly from the dashboard
 - Open a dedicated dashboard for a selected ecosystem
-- View a dashboard summary with current status, latest readings, and recent activity indicators
+- View a dashboard summary with current status, recent readings, activity streaks, 30-day activity, and lightweight trend analytics
 - Record activity logs with temperature, humidity, event type, and notes
+- Edit existing activity logs without leaving the dashboard
 - Filter and paginate activity logs by event type
 - Create manual maintenance tasks with due dates
+- Edit manual maintenance tasks inline from the dashboard
 - Review maintenance tasks by status and source
 - Mark suggested tasks as dismissed with a dismissal reason
 - Delete an ecosystem together with its logs
@@ -154,7 +157,7 @@ This means:
 - Hibernate validates the schema instead of mutating it automatically
 - database state is easier to reproduce across environments
 
-The test suite uses an isolated H2 profile for speed and determinism.
+The integration test suite is configured to run against PostgreSQL through Testcontainers so the test database matches runtime behavior more closely.
 
 ## API Summary
 
@@ -169,13 +172,16 @@ Interactive documentation:
 Endpoints:
 
 - `POST /ecosystems`
+- `PATCH /ecosystems/{id}`
 - `GET /ecosystems`
 - `GET /ecosystems/{id}`
 - `GET /ecosystems/{id}/summary`
 - `DELETE /ecosystems/{id}`
 - `POST /ecosystems/{id}/logs`
+- `PATCH /ecosystems/{id}/logs/{logId}`
 - `GET /ecosystems/{id}/logs`
 - `POST /ecosystems/{ecosystemId}/tasks`
+- `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}`
 - `GET /ecosystems/{ecosystemId}/tasks`
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}/status`
 
@@ -213,8 +219,8 @@ cd path\to\demoProject\application\application
 Current automated checks cover:
 - application context startup
 - controller-level error handling
-- integration scenarios for ecosystem creation, validation, summaries, log ordering, filtering, and cascade delete
-- maintenance task lifecycle scenarios including overdue, suggested, and dismissed flows
+- integration scenarios for ecosystem creation, updates, validation, summaries, log ordering, filtering, and cascade delete
+- maintenance task lifecycle scenarios including overdue, suggested, dismissed, and manual edit flows
 
 ## Trade-offs
 
@@ -225,7 +231,5 @@ Current automated checks cover:
 
 ## Next Steps
 
-- Move integration tests to Testcontainers + PostgreSQL
-- Add edit/update flows for ecosystems, logs, and manual maintenance tasks
 - Expand task management with richer source filters and bulk actions
-- Enrich the dashboard with longer-term trends and analytics
+- Continue enriching the dashboard with deeper trend views and analytics visualizations

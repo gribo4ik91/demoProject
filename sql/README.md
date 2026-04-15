@@ -72,3 +72,4 @@ When the application starts, Flyway applies migrations from:
 - Data is persisted in the `postgres_data` Docker volume
 - This folder does not contain seed data or standalone schema scripts
 - The module is meant to keep database lifecycle management separate from application code
+- A working Docker environment is also required when running integration tests that use Testcontainers from the application module

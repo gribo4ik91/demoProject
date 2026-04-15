@@ -3,6 +3,8 @@ package com.example.api.mapper
 import com.example.api.dto.CreateEcosystemRequest
 import com.example.api.dto.EcosystemLogResponse
 import com.example.api.dto.EcosystemResponse
+import com.example.api.dto.UpdateEcosystemRequest
+import com.example.api.dto.UpdateLogRequest
 import com.example.api.model.Ecosystem
 import com.example.api.model.EcosystemLog
 
@@ -14,6 +16,27 @@ fun CreateEcosystemRequest.toEntity(): Ecosystem =
         name = name.trim(),
         type = type.trim(),
         description = description?.trim()?.takeIf { it.isNotEmpty() }
+    )
+
+/**
+ * Applies an ecosystem update request to an existing entity.
+ */
+fun UpdateEcosystemRequest.applyTo(existing: Ecosystem): Ecosystem =
+    existing.copy(
+        name = name.trim(),
+        type = type.trim(),
+        description = description?.trim()?.takeIf { it.isNotEmpty() }
+    )
+
+/**
+ * Applies a log update request to an existing entity.
+ */
+fun UpdateLogRequest.applyTo(existing: EcosystemLog): EcosystemLog =
+    existing.copy(
+        temperatureC = temperatureC,
+        humidityPercent = humidityPercent,
+        eventType = eventType.trim().uppercase(),
+        notes = notes?.trim()?.takeIf { it.isNotEmpty() }
     )
 
 /**

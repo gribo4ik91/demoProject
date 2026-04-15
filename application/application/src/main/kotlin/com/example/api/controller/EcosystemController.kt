@@ -3,6 +3,7 @@ package com.example.api.controller
 import com.example.api.dto.CreateEcosystemRequest
 import com.example.api.dto.EcosystemResponse
 import com.example.api.dto.EcosystemSummaryResponse
+import com.example.api.dto.UpdateEcosystemRequest
 import com.example.api.exception.ApiErrorResponse
 import com.example.api.service.EcosystemService
 import io.swagger.v3.oas.annotations.Operation
@@ -46,6 +47,32 @@ class EcosystemController(
     )
     fun createEcosystem(@Valid @RequestBody request: CreateEcosystemRequest): EcosystemResponse =
         ecosystemService.createEcosystem(request)
+
+    /**
+     * Updates an existing ecosystem from the request payload.
+     */
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update an ecosystem", description = "Updates an existing ecosystem entry.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Ecosystem updated"),
+            ApiResponse(
+                responseCode = "400",
+                description = "Request validation failed",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Ecosystem not found",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    fun updateEcosystem(
+        @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: UpdateEcosystemRequest
+    ): EcosystemResponse = ecosystemService.updateEcosystem(id, request)
 
     /**
      * Returns all ecosystems currently tracked by the application.

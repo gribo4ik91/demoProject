@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ApiIntegrationTest {
+class ApiIntegrationTest : PostgresIntegrationTest() {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -71,6 +71,34 @@ class ApiIntegrationTest {
         val persisted = ecosystemRepository.findAll().single()
         check(persisted.name == "Rainforest Capsule")
         check(persisted.description == "High humidity setup for moss and ferns")
+    }
+
+    @Test
+    fun `ecosystem can be updated`() {
+        val ecosystemId = createEcosystem()
+
+        mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/ecosystems/$ecosystemId")
+                .contentType("application/json")
+                .content(
+                    """
+                        {
+                          "name": "Canopy Habitat",
+                          "type": "FLORARIUM",
+                          "description": "Updated high-humidity setup"
+                        }
+                    """.trimIndent()
+                )
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("Canopy Habitat"))
+            .andExpect(jsonPath("$.type").value("FLORARIUM"))
+            .andExpect(jsonPath("$.description").value("Updated high-humidity setup"))
+
+        val persisted = ecosystemRepository.findById(ecosystemId).orElseThrow()
+        check(persisted.name == "Canopy Habitat")
+        check(persisted.type == "FLORARIUM")
+        check(persisted.description == "Updated high-humidity setup")
     }
 
     @Test
@@ -176,6 +204,82 @@ class ApiIntegrationTest {
             .andExpect(jsonPath("$.currentTemperatureC").value(24.2))
             .andExpect(jsonPath("$.currentHumidityPercent").value(59))
             .andExpect(jsonPath("$.logsLast7Days").value(2))
+            .andExpect(jsonPath("$.logsLast30Days").value(2))
+            .andExpect(jsonPath("$.activeDaysLast30Days").value(1))
+            .andExpect(jsonPath("$.loggingStreakDays").value(1))
+    }
+
+    @Test
+    fun `summary includes longer term activity streak and trend deltas`() {
+        val ecosystem = ecosystemRepository.save(
+            com.example.api.model.Ecosystem(
+                name = "Trend Lab",
+                type = "FLORARIUM",
+                description = "Trend fixture ecosystem"
+            )
+        )
+        val ecosystemId = ecosystem.id ?: error("Expected generated ecosystem id")
+
+        ecosystemLogRepository.saveAll(
+            listOf(
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 26.0,
+                    humidityPercent = 70,
+                    eventType = "OBSERVATION",
+                    notes = "Today",
+                    recordedAt = LocalDateTime.now().minusHours(2)
+                ),
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 25.0,
+                    humidityPercent = 66,
+                    eventType = "OBSERVATION",
+                    notes = "Yesterday",
+                    recordedAt = LocalDateTime.now().minusDays(1)
+                ),
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 24.0,
+                    humidityPercent = 64,
+                    eventType = "OBSERVATION",
+                    notes = "Two days ago",
+                    recordedAt = LocalDateTime.now().minusDays(2)
+                ),
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 21.0,
+                    humidityPercent = 58,
+                    eventType = "OBSERVATION",
+                    notes = "Previous window 1",
+                    recordedAt = LocalDateTime.now().minusDays(8)
+                ),
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 20.0,
+                    humidityPercent = 57,
+                    eventType = "OBSERVATION",
+                    notes = "Previous window 2",
+                    recordedAt = LocalDateTime.now().minusDays(12)
+                ),
+                com.example.api.model.EcosystemLog(
+                    ecosystem = ecosystem,
+                    temperatureC = 19.0,
+                    humidityPercent = 56,
+                    eventType = "OBSERVATION",
+                    notes = "Previous window 3",
+                    recordedAt = LocalDateTime.now().minusDays(20)
+                )
+            )
+        )
+
+        mockMvc.perform(get("/api/v1/ecosystems/$ecosystemId/summary"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.logsLast30Days").value(6))
+            .andExpect(jsonPath("$.activeDaysLast30Days").value(6))
+            .andExpect(jsonPath("$.loggingStreakDays").value(3))
+            .andExpect(jsonPath("$.temperatureTrendDeltaC").value(5.0))
+            .andExpect(jsonPath("$.humidityTrendDeltaPercent").value(9.7))
     }
 
     @Test
@@ -238,6 +342,51 @@ class ApiIntegrationTest {
     }
 
     @Test
+    fun `log entry can be updated`() {
+        val ecosystemId = createEcosystem()
+
+        addLog(
+            ecosystemId = ecosystemId,
+            payload = """
+                {
+                  "temperatureC": 22.0,
+                  "humidityPercent": 60,
+                  "eventType": "OBSERVATION",
+                  "notes": "Initial reading"
+                }
+            """.trimIndent()
+        )
+
+        val logId = ecosystemLogRepository.findAll().single().id ?: error("Expected generated log id")
+
+        mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/ecosystems/$ecosystemId/logs/$logId")
+                .contentType("application/json")
+                .content(
+                    """
+                        {
+                          "temperatureC": 24.5,
+                          "humidityPercent": 57,
+                          "eventType": "WATERING",
+                          "notes": "Adjusted after misting"
+                        }
+                    """.trimIndent()
+                )
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.temperatureC").value(24.5))
+            .andExpect(jsonPath("$.humidityPercent").value(57))
+            .andExpect(jsonPath("$.eventType").value("WATERING"))
+            .andExpect(jsonPath("$.notes").value("Adjusted after misting"))
+
+        val persisted = ecosystemLogRepository.findById(logId).orElseThrow()
+        check(persisted.temperatureC == 24.5)
+        check(persisted.humidityPercent == 57)
+        check(persisted.eventType == "WATERING")
+        check(persisted.notes == "Adjusted after misting")
+    }
+
+    @Test
     fun `maintenance tasks can be created listed and marked done`() {
         val ecosystemId = createEcosystem()
 
@@ -280,6 +429,39 @@ class ApiIntegrationTest {
             .andExpect(jsonPath("$.status").value("DONE"))
 
         check(maintenanceTaskRepository.count() == 1L)
+    }
+
+    @Test
+    fun `manual maintenance task can be updated`() {
+        val ecosystemId = createEcosystem()
+
+        val createdTaskJson = mockMvc.perform(
+            post("/api/v1/ecosystems/$ecosystemId/tasks")
+                .contentType("application/json")
+                .content("""{"title":"Refill water reservoir","taskType":"WATERING","dueDate":"2026-04-10"}""")
+        )
+            .andExpect(status().isCreated)
+            .andReturn()
+            .response
+            .contentAsString
+
+        val taskId = """"id":"([^"]+)"""".toRegex().find(createdTaskJson)?.groupValues?.get(1)
+            ?: error("Expected task id in response")
+
+        mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/ecosystems/$ecosystemId/tasks/$taskId")
+                .contentType("application/json")
+                .content("""{"title":"Deep clean enclosure","taskType":"CLEANING","dueDate":"2026-04-12"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.title").value("Deep clean enclosure"))
+            .andExpect(jsonPath("$.taskType").value("CLEANING"))
+            .andExpect(jsonPath("$.dueDate").value("2026-04-12"))
+
+        val persisted = maintenanceTaskRepository.findById(java.util.UUID.fromString(taskId)).orElseThrow()
+        check(persisted.title == "Deep clean enclosure")
+        check(persisted.taskType == "CLEANING")
+        check(persisted.dueDate == LocalDate.parse("2026-04-12"))
     }
 
     @Test
@@ -505,6 +687,33 @@ class ApiIntegrationTest {
         mockMvc.perform(get("/api/v1/ecosystems/$ecosystemId/summary"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.openTasks").value(0))
+    }
+
+    @Test
+    fun `suggested task cannot be edited manually`() {
+        val ecosystemId = createEcosystem()
+
+        addLog(
+            ecosystemId = ecosystemId,
+            payload = """
+                {
+                  "temperatureC": 24.1,
+                  "humidityPercent": 55,
+                  "eventType": "WATERING",
+                  "notes": "Misted walls"
+                }
+            """.trimIndent()
+        )
+
+        val taskId = maintenanceTaskRepository.findAll().single().id ?: error("Expected generated task id")
+
+        mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/ecosystems/$ecosystemId/tasks/$taskId")
+                .contentType("application/json")
+                .content("""{"title":"Edited suggestion","taskType":"INSPECTION","dueDate":"2026-04-12"}""")
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Suggested tasks cannot be edited manually"))
     }
 
     @Test

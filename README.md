@@ -11,9 +11,13 @@ The repository is split into three main areas:
 ## Main Capabilities
 
 - Create and browse ecosystems
+- Edit ecosystem metadata directly from the dashboard
 - Open a dedicated ecosystem dashboard
 - Record activity logs and observations
+- Edit existing logs inline from the dashboard
 - Manage maintenance tasks
+- Edit manual maintenance tasks inline from the dashboard
+- View richer summary analytics including recent readings, 30-day activity, logging streaks, and lightweight trend indicators
 - Use optional user registration, login, and profile features
 - Persist data in PostgreSQL with Flyway migrations
 
@@ -26,7 +30,7 @@ The repository is split into three main areas:
 - Spring Data JPA
 - PostgreSQL 15
 - Flyway
-- H2 for tests
+- Testcontainers + PostgreSQL for integration tests
 - Gradle Kotlin DSL
 - Static HTML + Bootstrap frontend
 
@@ -83,6 +87,18 @@ Run tests:
 ```powershell
 cd path\to\demoProject\application\application
 .\gradlew.bat test
+```
+
+Note:
+
+- integration tests now rely on Testcontainers and therefore require a working Docker environment
+- if Docker is not available locally, compilation and non-containerized tests can still be run
+
+Compile the project and test sources:
+
+```powershell
+cd path\to\demoProject\application\application
+.\gradlew.bat compileKotlin compileTestKotlin
 ```
 
 Stop the database:

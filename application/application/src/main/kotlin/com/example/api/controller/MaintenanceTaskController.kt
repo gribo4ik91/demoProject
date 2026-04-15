@@ -2,6 +2,7 @@ package com.example.api.controller
 
 import com.example.api.dto.CreateMaintenanceTaskRequest
 import com.example.api.dto.MaintenanceTaskResponse
+import com.example.api.dto.UpdateMaintenanceTaskRequest
 import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.exception.ApiErrorResponse
 import com.example.api.service.MaintenanceTaskService
@@ -54,6 +55,34 @@ class MaintenanceTaskController(
         @PathVariable ecosystemId: UUID,
         @Valid @RequestBody request: CreateMaintenanceTaskRequest
     ): MaintenanceTaskResponse = maintenanceTaskService.createTask(ecosystemId, request)
+
+    /**
+     * Updates a manual maintenance task for the selected ecosystem.
+     */
+    @PatchMapping("/{taskId}")
+    @Operation(summary = "Update maintenance task", description = "Updates a manual maintenance reminder for the selected ecosystem.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Task updated"),
+            ApiResponse(
+                responseCode = "400",
+                description = "Request validation failed or task is not editable",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Task or ecosystem not found",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    fun updateTask(
+        @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
+        @PathVariable ecosystemId: UUID,
+        @Parameter(description = "Maintenance task identifier", example = "7e74cb50-b2c6-4ba4-a4ea-c4ef290d9880")
+        @PathVariable taskId: UUID,
+        @Valid @RequestBody request: UpdateMaintenanceTaskRequest
+    ): MaintenanceTaskResponse = maintenanceTaskService.updateTask(ecosystemId, taskId, request)
 
     /**
      * Returns maintenance tasks for the selected ecosystem, optionally filtered by status.

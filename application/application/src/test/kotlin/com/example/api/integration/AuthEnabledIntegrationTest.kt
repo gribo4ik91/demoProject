@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
     ]
 )
 @AutoConfigureMockMvc
-class AuthEnabledIntegrationTest {
+class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
 
     @Autowired
     private lateinit var mockMvc: MockMvc

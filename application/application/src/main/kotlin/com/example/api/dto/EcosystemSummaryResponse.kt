@@ -40,6 +40,21 @@ data class EcosystemSummaryResponse(
     @field:Schema(description = "Number of logs recorded in the last 7 days.", example = "4")
     val logsLast7Days: Long,
 
+    @field:Schema(description = "Number of logs recorded in the last 30 days.", example = "12")
+    val logsLast30Days: Long,
+
+    @field:Schema(description = "Number of distinct active logging days in the last 30 days.", example = "8")
+    val activeDaysLast30Days: Int,
+
+    @field:Schema(description = "Current consecutive-day logging streak based on recorded activity.", example = "3")
+    val loggingStreakDays: Int,
+
+    @field:Schema(description = "Temperature delta between the latest measurable window and the previous one.", example = "1.2")
+    val temperatureTrendDeltaC: Double?,
+
+    @field:Schema(description = "Humidity delta between the latest measurable window and the previous one.", example = "-4.0")
+    val humidityTrendDeltaPercent: Double?,
+
     @field:Schema(description = "Number of currently open maintenance tasks.", example = "2")
     val openTasks: Long,
 

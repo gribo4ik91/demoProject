@@ -12,6 +12,11 @@ import java.util.UUID
 @Repository
 interface MaintenanceTaskRepository : JpaRepository<MaintenanceTask, UUID> {
     /**
+     * Returns one task by id for the selected ecosystem, if present.
+     */
+    fun findByIdAndEcosystemId(id: UUID, ecosystemId: UUID): MaintenanceTask?
+
+    /**
      * Returns all tasks for one ecosystem using the default dashboard ordering.
      */
     fun findByEcosystemIdOrderByStatusAscDueDateAscCreatedAtDesc(ecosystemId: UUID): List<MaintenanceTask>

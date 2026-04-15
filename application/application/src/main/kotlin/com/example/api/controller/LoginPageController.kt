@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping
 class LoginPageController {
 
     /**
+     * Forwards the browser favicon request to the SVG icon stored in static assets.
+     */
+    @GetMapping("/favicon.ico")
+    fun favicon(): String = "forward:/favicon.svg"
+
+    /**
      * Forwards the login route to the login page asset.
      */
     @GetMapping("/login")

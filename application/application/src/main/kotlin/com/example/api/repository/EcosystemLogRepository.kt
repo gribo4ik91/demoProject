@@ -14,6 +14,10 @@ import java.util.UUID
  */
 @Repository
 interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
+    /**
+     * Returns one log by id for the selected ecosystem, if present.
+     */
+    fun findByIdAndEcosystemId(id: UUID, ecosystemId: UUID): EcosystemLog?
 
     /**
      * Returns all logs for one ecosystem ordered from newest to oldest.

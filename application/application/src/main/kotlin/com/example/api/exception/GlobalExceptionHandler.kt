@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.server.ResponseStatusException
 import java.time.OffsetDateTime
 
@@ -46,6 +47,20 @@ class GlobalExceptionHandler {
         buildResponse(
             status = HttpStatus.valueOf(exception.statusCode.value()),
             message = exception.reason ?: "Request failed",
+            path = request.requestURI
+        )
+
+    /**
+     * Converts missing static resources and routes into a standard 404 response.
+     */
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFoundException(
+        exception: NoResourceFoundException,
+        request: HttpServletRequest
+    ): ResponseEntity<ApiErrorResponse> =
+        buildResponse(
+            status = HttpStatus.NOT_FOUND,
+            message = "Requested resource was not found",
             path = request.requestURI
         )
 

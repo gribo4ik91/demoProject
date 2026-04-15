@@ -3,6 +3,7 @@ package com.example.api.controller
 import com.example.api.dto.EcosystemLogResponse
 import com.example.api.dto.LogRequest
 import com.example.api.dto.PagedResponse
+import com.example.api.dto.UpdateLogRequest
 import com.example.api.exception.ApiErrorResponse
 import com.example.api.service.EcosystemLogService
 import io.swagger.v3.oas.annotations.Operation
@@ -54,6 +55,34 @@ class EcosystemLogController(
         @PathVariable ecosystemId: UUID,
         @Valid @RequestBody request: LogRequest
     ): EcosystemLogResponse = ecosystemLogService.addLog(ecosystemId, request)
+
+    /**
+     * Updates an existing log entry for the selected ecosystem.
+     */
+    @PatchMapping("/{logId}")
+    @Operation(summary = "Update ecosystem log", description = "Updates an existing activity or observation record for the selected ecosystem.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Log entry updated"),
+            ApiResponse(
+                responseCode = "400",
+                description = "Request validation failed",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Log entry or ecosystem not found",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    fun updateLog(
+        @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
+        @PathVariable ecosystemId: UUID,
+        @Parameter(description = "Log identifier", example = "7e74cb50-b2c6-4ba4-a4ea-c4ef290d9880")
+        @PathVariable logId: UUID,
+        @Valid @RequestBody request: UpdateLogRequest
+    ): EcosystemLogResponse = ecosystemLogService.updateLog(ecosystemId, logId, request)
 
     /**
      * Returns a paged list of logs, optionally filtered by event type.

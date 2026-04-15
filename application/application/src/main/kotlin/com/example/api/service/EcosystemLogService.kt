@@ -3,6 +3,8 @@ package com.example.api.service
 import com.example.api.dto.EcosystemLogResponse
 import com.example.api.dto.LogRequest
 import com.example.api.dto.PagedResponse
+import com.example.api.dto.UpdateLogRequest
+import com.example.api.mapper.applyTo
 import com.example.api.mapper.toResponse
 import com.example.api.model.EcosystemLog
 import org.springframework.data.domain.PageRequest
@@ -48,6 +50,21 @@ class EcosystemLogService(
         maintenanceTaskService.createSuggestedTaskIfNeeded(ecosystem, normalizedEventType)
 
         return savedLog.toResponse()
+    }
+
+    /**
+     * Updates an existing log entry for one ecosystem.
+     */
+    @Transactional
+    fun updateLog(ecosystemId: UUID, logId: UUID, request: UpdateLogRequest): EcosystemLogResponse {
+        if (!ecosystemRepository.existsById(ecosystemId)) {
+            throw notFound()
+        }
+
+        val existing = ecosystemLogRepository.findByIdAndEcosystemId(logId, ecosystemId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Log entry not found")
+
+        return ecosystemLogRepository.save(request.applyTo(existing)).toResponse()
     }
 
     /**
