@@ -20,7 +20,11 @@ import java.time.LocalDateTime
 /**
  * Exercises the main ecosystem, log, summary, and maintenance task flows end to end.
  */
-@SpringBootTest
+@SpringBootTest(
+    properties = [
+        "app.auth.enabled=false"
+    ]
+)
 @AutoConfigureMockMvc
 class ApiIntegrationTest : PostgresIntegrationTest() {
 
