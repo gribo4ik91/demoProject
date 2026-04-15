@@ -9,6 +9,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin
 import org.springframework.mock.web.MockHttpSession
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -22,11 +23,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  */
 @SpringBootTest(
     properties = [
-        "spring.profiles.active=test",
         "app.auth.enabled=true"
     ]
 )
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
 
     @Autowired
