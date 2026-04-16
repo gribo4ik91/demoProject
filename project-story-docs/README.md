@@ -45,3 +45,4 @@ The product combines:
 The main value of the system is not only to store records, but to help the user understand the current state of an ecosystem, notice risks early, and stay on top of recurring care actions.
 
 Recent iterations also added inline dashboard editing flows and broader summary analytics so the main working screen stays useful without leaving the ecosystem page.
+The current UI delivery model is server-side rendered through Freemarker templates with htmx updates for focused interactions.

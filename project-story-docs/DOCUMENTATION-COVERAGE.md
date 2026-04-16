@@ -88,7 +88,7 @@ The following were additionally re-checked manually:
 - controllers and services
 - database migrations
 - security configuration
-- static frontend pages
+- SSR frontend pages, htmx fragments, and static UI assets
 - runtime and CI files
 - HTTP test collections
 

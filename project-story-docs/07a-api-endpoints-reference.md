@@ -236,7 +236,7 @@ Fields of one `EcosystemWorkspaceCardResponse`:
 - filtering is applied before pagination
 - sorting is applied before pagination
 - `OVERDUE` is a derived filter that matches ecosystems with overdue open tasks
-- the endpoint is intended to support incremental loading on `index.html`
+- the endpoint is intended to support the SSR home workspace and htmx-driven pagination/filtering
 
 ### `GET /api/v1/ecosystems/overview`
 
@@ -594,6 +594,14 @@ change the status of an existing task.
 
 These routes are not part of the REST API, but they matter for a complete application view.
 
+### `GET /`
+
+- returns the SSR home workspace page
+
+### `GET /ecosystems/{id}`
+
+- returns the SSR ecosystem dashboard page
+
 ### `GET /login`
 
 - returns the login page
@@ -605,6 +613,10 @@ These routes are not part of the REST API, but they matter for a complete applic
 ### `GET /profile`
 
 - returns the profile page
+
+### `GET /users`
+
+- returns the users directory page
 
 ### `POST /login`
 

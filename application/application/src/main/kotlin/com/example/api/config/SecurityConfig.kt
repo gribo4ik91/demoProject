@@ -77,7 +77,8 @@ class SecurityConfig {
                     "/css/**",
                     "/js/**",
                     "/api/v1/auth/register",
-                    "/api/v1/auth/status"
+                    "/api/v1/auth/status",
+                    "/ui/register"
                 ).permitAll()
                 it.anyRequest().authenticated()
             }

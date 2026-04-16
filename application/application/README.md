@@ -5,13 +5,14 @@ EcoTracker is a compact full-stack application for tracking small ecosystems suc
 The project demonstrates a complete vertical slice:
 - Kotlin + Spring Boot REST API
 - PostgreSQL persistence with Flyway migrations
-- Static frontend served by the application
+- Server-side rendered UI served by the application
 - Validation, structured API errors, and automated tests
 
 ## Highlights
 
 - Clear API contracts through request/response DTOs
 - Service layer separated from controllers
+- Dedicated MVC page/controller layer for SSR pages and htmx fragments
 - Flyway-managed database schema
 - Consistent JSON error responses
 - Controller and integration test coverage
@@ -64,22 +65,20 @@ Main package structure:
 - `repository`: Spring Data persistence access
 - `exception`: global API error handling
 
-### Frontend asset structure
+### Frontend structure
 
-The backend-hosted static frontend now uses separated CSS and JavaScript assets under `src/main/resources/static`:
+The backend-hosted UI now uses Spring MVC + Freemarker templates with htmx-driven partial updates:
 
-- `css/`
+- `src/main/resources/templates/pages/`
+  full SSR pages such as `home.ftlh`, `ecosystem.ftlh`, `login.ftlh`, `register.ftlh`, `profile.ftlh`, and `users.ftlh`
+- `src/main/resources/templates/fragments/`
+  reusable htmx fragments such as `workspace-panel.ftlh`, `task-list.ftlh`, and `log-list.ftlh`
+- `src/main/resources/static/css/`
   page and shared styles such as `home.css`, `ecosystem.css`, `auth.css`, `login.css`, `register.css`, and `profile.css`
-- `js/shared/`
-  shared browser helpers such as `api.js` and `utils.js`
-- `js/home/`
-  home page workspace dashboard logic
-- `js/ecosystem/`
-  ecosystem detail page modules split by responsibility such as `summary.js`, `tasks.js`, `logs.js`, `state.js`, and `page.js`
-- `js/auth/`
-  lightweight login, registration, and profile page logic
+- `src/main/resources/static/js/`
+  lightweight browser-side enhancements such as `ssr-ui.js` for local pinning, quick actions, and edit/view toggles
 
-This keeps the HTML files smaller, reduces inline scripting, and makes page behavior easier to extend without editing large embedded script blocks.
+This keeps primary rendering on the server while still allowing focused interactive updates without a separate SPA build.
 
 Request flow:
 
@@ -119,7 +118,7 @@ The app runs at `http://localhost:8085`.
 3. Spring Boot connects to PostgreSQL using the configured datasource
 4. Flyway runs the migrations from `src/main/resources/db/migration`
 5. Security configuration is applied
-6. The static frontend becomes available through the backend
+6. Freemarker pages and htmx fragments become available through the backend
 
 ## Configuration
 
@@ -245,7 +244,9 @@ Important behavior:
 
 - both cards and overview honor the same `search` and `status` filters
 - overview counters are calculated from the full filtered result set, not only the current page
-- the home page uses paged card loading while pinned ecosystems remain stored in browser `localStorage`
+- the home page uses server-rendered cards plus htmx updates for filtering and pagination
+- pinned ecosystems remain stored in browser `localStorage`
+- quick log and quick task interactions are opened from the workspace cards and submitted through the SSR UI layer
 
 Example validation error:
 
@@ -278,14 +279,14 @@ Current automated checks cover:
 
 ## Trade-offs
 
-- The frontend is intentionally simple and server-hosted.
+- The frontend is intentionally simple, server-hosted, and rendered through Freemarker.
 - Authentication is optional and intentionally minimal through a feature-flagged login and registration mode.
-- The UI is built as Bootstrap-powered static pages rather than a separate SPA.
+- The UI uses htmx for focused partial updates rather than a separate SPA.
 - Maintenance task filters are optimized for clarity and manual workflows, not for bulk operations.
 
 ## Next Steps
 
 - Build out a Smart Monitoring Hub with richer trend visualizations, health scoring, alert states, anomaly indicators, and weekly ecosystem summaries
 - Evolve maintenance workflows into a Care Automation Engine with recurring tasks, ecosystem-specific care templates, smarter suggested follow-up actions, snooze and reschedule flows, and bulk task updates
-- Expand the home page experience in `index.html` with quick insight cards, overdue and attention-needed counters, recent activity snapshots, filter and sort controls, search, pinned ecosystems, and one-click actions for creating logs or tasks directly from the ecosystem list
+- Expand the SSR home workspace with richer insight cards, overdue and attention-needed counters, recent activity snapshots, filter and sort controls, search, pinned ecosystems, and one-click actions for creating logs or tasks directly from the ecosystem list
 - Add a dashboard-level overview for the full workspace so the home page can highlight stale ecosystems, recently updated setups, and the most urgent maintenance items before the user opens a specific ecosystem

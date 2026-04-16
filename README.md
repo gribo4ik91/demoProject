@@ -35,7 +35,7 @@ The repository is split into three main areas:
 - Flyway
 - Testcontainers + PostgreSQL for integration tests
 - Gradle Kotlin DSL
-- Static HTML + Bootstrap frontend
+- Server-side rendered Freemarker + htmx frontend
 
 ## How to Run the Project
 
@@ -71,7 +71,7 @@ cd path\to\demoProject\application\application
 2. The Spring Boot application starts on port `8085`
 3. Flyway applies database migrations from `application/application/src/main/resources/db/migration`
 4. Security rules are loaded
-5. Static frontend pages are served by the backend
+5. Freemarker pages and htmx fragments are served by the backend
 
 ## Default Local Configuration
 

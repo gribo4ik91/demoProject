@@ -36,21 +36,125 @@
 }
 
 .task-card { animation: taskCardIn 220ms ease both; }
+.task-card details summary { cursor: pointer; user-select: none; }
+.task-card .badge { align-self: center; }
+.card-body .section-label + h6 { color: #20342e; }
+.card-body .border-top { border-color: var(--surface-border) !important; }
+.summary-shell,
+.edit-ecosystem-shell {
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background: #fff;
+    padding: 1.1rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.ecosystem-overview-card,
+.ecosystem-section-card { border: 1px solid #e6ece8; }
+.section-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--surface-border);
+}
+.section-card-header h5 {
+    letter-spacing: -0.01em;
+    color: #20342e;
+}
+.section-block h6 {
+    color: #20342e;
+    font-size: 1.08rem;
+}
+.section-divider {
+    border-top: 1px solid var(--surface-border);
+}
+.summary-status-banner {
+    border-radius: 1rem;
+    padding: .95rem 1rem;
+    border: 1px solid transparent;
+}
+.summary-status-needs_attention {
+    background: linear-gradient(135deg, #fff3d7, #ffe7b5);
+    border-color: #f0c36d;
+    box-shadow: 0 10px 24px rgba(201, 133, 24, 0.12);
+}
+.summary-status-stable {
+    background: linear-gradient(135deg, #e7f7ed, #d5efdf);
+    border-color: #9ed0b3;
+    box-shadow: 0 10px 24px rgba(41, 122, 78, 0.10);
+}
+.summary-status-no_recent_data {
+    background: linear-gradient(135deg, #f3f5f4, #ebefed);
+    border-color: #d5ddda;
+}
+.summary-status-label {
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    opacity: .85;
+}
+.summary-status-value {
+    font-size: 1.45rem;
+    line-height: 1.2;
+    font-weight: 800;
+    margin-top: .2rem;
+}
+.summary-status-note {
+    margin-top: .35rem;
+    font-size: .92rem;
+    line-height: 1.45;
+    color: #4f5b56;
+}
+.ecosystem-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .9rem;
+}
+.ecosystem-preview-item {
+    border: 1px solid var(--surface-border);
+    border-radius: .9rem;
+    padding: .85rem .95rem;
+    background: #fbfcfc;
+}
+.ecosystem-preview-item-wide {
+    grid-column: 1 / -1;
+}
+.ecosystem-description-input {
+    min-height: 7.25rem;
+    resize: vertical;
+}
 .summary-card { animation: summaryCardIn 260ms ease both; }
 .status-pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 0.22rem 0.55rem; border: 1px solid transparent; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em; line-height: 1; white-space: nowrap; }
 .status-pill-open { background: var(--pill-open-bg); color: var(--pill-open-text); border-color: var(--pill-open-border); }
 .status-pill-done { background: var(--pill-done-bg); color: var(--pill-done-text); border-color: var(--pill-done-border); }
 .status-pill-suggested { background: var(--pill-suggested-bg); color: var(--pill-suggested-text); border-color: var(--pill-suggested-border); }
 .status-pill-dismissed { background: var(--pill-dismissed-bg); color: var(--pill-dismissed-text); border-color: var(--pill-dismissed-border); }
+.badge-eco {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.28rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.badge-eco-inspection { background: #f4ecff; color: #6f42c1; border-color: #d9c4fa; }
+.badge-eco-suggested { background: #e7f1ff; color: #1d5fa7; border-color: #bfd8f6; }
+.badge-eco-manual { background: #f3f5f4; color: #52605d; border-color: #d7ddd9; }
+.badge-eco-observation { background: #eef2f0; color: #4c615b; border-color: #d8dfdb; }
+.badge-eco-watering { background: #e2f6f3; color: #1d6b63; border-color: #b8e2db; }
+.badge-eco-feeding { background: #fff1d9; color: #9a5a00; border-color: #f1d29c; }
+.badge-eco-cleaning { background: #ffe7ee; color: #a03b5b; border-color: #f4bfd0; }
 .task-action-group { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; align-items: center; margin-left: auto; flex: 0 1 auto; }
 .task-card-layout { display: flex; flex-direction: column; gap: 0.85rem; }
 .task-title { display: block; font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
-.task-detail-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.9rem; flex-wrap: wrap; }
-.task-meta-group { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; flex: 1 1 15rem; }
+.task-meta-group { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
 .task-badge-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .task-detail-text { margin: 0; min-width: 0; }
-.task-actions-panel { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; width: auto; }
-.task-actions-row { display: flex; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; width: auto; }
+.task-actions-row { display: flex; justify-content: flex-start; gap: 0.5rem; flex-wrap: wrap; width: 100%; }
+.task-actions-row .btn { white-space: nowrap; }
 .task-action-select { min-width: 9.5rem; max-width: 11rem; }
 .task-filter-group { display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; }
 .task-filter-group .btn { white-space: nowrap; font-size: 0.92rem; flex: 0 0 auto; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 0.5rem !important; }
@@ -113,10 +217,10 @@
 }
 
 @media (max-width: 575.98px) {
-    .task-detail-row { flex-direction: column; align-items: stretch; }
-    .task-action-group,
-    .task-actions-panel { width: auto; }
-    .task-actions-panel { align-items: flex-end; align-self: flex-end; }
+    .summary-shell,
+    .edit-ecosystem-shell { padding: 1rem; }
+    .section-card-header { padding: .9rem 1rem; }
+    .ecosystem-preview-grid { grid-template-columns: 1fr; }
     .task-actions-row { flex-direction: row; }
     .task-action-select { width: min(100%, 11rem); }
     .task-actions-row .btn { width: auto; }

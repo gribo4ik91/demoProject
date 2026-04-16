@@ -1,9 +1,11 @@
 package com.example.api.controller
 
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.ui.Model
 
 /**
- * Declares the browser-facing routes that forward to static authentication pages.
+ * Declares browser-facing routes for the login page and favicon.
  */
 interface LoginPageControllerApi {
     /**
@@ -13,26 +15,13 @@ interface LoginPageControllerApi {
     fun favicon(): String
 
     /**
-     * Forwards the login route to the login page asset.
+     * Renders the login page.
      */
     @GetMapping("/login")
-    fun loginPage(): String
-
-    /**
-     * Forwards the register route to the registration page asset.
-     */
-    @GetMapping("/register")
-    fun registerPage(): String
-
-    /**
-     * Forwards the profile route to the profile page asset.
-     */
-    @GetMapping("/profile")
-    fun profilePage(): String
-
-    /**
-     * Forwards the user directory route to the users page asset.
-     */
-    @GetMapping("/users")
-    fun usersPage(): String
+    fun loginPage(
+        @RequestParam(required = false) error: String?,
+        @RequestParam(required = false) logout: String?,
+        @RequestParam(required = false) registered: String?,
+        model: Model
+    ): String
 }

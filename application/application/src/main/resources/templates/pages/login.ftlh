@@ -11,19 +11,22 @@
 </head>
 <body class="auth-page auth-page-login d-flex align-items-center py-5">
 <div class="container auth-shell-login">
-    <div id="page-alert" class="alert d-none mb-4" role="alert"></div>
+    <#if loginError?? && loginError>
+        <div class="alert alert-danger mb-4" role="alert">Login failed. Check your username and password.</div>
+    <#elseif loggedOut?? && loggedOut>
+        <div class="alert alert-success mb-4" role="alert">You have been logged out.</div>
+    <#elseif registeredUser?has_content>
+        <div class="alert alert-success mb-4" role="alert">Account created for ${registeredUser}. You can log in now.</div>
+    <#elseif !auth.enabled>
+        <div class="alert alert-info mb-4" role="alert">Authentication is currently disabled in configuration, so this page is optional.</div>
+    </#if>
 
     <div class="row g-4 align-items-stretch">
         <div class="col-lg-5">
             <div class="login-hero-panel h-100 p-4 p-lg-5">
                 <p class="login-hero-kicker mb-3">EcoTracker Access</p>
                 <h1 class="display-6 fw-semibold mb-3">Sign in to keep your ecosystems and routines in one place.</h1>
-                <p class="mb-0 text-white-50">When auth is enabled, the dashboard stays private and every ecosystem belongs behind a login session.</p>
-                <ul class="login-hero-list">
-                    <li>Review your dashboards, logs, and tasks after a quick sign-in.</li>
-                    <li>Create a separate account profile when you need a fresh local user.</li>
-                    <li>Stay in the current demo flow when auth is turned off by config.</li>
-                </ul>
+                <p class="mb-0 text-white-50">The workspace is now server-rendered and updated with htmx interactions.</p>
             </div>
         </div>
 
@@ -34,7 +37,7 @@
                 <form method="post" action="/login">
                     <div class="mb-3">
                         <label for="login-username" class="form-label">Login</label>
-                        <input id="login-username" name="username" class="form-control" autocomplete="username" required>
+                        <input id="login-username" name="username" class="form-control" value="${registeredUser!""}" autocomplete="username" required>
                     </div>
                     <div class="mb-4">
                         <label for="login-password" class="form-label">Password</label>
@@ -45,17 +48,12 @@
 
                 <div class="auth-link-card p-4">
                     <h3 class="h5 mb-2">Need a new account?</h3>
-                    <p class="text-muted small mb-3">Open the dedicated registration page to add profile details like display name, first name, last name, and email.</p>
+                    <p class="text-muted small mb-3">Open the registration page to create a local demo user profile.</p>
                     <a href="/register" class="btn btn-outline-success">Create Account</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script src="/js/shared/utils.js"></script>
-<script src="/js/shared/api.js"></script>
-<script src="/js/auth/common.js"></script>
-<script src="/js/auth/login.js"></script>
 </body>
 </html>
