@@ -9,6 +9,7 @@ import com.example.api.model.Ecosystem
 import com.example.api.model.MaintenanceTask
 import com.example.api.repository.EcosystemRepository
 import com.example.api.repository.MaintenanceTaskRepository
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +26,8 @@ class MaintenanceTaskService(
     private val maintenanceTaskRepository: MaintenanceTaskRepository,
     private val ecosystemRepository: EcosystemRepository
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     companion object {
         private const val OPEN_STATUS = "OPEN"
         private const val DONE_STATUS = "DONE"
@@ -67,6 +70,7 @@ class MaintenanceTaskService(
      */
     @Transactional
     fun createTask(ecosystemId: UUID, request: CreateMaintenanceTaskRequest): MaintenanceTaskResponse {
+        logger.info("Creating maintenance task ecosystemId={} title={}", ecosystemId, request.title.trim())
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { ecosystemNotFound() }
 
@@ -91,6 +95,7 @@ class MaintenanceTaskService(
         taskId: UUID,
         request: UpdateMaintenanceTaskRequest
     ): MaintenanceTaskResponse {
+        logger.info("Updating maintenance task ecosystemId={} taskId={}", ecosystemId, taskId)
         if (!ecosystemRepository.existsById(ecosystemId)) {
             throw ecosystemNotFound()
         }
@@ -116,6 +121,7 @@ class MaintenanceTaskService(
      */
     @Transactional(readOnly = true)
     fun getTasks(ecosystemId: UUID, filter: String?): List<MaintenanceTaskResponse> {
+        logger.info("Loading maintenance tasks ecosystemId={} filter={}", ecosystemId, filter ?: "ALL")
         if (!ecosystemRepository.existsById(ecosystemId)) {
             throw ecosystemNotFound()
         }
@@ -153,6 +159,13 @@ class MaintenanceTaskService(
         request: UpdateMaintenanceTaskStatusRequest
     ): MaintenanceTaskResponse {
         val normalizedStatus = request.status.trim().uppercase()
+        logger.info(
+            "Updating maintenance task status ecosystemId={} taskId={} status={} dismissalReason={}",
+            ecosystemId,
+            taskId,
+            normalizedStatus,
+            request.dismissalReason ?: "NONE"
+        )
         if (normalizedStatus !in setOf(OPEN_STATUS, DONE_STATUS, DISMISSED_STATUS)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported task status")
         }
@@ -219,9 +232,15 @@ class MaintenanceTaskService(
         )
 
         if (latestDismissedMatch != null && shouldSkipSuggestedTask(latestDismissedMatch, LocalDateTime.now())) {
+            logger.info(
+                "Skipping suggested task ecosystemId={} eventType={} reason=cooldown",
+                ecosystemId,
+                eventType
+            )
             return
         }
 
+        logger.info("Creating suggested maintenance task ecosystemId={} eventType={}", ecosystemId, eventType)
         maintenanceTaskRepository.save(
             MaintenanceTask(
                 ecosystem = ecosystem,

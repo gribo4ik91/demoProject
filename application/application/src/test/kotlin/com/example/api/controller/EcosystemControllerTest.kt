@@ -2,6 +2,9 @@ package com.example.api.controller
 
 import com.example.api.dto.CreateEcosystemRequest
 import com.example.api.dto.EcosystemResponse
+import com.example.api.dto.EcosystemWorkspaceCardResponse
+import com.example.api.dto.EcosystemWorkspaceOverviewResponse
+import com.example.api.dto.PagedResponse
 import com.example.api.exception.GlobalExceptionHandler
 import com.example.api.service.EcosystemService
 import org.junit.jupiter.api.BeforeEach
@@ -11,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -122,5 +126,85 @@ class EcosystemControllerTest {
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.name").value("Rainforest Terrarium"))
             .andExpect(jsonPath("$.type").value("FLORARIUM"))
+    }
+
+    @Test
+    fun `workspace cards endpoint returns enriched ecosystem cards`() {
+        val workspaceCard = EcosystemWorkspaceCardResponse(
+            id = UUID.randomUUID(),
+            name = "Rainforest Terrarium",
+            type = "FLORARIUM",
+            description = "Tropical glass setup",
+            status = "STABLE",
+            lastRecordedAt = LocalDateTime.now(),
+            logsLast7Days = 4,
+            openTasks = 2,
+            overdueTasks = 1,
+            createdAt = LocalDateTime.now().minusDays(1)
+        )
+        val pagedResponse = PagedResponse(
+            page = 0,
+            size = 9,
+            totalElements = 1,
+            totalPages = 1,
+            hasNext = false,
+            hasPrevious = false,
+            items = listOf(workspaceCard)
+        )
+
+        Mockito.`when`(ecosystemService.getWorkspaceCards(null, null, null, 0, 9)).thenReturn(pagedResponse)
+
+        mockMvc.perform(get("/api/v1/ecosystems/cards"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].name").value("Rainforest Terrarium"))
+            .andExpect(jsonPath("$.items[0].status").value("STABLE"))
+            .andExpect(jsonPath("$.items[0].logsLast7Days").value(4))
+            .andExpect(jsonPath("$.items[0].overdueTasks").value(1))
+            .andExpect(jsonPath("$.totalElements").value(1))
+            .andExpect(jsonPath("$.hasNext").value(false))
+    }
+
+    @Test
+    fun `workspace overview endpoint returns aggregated counters`() {
+        val overview = EcosystemWorkspaceOverviewResponse(
+            totalEcosystems = 8,
+            needsAttention = 2,
+            stable = 4,
+            noRecentData = 2,
+            openTasks = 11,
+            overdueTasks = 3
+        )
+
+        Mockito.`when`(ecosystemService.getWorkspaceOverview(null, null)).thenReturn(overview)
+
+        mockMvc.perform(get("/api/v1/ecosystems/overview"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.totalEcosystems").value(8))
+            .andExpect(jsonPath("$.needsAttention").value(2))
+            .andExpect(jsonPath("$.stable").value(4))
+            .andExpect(jsonPath("$.openTasks").value(11))
+            .andExpect(jsonPath("$.overdueTasks").value(3))
+    }
+
+    @Test
+    fun `workspace cards endpoint forwards search status and sort filters`() {
+        Mockito.`when`(
+            ecosystemService.getWorkspaceCards("fern", "STABLE", "NAME", 2, 6)
+        ).thenReturn(
+            PagedResponse(
+                page = 2,
+                size = 6,
+                totalElements = 0,
+                totalPages = 0,
+                hasNext = false,
+                hasPrevious = true,
+                items = emptyList()
+            )
+        )
+
+        mockMvc.perform(get("/api/v1/ecosystems/cards?search=fern&status=STABLE&sort=NAME&page=2&size=6"))
+            .andExpect(status().isOk)
+
+        Mockito.verify(ecosystemService).getWorkspaceCards("fern", "STABLE", "NAME", 2, 6)
     }
 }

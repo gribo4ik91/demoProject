@@ -139,6 +139,99 @@ return all ecosystems.
 - `200 OK`
 - returns an array of `EcosystemResponse`
 
+### `GET /api/v1/ecosystems/cards`
+
+Purpose:
+return enriched workspace cards for the home page dashboard using server-side filtering, sorting, and pagination.
+
+#### Parameters
+
+- path parameters: none
+- body: none
+
+#### Query parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `search` | string | no | - | case-insensitive match across ecosystem name, type, and description |
+| `status` | string | no | `ALL` | `NEEDS_ATTENTION`, `STABLE`, `NO_RECENT_DATA`, or `OVERDUE` |
+| `sort` | string | no | `PRIORITY` | `PRIORITY`, `LAST_ACTIVITY`, `NAME`, or `NEWEST` |
+| `page` | integer | no | `0` | page index, minimum 0 |
+| `size` | integer | no | `9` | page size, effectively constrained to 1-24 |
+
+#### Response
+
+Returns `PagedResponse<EcosystemWorkspaceCardResponse>`.
+
+Paged wrapper fields:
+
+| Field | Type |
+|---|---|
+| `page` | integer |
+| `size` | integer |
+| `totalElements` | integer |
+| `totalPages` | integer |
+| `hasNext` | boolean |
+| `hasPrevious` | boolean |
+| `items` | array |
+
+Fields of one `EcosystemWorkspaceCardResponse`:
+
+| Field | Type |
+|---|---|
+| `id` | UUID |
+| `name` | string |
+| `type` | string |
+| `description` | string \| null |
+| `status` | string |
+| `lastRecordedAt` | datetime \| null |
+| `logsLast7Days` | integer |
+| `openTasks` | integer |
+| `overdueTasks` | integer |
+| `createdAt` | datetime |
+
+#### Important behavior
+
+- filtering is applied before pagination
+- sorting is applied before pagination
+- `OVERDUE` is a derived filter that matches ecosystems with overdue open tasks
+- the endpoint is intended to support incremental loading on `index.html`
+
+### `GET /api/v1/ecosystems/overview`
+
+Purpose:
+return aggregated workspace counters for the home page dashboard.
+
+#### Parameters
+
+- path parameters: none
+- body: none
+
+#### Query parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `search` | string | no | - | same workspace search semantics as `/ecosystems/cards` |
+| `status` | string | no | `ALL` | same status filter semantics as `/ecosystems/cards` |
+
+#### Response
+
+Returns `EcosystemWorkspaceOverviewResponse`.
+
+| Field | Type | Description |
+|---|---|---|
+| `totalEcosystems` | integer | number of ecosystems in the filtered result set |
+| `needsAttention` | integer | number of filtered ecosystems with `NEEDS_ATTENTION` |
+| `stable` | integer | number of filtered ecosystems with `STABLE` |
+| `noRecentData` | integer | number of filtered ecosystems with `NO_RECENT_DATA` |
+| `openTasks` | integer | sum of open tasks across filtered ecosystems |
+| `overdueTasks` | integer | sum of overdue open tasks across filtered ecosystems |
+
+#### Important behavior
+
+- overview uses the same search and status filtering semantics as `/ecosystems/cards`
+- overview is calculated from the full filtered set, not from a paged slice
+
 ### `GET /api/v1/ecosystems/{id}`
 
 Purpose:

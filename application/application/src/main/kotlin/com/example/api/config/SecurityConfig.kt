@@ -63,6 +63,8 @@ class SecurityConfig {
 
         http
             .authorizeHttpRequests {
+                it.requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                it.requestMatchers("/actuator/loggers", "/actuator/loggers/**").authenticated()
                 it.requestMatchers(
                     "/login",
                     "/login.html",

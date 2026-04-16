@@ -5,8 +5,10 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import java.util.UUID
 
 /**
@@ -47,7 +49,40 @@ interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
     /**
      * Counts logs recorded after the supplied timestamp for one ecosystem.
      */
-    fun countByEcosystemIdAndRecordedAtAfter(ecosystemId: UUID, recordedAt: java.time.LocalDateTime): Long
+    fun countByEcosystemIdAndRecordedAtAfter(ecosystemId: UUID, recordedAt: LocalDateTime): Long
+
+    /**
+     * Returns the latest log snapshot for each ecosystem.
+     */
+    @Query(
+        value = """
+            SELECT DISTINCT ON (ecosystem_id)
+                ecosystem_id AS ecosystemId,
+                recorded_at AS lastRecordedAt,
+                temperature_c AS temperatureC,
+                humidity_percent AS humidityPercent
+            FROM logs
+            ORDER BY ecosystem_id, recorded_at DESC
+        """,
+        nativeQuery = true
+    )
+    fun findLatestLogSnapshots(): List<EcosystemLatestLogView>
+
+    /**
+     * Returns recent log counts grouped by ecosystem after the supplied timestamp.
+     */
+    @Query(
+        value = """
+            SELECT
+                ecosystem_id AS ecosystemId,
+                COUNT(*) AS logsLast7Days
+            FROM logs
+            WHERE recorded_at > :recordedAfter
+            GROUP BY ecosystem_id
+        """,
+        nativeQuery = true
+    )
+    fun countLogsByEcosystemRecordedAfter(recordedAfter: LocalDateTime): List<EcosystemRecentLogCountView>
 
     /**
      * Deletes all logs associated with a specific ecosystem.
@@ -55,4 +90,22 @@ interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
     @Transactional
     @Modifying
     fun deleteByEcosystemId(ecosystemId: UUID)
+}
+
+/**
+ * Projection for the latest known log snapshot per ecosystem.
+ */
+interface EcosystemLatestLogView {
+    fun getEcosystemId(): UUID
+    fun getLastRecordedAt(): LocalDateTime
+    fun getTemperatureC(): Double?
+    fun getHumidityPercent(): Int?
+}
+
+/**
+ * Projection for recent log counts grouped by ecosystem.
+ */
+interface EcosystemRecentLogCountView {
+    fun getEcosystemId(): UUID
+    fun getLogsLast7Days(): Long
 }

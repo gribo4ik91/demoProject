@@ -33,12 +33,14 @@ The project demonstrates a complete vertical slice:
 ## Features
 
 - Create and browse ecosystems
+- Use the home page as a workspace dashboard with overview counters, priority sections, pinned ecosystems, richer cards, and quick actions
 - Edit ecosystem metadata directly from the dashboard
 - Open a dedicated dashboard for a selected ecosystem
 - View a dashboard summary with current status, recent readings, activity streaks, 30-day activity, and lightweight trend analytics
 - Record activity logs with temperature, humidity, event type, and notes
 - Edit existing activity logs without leaving the dashboard
 - Filter and paginate activity logs by event type
+- Filter, sort, search, and incrementally load workspace cards from the backend
 - Create manual maintenance tasks with due dates
 - Edit manual maintenance tasks inline from the dashboard
 - Review maintenance tasks by status and source
@@ -174,6 +176,8 @@ Endpoints:
 - `POST /ecosystems`
 - `PATCH /ecosystems/{id}`
 - `GET /ecosystems`
+- `GET /ecosystems/cards`
+- `GET /ecosystems/overview`
 - `GET /ecosystems/{id}`
 - `GET /ecosystems/{id}/summary`
 - `DELETE /ecosystems/{id}`
@@ -187,11 +191,35 @@ Endpoints:
 
 Supported query options:
 
+- `GET /ecosystems/cards?search=fern&status=NEEDS_ATTENTION&sort=PRIORITY&page=0&size=9`
+- `GET /ecosystems/overview?search=fern&status=STABLE`
 - `GET /ecosystems/{id}/logs?eventType=WATERING&page=0&size=5`
 - `GET /ecosystems/{ecosystemId}/tasks?filter=OPEN`
 - `GET /ecosystems/{ecosystemId}/tasks?filter=DONE`
 - `GET /ecosystems/{ecosystemId}/tasks?filter=OVERDUE`
 - `GET /ecosystems/{ecosystemId}/tasks?filter=DISMISSED`
+
+### Workspace home endpoints
+
+The home page now relies on two backend endpoints:
+
+- `GET /api/v1/ecosystems/cards`
+  returns `PagedResponse<EcosystemWorkspaceCardResponse>` for the dashboard card grid
+- `GET /api/v1/ecosystems/overview`
+  returns `EcosystemWorkspaceOverviewResponse` for the top-level counters
+
+`/ecosystems/cards` supports:
+
+- `search` for name, type, and description matching
+- `status` with `NEEDS_ATTENTION`, `STABLE`, `NO_RECENT_DATA`, and `OVERDUE`
+- `sort` with `PRIORITY`, `LAST_ACTIVITY`, `NAME`, and `NEWEST`
+- `page` and `size` for incremental loading on the home page
+
+Important behavior:
+
+- both cards and overview honor the same `search` and `status` filters
+- overview counters are calculated from the full filtered result set, not only the current page
+- the home page uses paged card loading while pinned ecosystems remain stored in browser `localStorage`
 
 Example validation error:
 
@@ -231,5 +259,7 @@ Current automated checks cover:
 
 ## Next Steps
 
-- Expand task management with richer source filters and bulk actions
-- Continue enriching the dashboard with deeper trend views and analytics visualizations
+- Build out a Smart Monitoring Hub with richer trend visualizations, health scoring, alert states, anomaly indicators, and weekly ecosystem summaries
+- Evolve maintenance workflows into a Care Automation Engine with recurring tasks, ecosystem-specific care templates, smarter suggested follow-up actions, snooze and reschedule flows, and bulk task updates
+- Expand the home page experience in `index.html` with quick insight cards, overdue and attention-needed counters, recent activity snapshots, filter and sort controls, search, pinned ecosystems, and one-click actions for creating logs or tasks directly from the ecosystem list
+- Add a dashboard-level overview for the full workspace so the home page can highlight stale ecosystems, recently updated setups, and the most urgent maintenance items before the user opens a specific ecosystem

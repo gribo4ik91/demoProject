@@ -80,6 +80,18 @@ client.global.set("ecosystemId", response.body.id);
 ### List all ecosystems
 GET {{baseUrl}}/api/v1/ecosystems
 
+### List workspace cards for the home page
+GET {{baseUrl}}/api/v1/ecosystems/cards
+
+### List workspace cards with filters, sorting, and pagination
+GET {{baseUrl}}/api/v1/ecosystems/cards?search=rain&status=NEEDS_ATTENTION&sort=PRIORITY&page=0&size=9
+
+### Get workspace overview counters
+GET {{baseUrl}}/api/v1/ecosystems/overview
+
+### Get workspace overview counters for a filtered view
+GET {{baseUrl}}/api/v1/ecosystems/overview?search=rain&status=STABLE
+
 ### Get one ecosystem by ID
 GET {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}
 

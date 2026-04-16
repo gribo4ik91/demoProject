@@ -21,16 +21,23 @@ This means:
 
 Purpose:
 
-- show the list of ecosystems
+- act as a workspace dashboard for the full ecosystem portfolio
 - provide a form to create a new ecosystem
+- surface overview counters, urgent ecosystems, pinned ecosystems, and quick actions
 - display the current user status when auth is enabled
 
 User flow:
 
 1. Load authentication status
-2. Load the ecosystem list
-3. Create a new ecosystem through the form
-4. Open the selected ecosystem dashboard
+2. Load workspace overview counters
+3. Load the first page of enriched ecosystem cards
+4. Apply search, status filter, and sorting controls
+5. Review the "Needs Attention First" section
+6. Pin or unpin ecosystems locally in the browser
+7. Create a new ecosystem through the form
+8. Trigger quick log or quick task actions directly from a card
+9. Load more ecosystem cards without leaving the page
+10. Open the selected ecosystem dashboard
 
 ### 2. Ecosystem page `ecosystem.html`
 
@@ -77,6 +84,12 @@ Purpose:
 
 - the interface shows toast notifications for page-level success and error feedback
 - authentication status is blended into the page header via `auth/status`
+- the home page combines a hero section, workspace counters, filters, urgency grouping, pinned grouping, and the main card grid
+- home page cards are now enriched by backend-computed status, freshness, log counts, and task counts
+- home page search and status filters are executed server-side so counters and card lists stay aligned
+- home page card loading is incremental through pagination rather than loading the entire workspace at once
+- quick log and quick task actions run through modal flows on the home page
+- pinned ecosystems are still browser-local and currently use `localStorage`
 - the dashboard refreshes summary data after task and log changes
 - tasks can be filtered by both status and source
 - logs are loaded page by page
@@ -103,3 +116,5 @@ Limitations:
 
 The current frontend approach fits the size and purpose of the solution well.
 It is a strong choice for a demo-oriented full-stack project and fully supports the main user journey without unnecessary infrastructure complexity.
+
+Recent iterations made the home page materially richer: instead of being only an entry list, it now acts as a lightweight workspace dashboard and delegates more filtering and aggregation logic to the backend.

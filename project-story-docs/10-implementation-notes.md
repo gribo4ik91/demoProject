@@ -131,7 +131,27 @@ The repository layer should remain a thin data access layer.
 
 New read/write behavior should first be modeled as a business use case in the service layer and only then supported by repository methods.
 
-## 6. Testing strategy
+## 6. Workspace dashboard aggregation pattern
+
+### Purpose
+
+The home page workspace now needs richer cards and overview counters without rebuilding a full ecosystem summary for every visible item.
+
+### Current implementation direction
+
+- workspace cards are assembled in the service layer from aggregated repository reads
+- latest log snapshots are loaded in grouped form
+- recent log counts are loaded in grouped form
+- task counters are loaded in grouped form
+- card-level search, status filtering, sorting, and pagination are coordinated after the shared snapshot is assembled
+- overview reuses the same filtered workspace snapshot so counters match the visible filter context
+
+### Practical rule
+
+If the workspace dashboard grows further, new home page metrics should prefer shared aggregation inputs over per-ecosystem summary rebuilding.
+This keeps the home page cheaper than the detailed dashboard and reduces drift between cards and overview counters.
+
+## 7. Testing strategy
 
 ### Where it is implemented
 
@@ -151,6 +171,7 @@ New read/write behavior should first be modeled as a business use case in the se
 
 - integration tests are being moved toward Testcontainers + PostgreSQL so the test database matches runtime behavior
 - focused integration scenarios now cover manual edit flows and richer dashboard summary analytics
+- controller coverage now also protects the workspace cards contract, including filter forwarding and paged response shape
 
 ### Practical rule
 
@@ -160,7 +181,7 @@ If a new business feature is added, it should ideally be checked at three levels
 - service or integration flow
 - negative error scenarios
 
-## 7. What is intentionally not documented in detail
+## 8. What is intentionally not documented in detail
 
 At this stage, a dedicated implementation document is not needed for:
 

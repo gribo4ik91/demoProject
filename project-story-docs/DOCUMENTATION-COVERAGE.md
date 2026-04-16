@@ -28,15 +28,18 @@ This helps the team understand where the documentation is considered complete an
 - [x] suggested task logic
 - [x] authentication and profile
 - [x] frontend user journey
+- [x] workspace home dashboard journey
 
 ### API and integration
 
 - [x] list of main endpoints
+- [x] workspace dashboard endpoints
 - [x] path parameters
 - [x] query parameters
 - [x] request body fields
 - [x] field requirements and constraints
 - [x] base response structures
+- [x] paged response usage for home workspace cards
 - [x] page routes outside `/api/v1`
 - [x] references to Swagger / OpenAPI endpoints
 
@@ -66,6 +69,7 @@ This helps the team understand where the documentation is considered complete an
 - [x] OpenAPI configuration
 - [x] response delay implementation
 - [x] repository usage pattern
+- [x] workspace dashboard aggregation pattern
 - [x] testing strategy
 
 ### Meta-documentation

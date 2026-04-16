@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import com.example.api.repository.EcosystemLogRepository
 import com.example.api.repository.EcosystemRepository
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,11 +28,14 @@ class EcosystemLogService(
     private val maintenanceTaskService: MaintenanceTaskService
 ) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * Creates a new log entry and triggers any related suggested maintenance tasks.
      */
     @Transactional
     fun addLog(ecosystemId: UUID, request: LogRequest): EcosystemLogResponse {
+        logger.info("Adding activity log ecosystemId={} eventType={}", ecosystemId, request.eventType.trim())
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { notFound() }
 
@@ -57,6 +61,7 @@ class EcosystemLogService(
      */
     @Transactional
     fun updateLog(ecosystemId: UUID, logId: UUID, request: UpdateLogRequest): EcosystemLogResponse {
+        logger.info("Updating activity log ecosystemId={} logId={}", ecosystemId, logId)
         if (!ecosystemRepository.existsById(ecosystemId)) {
             throw notFound()
         }
@@ -77,6 +82,13 @@ class EcosystemLogService(
         page: Int,
         size: Int
     ): PagedResponse<EcosystemLogResponse> {
+        logger.info(
+            "Loading activity logs ecosystemId={} eventType={} page={} size={}",
+            ecosystemId,
+            eventType ?: "ALL",
+            page,
+            size
+        )
         if (!ecosystemRepository.existsById(ecosystemId)) {
             throw notFound()
         }

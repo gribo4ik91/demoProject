@@ -3,6 +3,9 @@ package com.example.api.controller
 import com.example.api.dto.CreateEcosystemRequest
 import com.example.api.dto.EcosystemResponse
 import com.example.api.dto.EcosystemSummaryResponse
+import com.example.api.dto.EcosystemWorkspaceCardResponse
+import com.example.api.dto.EcosystemWorkspaceOverviewResponse
+import com.example.api.dto.PagedResponse
 import com.example.api.dto.UpdateEcosystemRequest
 import com.example.api.exception.ApiErrorResponse
 import com.example.api.service.EcosystemService
@@ -85,6 +88,39 @@ class EcosystemController(
         content = [Content(array = ArraySchema(schema = Schema(implementation = EcosystemResponse::class)))]
     )
     fun getAllEcosystems(): List<EcosystemResponse> = ecosystemService.getAllEcosystems()
+
+    /**
+     * Returns enriched ecosystem cards for the workspace home page.
+     */
+    @GetMapping("/cards")
+    @Operation(summary = "List workspace cards", description = "Returns enriched ecosystem cards for the home page workspace overview.")
+    @ApiResponse(
+        responseCode = "200",
+        description = "Workspace cards returned successfully",
+        content = [Content(schema = Schema(implementation = PagedResponse::class))]
+    )
+    fun getWorkspaceCards(
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) status: String?,
+        @RequestParam(required = false) sort: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "9") size: Int
+    ): PagedResponse<EcosystemWorkspaceCardResponse> = ecosystemService.getWorkspaceCards(search, status, sort, page, size)
+
+    /**
+     * Returns aggregated workspace counters for the home page overview.
+     */
+    @GetMapping("/overview")
+    @Operation(summary = "Get workspace overview", description = "Returns aggregated workspace counters for the home page overview.")
+    @ApiResponse(
+        responseCode = "200",
+        description = "Workspace overview returned successfully",
+        content = [Content(schema = Schema(implementation = EcosystemWorkspaceOverviewResponse::class))]
+    )
+    fun getWorkspaceOverview(
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) status: String?
+    ): EcosystemWorkspaceOverviewResponse = ecosystemService.getWorkspaceOverview(search, status)
 
     /**
      * Returns a single ecosystem identified by its id.

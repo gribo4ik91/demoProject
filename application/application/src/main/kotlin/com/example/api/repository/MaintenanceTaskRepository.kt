@@ -2,6 +2,7 @@ package com.example.api.repository
 
 import com.example.api.model.MaintenanceTask
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.UUID
@@ -69,4 +70,29 @@ interface MaintenanceTaskRepository : JpaRepository<MaintenanceTask, UUID> {
      * Counts tasks that are overdue for one ecosystem and status.
      */
     fun countByEcosystemIdAndStatusAndDueDateBefore(ecosystemId: UUID, status: String, dueDate: LocalDate): Long
+
+    /**
+     * Returns open and overdue task counts grouped by ecosystem.
+     */
+    @Query(
+        value = """
+            SELECT
+                ecosystem_id AS ecosystemId,
+                SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) AS openTasks,
+                SUM(CASE WHEN status = 'OPEN' AND due_date < :today THEN 1 ELSE 0 END) AS overdueTasks
+            FROM maintenance_tasks
+            GROUP BY ecosystem_id
+        """,
+        nativeQuery = true
+    )
+    fun findTaskCountsByEcosystem(today: LocalDate): List<EcosystemTaskCountView>
+}
+
+/**
+ * Projection for grouped maintenance task counters per ecosystem.
+ */
+interface EcosystemTaskCountView {
+    fun getEcosystemId(): UUID
+    fun getOpenTasks(): Long?
+    fun getOverdueTasks(): Long?
 }
