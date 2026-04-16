@@ -60,6 +60,23 @@ Main package structure:
 - `repository`: Spring Data persistence access
 - `exception`: global API error handling
 
+### Frontend asset structure
+
+The backend-hosted static frontend now uses separated CSS and JavaScript assets under `src/main/resources/static`:
+
+- `css/`
+  page and shared styles such as `home.css`, `ecosystem.css`, `auth.css`, `login.css`, `register.css`, and `profile.css`
+- `js/shared/`
+  shared browser helpers such as `api.js` and `utils.js`
+- `js/home/`
+  home page workspace dashboard logic
+- `js/ecosystem/`
+  ecosystem detail page modules split by responsibility such as `summary.js`, `tasks.js`, `logs.js`, `state.js`, and `page.js`
+- `js/auth/`
+  lightweight login, registration, and profile page logic
+
+This keeps the HTML files smaller, reduces inline scripting, and makes page behavior easier to extend without editing large embedded script blocks.
+
 Request flow:
 
 1. The client sends an HTTP request.

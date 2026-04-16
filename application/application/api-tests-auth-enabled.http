@@ -7,8 +7,8 @@
 @location = Chisinau
 @bio = Building calm terrarium routines and logging daily ecosystem changes.
 @password = secret123
-@ecosystemId = 067621a4-4873-4f79-95fb-637e914e8653
-@logId = 067621a4-4873-4f79-95fb-637e914e8653
+@ecosystemId = e2025559-3cac-4a75-8673-2ad4e0dc93ad
+@logId = e2025559-3cac-4a75-8673-2ad4e0dc93ad
 @taskId = 00000000-0000-0000-0000-000000000000
 
 ### Auth status before login
@@ -113,8 +113,8 @@ POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
 Content-Type: application/json
 
 {
-  "temperatureC": 23.4,
-  "humidityPercent": 58,
+  "temperatureC": 20,
+  "humidityPercent": 50,
   "eventType": "OBSERVATION",
   "notes": "Condensation on the glass is stable and fern growth looks healthy."
 }
@@ -128,8 +128,8 @@ POST {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}/logs
 Content-Type: application/json
 
 {
-  "temperatureC": 24.1,
-  "humidityPercent": 61,
+  "temperatureC": 20.1,
+  "humidityPercent": 50,
   "eventType": "WATERING",
   "notes": "Light misting after the substrate started drying near the front panel."
 }

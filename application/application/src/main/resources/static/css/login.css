@@ -1,0 +1,51 @@
+body.auth-page-login {
+    background:
+        radial-gradient(circle at top left, rgba(104, 178, 122, 0.24), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(45, 122, 97, 0.18), transparent 30%),
+        linear-gradient(135deg, #f3f8f2 0%, #e9f2ed 48%, #f7fbf6 100%);
+}
+
+.auth-shell-login {
+    max-width: 1050px;
+}
+
+.login-hero-panel,
+.login-card {
+    border: 0;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 45px rgba(47, 72, 59, 0.08);
+}
+
+.login-hero-panel {
+    background: linear-gradient(155deg, #214b3c 0%, #356b56 55%, #4d8f71 100%);
+    color: #f5fbf7;
+}
+
+.login-hero-kicker {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.login-hero-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+}
+
+.login-hero-list li {
+    padding: 0.8rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+}
+
+.auth-link-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(33, 75, 60, 0.12);
+    background: #f7fbf8;
+}

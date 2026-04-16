@@ -72,6 +72,9 @@ class SecurityConfig {
                     "/register.html",
                     "/error",
                     "/favicon.ico",
+                    "/favicon.svg",
+                    "/css/**",
+                    "/js/**",
                     "/api/v1/auth/register",
                     "/api/v1/auth/status"
                 ).permitAll()

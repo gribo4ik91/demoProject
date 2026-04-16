@@ -1,0 +1,9 @@
+body.auth-page-register {
+    background:
+        radial-gradient(circle at top left, rgba(117, 181, 136, 0.22), transparent 35%),
+        linear-gradient(140deg, #f5faf5 0%, #edf6ef 45%, #f9fcf8 100%);
+}
+
+.register-shell {
+    max-width: 980px;
+}

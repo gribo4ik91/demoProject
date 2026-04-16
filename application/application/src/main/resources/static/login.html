@@ -6,72 +6,20 @@
     <title>EcoTracker | Login</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at top left, rgba(104, 178, 122, 0.24), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(45, 122, 97, 0.18), transparent 30%),
-                linear-gradient(135deg, #f3f8f2 0%, #e9f2ed 48%, #f7fbf6 100%);
-        }
-
-        .auth-shell {
-            max-width: 1050px;
-        }
-
-        .hero-panel,
-        .auth-card {
-            border: 0;
-            border-radius: 1.25rem;
-            box-shadow: 0 20px 45px rgba(47, 72, 59, 0.08);
-        }
-
-        .hero-panel {
-            background: linear-gradient(155deg, #214b3c 0%, #356b56 55%, #4d8f71 100%);
-            color: #f5fbf7;
-        }
-
-        .hero-kicker {
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .hero-list {
-            list-style: none;
-            padding: 0;
-            margin: 1.5rem 0 0;
-        }
-
-        .hero-list li {
-            padding: 0.8rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.14);
-        }
-
-        .auth-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-        }
-
-        .auth-link-card {
-            border-radius: 1rem;
-            border: 1px solid rgba(33, 75, 60, 0.12);
-            background: #f7fbf8;
-        }
-    </style>
+    <link href="/css/auth.css" rel="stylesheet">
+    <link href="/css/login.css" rel="stylesheet">
 </head>
-<body class="d-flex align-items-center py-5">
-<div class="container auth-shell">
+<body class="auth-page auth-page-login d-flex align-items-center py-5">
+<div class="container auth-shell-login">
     <div id="page-alert" class="alert d-none mb-4" role="alert"></div>
 
     <div class="row g-4 align-items-stretch">
         <div class="col-lg-5">
-            <div class="hero-panel h-100 p-4 p-lg-5">
-                <p class="hero-kicker mb-3">EcoTracker Access</p>
+            <div class="login-hero-panel h-100 p-4 p-lg-5">
+                <p class="login-hero-kicker mb-3">EcoTracker Access</p>
                 <h1 class="display-6 fw-semibold mb-3">Sign in to keep your ecosystems and routines in one place.</h1>
                 <p class="mb-0 text-white-50">When auth is enabled, the dashboard stays private and every ecosystem belongs behind a login session.</p>
-                <ul class="hero-list">
+                <ul class="login-hero-list">
                     <li>Review your dashboards, logs, and tasks after a quick sign-in.</li>
                     <li>Create a separate account profile when you need a fresh local user.</li>
                     <li>Stay in the current demo flow when auth is turned off by config.</li>
@@ -80,7 +28,7 @@
         </div>
 
         <div class="col-lg-7">
-            <div class="auth-card p-4 p-lg-5 h-100">
+            <div class="login-card p-4 p-lg-5 h-100">
                 <h2 class="h4 mb-3">Log in</h2>
                 <p class="text-muted small mb-4">Use your account login and password to open the application.</p>
                 <form method="post" action="/login">
@@ -105,41 +53,9 @@
     </div>
 </div>
 
-<script>
-    window.onload = async () => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('error')) {
-            showAlert('Login failed. Check your username and password.', 'danger');
-        } else if (params.has('logout')) {
-            showAlert('You have been logged out.', 'success');
-        } else if (params.has('registered')) {
-            const login = params.get('registered');
-            showAlert(`Account created for ${login}. You can log in now.`, 'success');
-            document.getElementById('login-username').value = login || '';
-        }
-
-        try {
-            const response = await fetch('/api/v1/auth/status');
-            if (!response.ok) {
-                return;
-            }
-
-            const status = await response.json();
-            if (!status.enabled) {
-                showAlert('Authentication is currently disabled in configuration, so this page is optional.', 'info');
-            } else if (status.authenticated) {
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    function showAlert(message, type) {
-        const alert = document.getElementById('page-alert');
-        alert.className = `alert alert-${type}`;
-        alert.textContent = message;
-    }
-</script>
+<script src="/js/shared/utils.js"></script>
+<script src="/js/shared/api.js"></script>
+<script src="/js/auth/common.js"></script>
+<script src="/js/auth/login.js"></script>
 </body>
 </html>

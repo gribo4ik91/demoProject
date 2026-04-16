@@ -1,0 +1,9 @@
+body.auth-page-profile {
+    background:
+        radial-gradient(circle at top right, rgba(93, 163, 119, 0.22), transparent 30%),
+        linear-gradient(145deg, #f7fbf7 0%, #edf6ef 46%, #f4faf6 100%);
+}
+
+.profile-shell {
+    max-width: 980px;
+}
