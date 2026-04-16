@@ -16,5 +16,7 @@ fun MaintenanceTask.toResponse(): MaintenanceTaskResponse =
         status = status,
         autoCreated = autoCreated,
         dismissalReason = dismissalReason,
+        createdByUsername = createdByUsername,
+        createdByDisplayName = createdByDisplayName,
         createdAt = createdAt
     )

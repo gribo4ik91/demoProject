@@ -52,6 +52,7 @@ window.EcoTrackerLogsModule = (() => {
                         <span>Temp: ${log.temperatureC ?? '--'} C</span>
                         <span>Humidity: ${log.humidityPercent ?? '--'}%</span>
                     </div>
+                    <small class="text-muted d-block mb-1">Created by: ${escapeHtml(log.createdByDisplayName || log.createdByUsername || 'Legacy record')}</small>
                     <small class="text-muted d-block mb-2">${escapeHtml(log.notes || 'No notes')}</small>
                     <button class="btn btn-outline-secondary btn-sm" data-action="edit-log" data-log='${encodeURIComponent(JSON.stringify(log))}'>Edit</button>
                 </div>

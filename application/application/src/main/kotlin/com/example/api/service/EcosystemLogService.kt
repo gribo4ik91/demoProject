@@ -25,7 +25,8 @@ import java.util.UUID
 class EcosystemLogService(
     private val ecosystemLogRepository: EcosystemLogRepository,
     private val ecosystemRepository: EcosystemRepository,
-    private val maintenanceTaskService: MaintenanceTaskService
+    private val maintenanceTaskService: MaintenanceTaskService,
+    private val authService: AuthService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -34,19 +35,23 @@ class EcosystemLogService(
      * Creates a new log entry and triggers any related suggested maintenance tasks.
      */
     @Transactional
-    fun addLog(ecosystemId: UUID, request: LogRequest): EcosystemLogResponse {
+    fun addLog(username: String?, ecosystemId: UUID, request: LogRequest): EcosystemLogResponse {
         logger.info("Adding activity log ecosystemId={} eventType={}", ecosystemId, request.eventType.trim())
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { notFound() }
 
         val normalizedEventType = request.eventType.trim().uppercase()
 
+        val actor = authService.resolveActorSnapshot(username)
         val newLog = EcosystemLog(
             ecosystem = ecosystem,
             temperatureC = request.temperatureC,
             humidityPercent = request.humidityPercent,
             eventType = normalizedEventType,
-            notes = request.notes?.trim()?.takeIf { it.isNotEmpty() }
+            notes = request.notes?.trim()?.takeIf { it.isNotEmpty() },
+            createdByUser = actor.user,
+            createdByUsername = actor.username,
+            createdByDisplayName = actor.displayName
         )
 
         val savedLog = ecosystemLogRepository.save(newLog)

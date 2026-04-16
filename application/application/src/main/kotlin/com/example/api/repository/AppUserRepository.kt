@@ -17,4 +17,9 @@ interface AppUserRepository : JpaRepository<AppUser, UUID> {
      * Checks whether a username is already taken.
      */
     fun existsByUsername(username: String): Boolean
+
+    /**
+     * Returns all users sorted from oldest to newest registration.
+     */
+    fun findAllByOrderByCreatedAtAsc(): List<AppUser>
 }

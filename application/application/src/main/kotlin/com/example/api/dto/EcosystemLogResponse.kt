@@ -31,6 +31,12 @@ data class EcosystemLogResponse(
     @field:Schema(description = "Optional note recorded for the event.", example = "After misting")
     val notes: String?,
 
+    @field:Schema(description = "Login of the user who created the log entry, if known.", example = "demo-user")
+    val createdByUsername: String?,
+
+    @field:Schema(description = "Display name of the user who created the log entry, if known.", example = "Demo Gardener")
+    val createdByDisplayName: String?,
+
     @field:Schema(description = "Timestamp when the event was recorded.", example = "2026-04-07T15:00:00")
     val recordedAt: LocalDateTime
 )

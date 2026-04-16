@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Provides the OpenAPI metadata used by Swagger UI and generated API docs.
+ * Configures the OpenAPI metadata exposed through Swagger UI and generated API documentation.
  */
 @Configuration
 class OpenApiConfig {
 
     /**
-     * Builds the OpenAPI descriptor for the local EcoTracker API.
+     * Builds the OpenAPI descriptor for the EcoTracker REST API.
      */
     @Bean
     fun ecoTrackerOpenApi(): OpenAPI =

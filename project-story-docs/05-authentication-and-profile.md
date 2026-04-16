@@ -52,6 +52,8 @@ The system:
 - checks `username` uniqueness
 - hashes the password with BCrypt
 - creates the user record
+- assigns role `ADMIN` to the first created account
+- assigns role `USER` to every later account
 
 ### Scenario 3. Sign in
 
@@ -72,9 +74,35 @@ The system allows reading and updating:
 
 The username and password are not changed on this page.
 
+### Scenario 5. View the user directory
+
+Any authenticated user can open the shared users page and review all registered accounts.
+
+The directory shows:
+
+- display name
+- login
+- role
+- basic contact and profile fields used by the page
+
+### Scenario 6. Delete a user
+
+Only an admin can delete user accounts.
+
+The system also prevents chaotic cleanup:
+
+- regular users cannot delete anyone
+- the admin cannot delete their own account
+- creator labels on old ecosystems, logs, and tasks remain visible through stored creator snapshots
+
 ## Business rules
 
 - `username` must be unique
+- the first created account becomes `ADMIN`
+- all later accounts become `USER`
+- every authenticated account can read the directory of users
+- only admins can delete user accounts
+- the admin cannot delete their own account
 - password length must be between 6 and 72 characters
 - `displayName` must be between 3 and 60 characters
 - `firstName` and `lastName` must be between 2 and 60 characters
@@ -88,6 +116,8 @@ The username and password are not changed on this page.
 - `GET /api/v1/auth/profile`
 - `PUT /api/v1/auth/profile`
 - `GET /api/v1/auth/status`
+- `GET /api/v1/auth/users`
+- `DELETE /api/v1/auth/users/{userId}`
 
 ## What auth status returns
 
@@ -103,18 +133,23 @@ The response includes:
 - `authenticated`
 - `username`
 - `displayName`
+- `role`
 
 ## Architectural implementation
 
 - `SecurityConfig` switches between open mode and protected mode
 - `AuthController` exposes registration and profile endpoints
-- `AuthService` implements normalization, lookup, update, and registration logic
+- `AuthService` implements normalization, lookup, update, registration, role assignment, directory loading, and admin-only deletion logic
 - `AppUserRepository` and the `app_user` table provide persistence
 
 ## Architectural note
 
-The current authentication model protects access to the application, but it does not isolate business data per user.
-Ecosystems are not linked to a specific owner, so the feature currently secures entry into the product rather than implementing true multi-user ownership.
+The current authentication model still protects entry into the product rather than implementing true multi-user ownership.
+At the same time, it now adds lightweight governance through:
+
+- one automatic admin account
+- a shared user directory
+- creator attribution on ecosystems, logs, and tasks
 
 ## Summary
 

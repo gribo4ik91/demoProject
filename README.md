@@ -18,7 +18,10 @@ The repository is split into three main areas:
 - Manage maintenance tasks
 - Edit manual maintenance tasks inline from the dashboard
 - View richer summary analytics including recent readings, 30-day activity, logging streaks, and lightweight trend indicators
-- Use optional user registration, login, and profile features
+- Use optional user registration, login, profile, and lightweight role-based access
+- Automatically promote the first registered account to `ADMIN`
+- Let every signed-in account view the shared users directory while restricting account deletion to admins
+- Show who created each ecosystem, log, and task entry
 - Persist data in PostgreSQL with Flyway migrations
 
 ## Tech Stack
@@ -78,7 +81,7 @@ cd path\to\demoProject\application\application
 - Application port: `8085`
 - Authentication: enabled by default
 
-If authentication is enabled, the first screen for anonymous users is the login page. A local user can be created through the registration flow.
+If authentication is enabled, the first screen for anonymous users is the login page. A local user can be created through the registration flow, and the first created account automatically becomes the administrator.
 
 ## Useful Commands
 

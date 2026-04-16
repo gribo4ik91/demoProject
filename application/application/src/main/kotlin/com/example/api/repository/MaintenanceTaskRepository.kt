@@ -92,7 +92,18 @@ interface MaintenanceTaskRepository : JpaRepository<MaintenanceTask, UUID> {
  * Projection for grouped maintenance task counters per ecosystem.
  */
 interface EcosystemTaskCountView {
+    /**
+     * Returns the ecosystem identifier for the grouped counter row.
+     */
     fun getEcosystemId(): UUID
+
+    /**
+     * Returns the number of open tasks for the ecosystem, if the query produced a value.
+     */
     fun getOpenTasks(): Long?
+
+    /**
+     * Returns the number of overdue open tasks for the ecosystem, if the query produced a value.
+     */
     fun getOverdueTasks(): Long?
 }

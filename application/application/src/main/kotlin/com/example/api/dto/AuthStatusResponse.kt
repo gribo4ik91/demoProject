@@ -7,5 +7,6 @@ data class AuthStatusResponse(
     val enabled: Boolean,
     val authenticated: Boolean,
     val username: String?,
-    val displayName: String?
+    val displayName: String?,
+    val role: String?
 )

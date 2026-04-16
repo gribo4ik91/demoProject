@@ -40,6 +40,9 @@ class AppUser(
     @Column(length = 500)
     var bio: String? = null,
 
+    @Column(nullable = false, length = 20)
+    var role: String = "USER",
+
     @Column(name = "password_hash", nullable = false, length = 100)
     var passwordHash: String = "",
 

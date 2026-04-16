@@ -25,6 +25,12 @@ data class EcosystemResponse(
     @field:Schema(description = "Optional free-text description.", example = "High humidity setup for moss and ferns")
     val description: String?,
 
+    @field:Schema(description = "Login of the user who created the ecosystem, if known.", example = "demo-user")
+    val createdByUsername: String?,
+
+    @field:Schema(description = "Display name of the user who created the ecosystem, if known.", example = "Demo Gardener")
+    val createdByDisplayName: String?,
+
     @field:Schema(description = "Timestamp when the ecosystem was created.", example = "2026-04-07T14:30:00")
     val createdAt: LocalDateTime
 )

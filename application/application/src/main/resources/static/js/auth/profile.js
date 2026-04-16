@@ -45,6 +45,7 @@
     function fillProfile(profile) {
         document.getElementById('profile-display-name').textContent = profile.displayName;
         document.getElementById('profile-login').textContent = `Login: ${profile.username}`;
+        document.getElementById('profile-role').textContent = `Role: ${profile.role}`;
         document.getElementById('profile-created-at').textContent = `Created: ${new Date(profile.createdAt).toLocaleString()}`;
         document.getElementById('display-name').value = profile.displayName;
         document.getElementById('username').value = profile.username;

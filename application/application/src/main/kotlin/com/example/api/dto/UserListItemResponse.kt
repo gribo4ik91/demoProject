@@ -4,9 +4,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 /**
- * Represents the public profile data returned for an authenticated user.
+ * Represents one account in the user directory page.
  */
-data class AuthUserResponse(
+data class UserListItemResponse(
     val id: UUID,
     val displayName: String,
     val username: String,
@@ -15,6 +15,5 @@ data class AuthUserResponse(
     val lastName: String,
     val email: String,
     val location: String?,
-    val bio: String?,
     val createdAt: LocalDateTime
 )

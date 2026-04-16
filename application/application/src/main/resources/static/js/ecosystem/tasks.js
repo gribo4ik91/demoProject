@@ -39,6 +39,7 @@ window.EcoTrackerTasksModule = (() => {
                 const sourceBadge = task.autoCreated ? '<span class="status-pill status-pill-suggested">Suggested</span>' : '';
                 const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date';
                 const dismissalReason = task.dismissalReason ? ` | Reason: ${formatDismissalReason(task.dismissalReason)}` : '';
+                const creatorLabel = task.createdByDisplayName || task.createdByUsername || 'Legacy record';
 
                 return `
                     <div class="border rounded-3 p-3 mb-2 task-card">
@@ -51,6 +52,7 @@ window.EcoTrackerTasksModule = (() => {
                                         ${sourceBadge}
                                     </div>
                                     <p class="small text-muted task-detail-text">${escapeHtml(formatTaskType(task.taskType))} | Due: ${dueDate}${escapeHtml(dismissalReason)}</p>
+                                    <p class="small text-muted task-detail-text mb-0">Created by: ${escapeHtml(creatorLabel)}</p>
                                 </div>
                                 <div class="task-action-group">
                                     ${buildTaskActions(task)}

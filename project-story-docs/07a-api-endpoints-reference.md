@@ -102,6 +102,42 @@ Response fields:
 | `authenticated` | boolean | whether a user is currently authenticated |
 | `username` | string \| null | current username |
 | `displayName` | string \| null | current display name |
+| `role` | string \| null | current role, typically `ADMIN` or `USER` |
+
+### `GET /api/v1/auth/users`
+
+Purpose:
+return all registered users for the signed-in account.
+
+#### Response
+
+- `200 OK`
+- returns an array of user directory entries
+
+Response fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | user identifier |
+| `displayName` | string | display name |
+| `username` | string | login |
+| `role` | string | `ADMIN` or `USER` |
+| `firstName` | string | first name |
+| `lastName` | string | last name |
+| `email` | string | contact email |
+| `location` | string \| null | optional location |
+| `createdAt` | datetime | account creation timestamp |
+
+### `DELETE /api/v1/auth/users/{userId}`
+
+Purpose:
+delete a user account through admin access.
+
+#### Important behavior
+
+- only admins can call it
+- admins cannot delete their own account
+- successful deletion returns `204 No Content`
 
 ## 2. Ecosystem API
 
@@ -122,6 +158,11 @@ create a new ecosystem.
 
 - `201 Created`
 - returns `EcosystemResponse`
+
+Important response fields also include:
+
+- `createdByUsername`
+- `createdByDisplayName`
 
 ### `GET /api/v1/ecosystems`
 
@@ -392,6 +433,8 @@ Fields of one `EcosystemLogResponse`:
 | `humidityPercent` | integer \| null |
 | `eventType` | string |
 | `notes` | string \| null |
+| `createdByUsername` | string \| null |
+| `createdByDisplayName` | string \| null |
 | `recordedAt` | datetime |
 
 ### `PATCH /api/v1/ecosystems/{ecosystemId}/logs/{logId}`
@@ -479,6 +522,8 @@ Fields of `MaintenanceTaskResponse`:
 | `status` | string |
 | `autoCreated` | boolean |
 | `dismissalReason` | string \| null |
+| `createdByUsername` | string \| null |
+| `createdByDisplayName` | string \| null |
 | `createdAt` | datetime |
 
 ### `PATCH /api/v1/ecosystems/{ecosystemId}/tasks/{taskId}`

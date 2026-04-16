@@ -42,6 +42,12 @@ data class MaintenanceTaskResponse(
     )
     val dismissalReason: String?,
 
+    @field:Schema(description = "Login of the user or system actor that created the task, if known.", example = "demo-user")
+    val createdByUsername: String?,
+
+    @field:Schema(description = "Display name of the user or system actor that created the task, if known.", example = "Demo Gardener")
+    val createdByDisplayName: String?,
+
     @field:Schema(description = "Timestamp when the task was created.", example = "2026-04-07T16:00:00")
     val createdAt: LocalDateTime
 )

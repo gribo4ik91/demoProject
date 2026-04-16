@@ -37,6 +37,7 @@
             state.currentEcosystem = eco;
             document.getElementById('page-title').innerText = eco.name;
             document.getElementById('bc-name').innerText = eco.name;
+            document.getElementById('ecosystem-created-by').innerText = `Created by ${eco.createdByDisplayName || eco.createdByUsername || 'legacy record'}`;
             hideAlert();
         } catch (error) {
             showAlert(error.message || 'Could not load ecosystem details. Returning to the home page.', 'danger', 'Details unavailable');

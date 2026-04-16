@@ -39,7 +39,7 @@ The product combines:
 - a dedicated ecosystem workspace
 - an activity and observation log
 - manual and auto-suggested maintenance tasks
-- optional authentication and user profile management
+- optional authentication, user profile management, role-based user administration, and creator attribution
 - PostgreSQL + Flyway for stable persistence
 
 The main value of the system is not only to store records, but to help the user understand the current state of an ecosystem, notice risks early, and stay on top of recurring care actions.

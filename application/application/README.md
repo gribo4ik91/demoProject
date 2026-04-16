@@ -45,6 +45,10 @@ The project demonstrates a complete vertical slice:
 - Edit manual maintenance tasks inline from the dashboard
 - Review maintenance tasks by status and source
 - Mark suggested tasks as dismissed with a dismissal reason
+- Automatically assign the first registered account the `ADMIN` role and later accounts the `USER` role
+- Expose a shared users directory to authenticated accounts
+- Allow user deletion only for admins while blocking admin self-deletion
+- Show who created each ecosystem, log entry, and maintenance task
 - Delete an ecosystem together with its logs
 - Receive structured validation and not-found responses from the API
 
@@ -160,6 +164,9 @@ When authentication is enabled:
 - a local user can be created from the sign-up form
 - the app uses a server-side session after form login
 - the user store is persisted in the `app_user` table
+- the first registered user is promoted to `ADMIN`
+- all authenticated users can open the `/users` directory page
+- only admins can delete user accounts
 
 When authentication is disabled:
 
@@ -205,6 +212,8 @@ Endpoints:
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}`
 - `GET /ecosystems/{ecosystemId}/tasks`
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}/status`
+- `GET /auth/users`
+- `DELETE /auth/users/{userId}`
 
 Supported query options:
 

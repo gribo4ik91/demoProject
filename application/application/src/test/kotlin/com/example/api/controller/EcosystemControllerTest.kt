@@ -106,6 +106,8 @@ class EcosystemControllerTest {
             name = request.name,
             type = request.type,
             description = request.description,
+            createdByUsername = null,
+            createdByDisplayName = null,
             createdAt = LocalDateTime.now()
         )
         val requestJson = """
@@ -116,7 +118,7 @@ class EcosystemControllerTest {
             }
         """.trimIndent()
 
-        Mockito.`when`(ecosystemService.createEcosystem(request)).thenReturn(response)
+        Mockito.`when`(ecosystemService.createEcosystem(null, request)).thenReturn(response)
 
         mockMvc.perform(
             post("/api/v1/ecosystems")

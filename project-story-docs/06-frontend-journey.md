@@ -38,6 +38,7 @@ User flow:
 8. Trigger quick log or quick task actions directly from a card
 9. Load more ecosystem cards without leaving the page
 10. Open the selected ecosystem dashboard
+11. Open profile or users pages from the shared authenticated header
 
 ### 2. Ecosystem page `ecosystem.html`
 
@@ -55,6 +56,7 @@ It combines:
 - ecosystem editing
 - ecosystem deletion
 - status changes for tasks
+- creator labels for the ecosystem, each log entry, and each maintenance task
 
 From a business perspective, this is where the day-to-day work happens.
 
@@ -79,6 +81,15 @@ Purpose:
 
 - display current user data
 - allow editing of visible profile fields
+- show the current account role
+
+### 6. `users.html`
+
+Purpose:
+
+- list all registered users for authenticated accounts
+- show role-based access information
+- show delete actions only to admins
 
 ## UI behavior highlights
 
@@ -96,6 +107,8 @@ Purpose:
 - manual task edit flows run inline in the dashboard
 - logs can also be corrected inline through the update flow
 - suggested tasks remain status-driven and are not content-editable
+- the users page is visible to every signed-in account but destructive actions are admin-only
+- creator labels are rendered from backend snapshots so history still makes sense after account deletion
 
 ## Architectural assessment of the frontend approach
 

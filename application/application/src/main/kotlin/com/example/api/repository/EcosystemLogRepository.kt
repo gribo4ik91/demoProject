@@ -96,9 +96,24 @@ interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
  * Projection for the latest known log snapshot per ecosystem.
  */
 interface EcosystemLatestLogView {
+    /**
+     * Returns the ecosystem identifier for the projected row.
+     */
     fun getEcosystemId(): UUID
+
+    /**
+     * Returns when the latest projected log was recorded.
+     */
     fun getLastRecordedAt(): LocalDateTime
+
+    /**
+     * Returns the latest projected temperature reading, if available.
+     */
     fun getTemperatureC(): Double?
+
+    /**
+     * Returns the latest projected humidity reading, if available.
+     */
     fun getHumidityPercent(): Int?
 }
 
@@ -106,6 +121,13 @@ interface EcosystemLatestLogView {
  * Projection for recent log counts grouped by ecosystem.
  */
 interface EcosystemRecentLogCountView {
+    /**
+     * Returns the ecosystem identifier for the grouped counter row.
+     */
     fun getEcosystemId(): UUID
+
+    /**
+     * Returns the number of logs recorded within the recent counting window.
+     */
     fun getLogsLast7Days(): Long
 }

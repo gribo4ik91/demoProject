@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 
 /**
- * Configures password hashing, user lookup, and HTTP security rules for the application.
+ * Configures password hashing, user lookup, and HTTP authorization rules for the application.
  */
 @Configuration
 class SecurityConfig {
@@ -37,12 +37,13 @@ class SecurityConfig {
 
         User.withUsername(user.username)
             .password(user.passwordHash)
-            .roles("USER")
+            .roles(user.role)
             .build()
     }
 
     /**
      * Builds the active security filter chain based on whether authentication is enabled.
+     * Public auth pages stay reachable in secured mode, while the rest of the app requires login.
      */
     @Bean
     fun securityFilterChain(

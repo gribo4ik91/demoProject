@@ -19,6 +19,9 @@ class RequestResponseLoggingFilter : OncePerRequestFilter() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Skips noisy static-asset requests so application logs stay focused on interactive traffic.
+     */
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI
         return path.startsWith("/css/") ||
@@ -27,6 +30,9 @@ class RequestResponseLoggingFilter : OncePerRequestFilter() {
             path.startsWith("/webjars/")
     }
 
+    /**
+     * Logs request metadata before delegation and logs the final status after downstream processing completes.
+     */
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -56,6 +62,9 @@ class RequestResponseLoggingFilter : OncePerRequestFilter() {
         }
     }
 
+    /**
+     * Resolves the best available client IP, preferring the first forwarded address when present.
+     */
     private fun extractClientIp(request: HttpServletRequest): String =
         request.getHeader("X-Forwarded-For")
             ?.split(",")

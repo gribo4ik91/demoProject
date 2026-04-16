@@ -8,9 +8,9 @@ import com.example.api.dto.EcosystemWorkspaceOverviewResponse
 import com.example.api.dto.PagedResponse
 import com.example.api.dto.UpdateEcosystemRequest
 import com.example.api.mapper.applyTo
-import com.example.api.mapper.toEntity
 import com.example.api.mapper.toResponse
 import com.example.api.model.EcosystemLog
+import com.example.api.service.AuthService.ActorSnapshot
 import com.example.api.repository.EcosystemLogRepository
 import com.example.api.repository.MaintenanceTaskRepository
 import com.example.api.repository.EcosystemRepository
@@ -30,7 +30,8 @@ import java.util.UUID
 class EcosystemService(
     private val ecosystemRepository: EcosystemRepository,
     private val ecosystemLogRepository: EcosystemLogRepository,
-    private val maintenanceTaskRepository: MaintenanceTaskRepository
+    private val maintenanceTaskRepository: MaintenanceTaskRepository,
+    private val authService: AuthService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -39,9 +40,10 @@ class EcosystemService(
      * Creates and persists a new ecosystem.
      */
     @Transactional
-    fun createEcosystem(request: CreateEcosystemRequest): EcosystemResponse {
+    fun createEcosystem(username: String?, request: CreateEcosystemRequest): EcosystemResponse {
         logger.info("Creating ecosystem name={} type={}", request.name.trim(), request.type.trim())
-        return ecosystemRepository.save(request.toEntity()).toResponse()
+        val actor = authService.resolveActorSnapshot(username)
+        return ecosystemRepository.save(request.toEntity(actor)).toResponse()
     }
 
     /**
@@ -325,6 +327,19 @@ class EcosystemService(
             humidityPercent = getHumidityPercent(),
             eventType = "OBSERVATION",
             recordedAt = getLastRecordedAt()
+        )
+
+    /**
+     * Converts an ecosystem creation request into an entity with author snapshot metadata.
+     */
+    private fun CreateEcosystemRequest.toEntity(actor: ActorSnapshot) =
+        com.example.api.model.Ecosystem(
+            name = name.trim(),
+            type = type.trim(),
+            description = description?.trim()?.takeIf { it.isNotEmpty() },
+            createdByUser = actor.user,
+            createdByUsername = actor.username,
+            createdByDisplayName = actor.displayName
         )
 
     /**

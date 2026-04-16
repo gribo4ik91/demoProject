@@ -24,7 +24,8 @@ import java.util.UUID
 @Service
 class MaintenanceTaskService(
     private val maintenanceTaskRepository: MaintenanceTaskRepository,
-    private val ecosystemRepository: EcosystemRepository
+    private val ecosystemRepository: EcosystemRepository,
+    private val authService: AuthService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -69,10 +70,11 @@ class MaintenanceTaskService(
      * Creates a manual maintenance task for the selected ecosystem.
      */
     @Transactional
-    fun createTask(ecosystemId: UUID, request: CreateMaintenanceTaskRequest): MaintenanceTaskResponse {
+    fun createTask(username: String?, ecosystemId: UUID, request: CreateMaintenanceTaskRequest): MaintenanceTaskResponse {
         logger.info("Creating maintenance task ecosystemId={} title={}", ecosystemId, request.title.trim())
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { ecosystemNotFound() }
+        val actor = authService.resolveActorSnapshot(username)
 
         val task = MaintenanceTask(
             ecosystem = ecosystem,
@@ -80,7 +82,10 @@ class MaintenanceTaskService(
             taskType = request.taskType.trim(),
             dueDate = request.dueDate,
             autoCreated = false,
-            dismissalReason = null
+            dismissalReason = null,
+            createdByUser = actor.user,
+            createdByUsername = actor.username,
+            createdByDisplayName = actor.displayName
         )
 
         return maintenanceTaskRepository.save(task).toResponse()
@@ -241,6 +246,7 @@ class MaintenanceTaskService(
         }
 
         logger.info("Creating suggested maintenance task ecosystemId={} eventType={}", ecosystemId, eventType)
+        val systemActor = authService.systemActorSnapshot()
         maintenanceTaskRepository.save(
             MaintenanceTask(
                 ecosystem = ecosystem,
@@ -249,7 +255,10 @@ class MaintenanceTaskService(
                 dueDate = LocalDate.now().plusDays(rule.dueInDays),
                 status = OPEN_STATUS,
                 autoCreated = true,
-                dismissalReason = null
+                dismissalReason = null,
+                createdByUser = null,
+                createdByUsername = systemActor.username,
+                createdByDisplayName = systemActor.displayName
             )
         )
     }

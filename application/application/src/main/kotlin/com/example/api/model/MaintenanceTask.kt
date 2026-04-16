@@ -37,6 +37,16 @@ data class MaintenanceTask(
     @Column(name = "dismissal_reason")
     val dismissalReason: String? = null,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    val createdByUser: AppUser? = null,
+
+    @Column(name = "created_by_username", length = 40)
+    val createdByUsername: String? = null,
+
+    @Column(name = "created_by_display_name", length = 60)
+    val createdByDisplayName: String? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

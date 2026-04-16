@@ -15,9 +15,15 @@ class ResponseDelayFilter(
     private val responseDelayProperties: ResponseDelayProperties
 ) : OncePerRequestFilter() {
 
+    /**
+     * Limits artificial delays to API routes so static pages and assets remain responsive.
+     */
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/api/")
 
+    /**
+     * Applies the configured delay before delegating to the rest of the filter chain.
+     */
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -27,6 +33,9 @@ class ResponseDelayFilter(
         filterChain.doFilter(request, response)
     }
 
+    /**
+     * Sleeps for a configured fixed or random interval when response-delay simulation is enabled.
+     */
     private fun maybeDelay() {
         if (!responseDelayProperties.enabled) {
             return

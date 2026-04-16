@@ -50,6 +50,9 @@ Stores:
 - name
 - type
 - description
+- creator user reference
+- creator username snapshot
+- creator display-name snapshot
 - creation timestamp
 
 ### Table `logs`
@@ -62,6 +65,9 @@ Stores:
 - humidity
 - event type
 - notes
+- creator user reference
+- creator username snapshot
+- creator display-name snapshot
 - recorded timestamp
 
 ### Table `maintenance_tasks`
@@ -76,6 +82,9 @@ Stores:
 - status
 - auto-created flag
 - dismissal reason
+- creator user reference
+- creator username snapshot
+- creator display-name snapshot
 - creation timestamp
 
 ### Table `app_user`
@@ -91,6 +100,7 @@ Stores:
 - email
 - location
 - bio
+- role
 - creation timestamp
 
 ## Database migrations
@@ -104,6 +114,7 @@ The schema evolves through Flyway migrations:
 - `V5` - base user table
 - `V6` - expanded user profile fields
 - `V7` - optional `location` and `bio`
+- `V8` - roles plus creator-tracking fields on ecosystems, logs, and maintenance tasks
 
 ## Runtime infrastructure
 
@@ -148,10 +159,12 @@ The project already contains:
 - consistent API error format
 - understandable REST contracts
 - complete vertical slice from UI to database
+- lightweight role-based user administration without a heavy ACL model
+- creator attribution preserved by snapshot fields even after deleting an account
 
 ## Architectural limitations
 
-- ecosystems are not linked to users
+- ecosystems are still not ownership-isolated per user
 - the frontend is not modular and will be harder to scale
 - suggested-task rules are hardcoded
 - notifications and scheduled care reminders are not implemented

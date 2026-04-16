@@ -48,6 +48,8 @@ fun Ecosystem.toResponse(): EcosystemResponse =
         name = name,
         type = type,
         description = description,
+        createdByUsername = createdByUsername,
+        createdByDisplayName = createdByDisplayName,
         createdAt = createdAt
     )
 
@@ -62,5 +64,7 @@ fun EcosystemLog.toResponse(): EcosystemLogResponse =
         humidityPercent = humidityPercent,
         eventType = eventType,
         notes = notes,
+        createdByUsername = createdByUsername,
+        createdByDisplayName = createdByDisplayName,
         recordedAt = recordedAt
     )

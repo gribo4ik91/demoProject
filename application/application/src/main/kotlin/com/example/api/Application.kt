@@ -8,13 +8,16 @@ import org.springframework.context.event.EventListener
 import org.slf4j.LoggerFactory
 
 /**
- * Main Spring Boot application entry point for the EcoTracker service.
+ * Bootstraps the EcoTracker Spring Boot application and enables configuration-properties scanning.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 class Application {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Writes a startup log entry once the application context is fully ready to serve requests.
+     */
     @EventListener(ApplicationReadyEvent::class)
     fun logStartup() {
         logger.info("EcoTracker application is ready and accepting requests")
@@ -22,7 +25,7 @@ class Application {
 }
 
 /**
- * Boots the Spring application and initializes the web API.
+ * Launches the EcoTracker application from the command line.
  */
 fun main(args: Array<String>) {
     runApplication<Application>(*args)

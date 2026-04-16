@@ -3,6 +3,7 @@ package com.example.api.service
 import com.example.api.dto.AuthUserResponse
 import com.example.api.dto.RegisterUserRequest
 import com.example.api.dto.UpdateUserProfileRequest
+import com.example.api.dto.UserListItemResponse
 import com.example.api.model.AppUser
 import com.example.api.repository.AppUserRepository
 import org.slf4j.LoggerFactory
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 /**
  * Handles user registration and profile operations for the authenticated account.
@@ -20,6 +22,12 @@ class AuthService(
     private val appUserRepository: AppUserRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
+
+    data class ActorSnapshot(
+        val user: AppUser?,
+        val username: String?,
+        val displayName: String?
+    )
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -41,6 +49,8 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.CONFLICT, "Username already exists")
         }
 
+        val assignedRole = if (appUserRepository.count() == 0L) "ADMIN" else "USER"
+
         val savedUser = appUserRepository.save(
             AppUser(
                 displayName = normalizedDisplayName,
@@ -50,6 +60,7 @@ class AuthService(
                 email = normalizedEmail,
                 location = normalizedLocation,
                 bio = normalizedBio,
+                role = assignedRole,
                 passwordHash = passwordEncoder.encode(request.password)
                     ?: error("Expected encoded password")
             )
@@ -86,11 +97,86 @@ class AuthService(
     }
 
     /**
+     * Returns all users for the directory page.
+     */
+    @Transactional(readOnly = true)
+    fun getAllUsers(requestingUsername: String): List<UserListItemResponse> {
+        logger.info("Loading user directory requestedBy={}", requestingUsername)
+        findUserByUsername(requestingUsername)
+
+        return appUserRepository.findAllByOrderByCreatedAtAsc()
+            .map { user ->
+                UserListItemResponse(
+                    id = user.id ?: error("Expected generated user id"),
+                    displayName = user.displayName,
+                    username = user.username,
+                    role = user.role,
+                    firstName = user.firstName,
+                    lastName = user.lastName,
+                    email = user.email,
+                    location = user.location,
+                    createdAt = user.createdAt
+                )
+            }
+    }
+
+    /**
+     * Deletes a user account when the requester is an admin and not deleting themselves.
+     */
+    @Transactional
+    fun deleteUser(requestingUsername: String, userId: UUID) {
+        logger.info("Deleting user requestedBy={} userId={}", requestingUsername, userId)
+        val requester = findUserByUsername(requestingUsername)
+        requireAdmin(requester)
+
+        val target = appUserRepository.findById(userId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "User not found") }
+
+        if (requester.id == target.id) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Admins cannot delete their own account")
+        }
+
+        appUserRepository.delete(target)
+    }
+
+    /**
+     * Returns a creator snapshot for the supplied username, or null fields when unavailable.
+     */
+    @Transactional(readOnly = true)
+    fun resolveActorSnapshot(username: String?): ActorSnapshot {
+        if (username.isNullOrBlank()) {
+            return ActorSnapshot(user = null, username = null, displayName = null)
+        }
+
+        val user = appUserRepository.findByUsername(username)
+        return ActorSnapshot(
+            user = user,
+            username = user?.username ?: username,
+            displayName = user?.displayName
+        )
+    }
+
+    /**
+     * Returns a snapshot representing a system-generated action.
+     */
+    fun systemActorSnapshot(): ActorSnapshot =
+        ActorSnapshot(user = null, username = "system", displayName = "System")
+
+    /**
      * Loads a user by username or throws a not-found error.
      */
-    private fun findUserByUsername(username: String): AppUser =
+    fun findUserByUsername(username: String): AppUser =
         appUserRepository.findByUsername(username)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+
+    /**
+     * Verifies that the provided user has admin access.
+     */
+    private fun requireAdmin(user: AppUser) {
+        if (user.role != "ADMIN") {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can manage users")
+        }
+    }
 
     /**
      * Converts a user entity into the API response shape used by auth endpoints.
@@ -100,6 +186,7 @@ class AuthService(
             id = id ?: error("Expected generated user id"),
             displayName = displayName,
             username = username,
+            role = role,
             firstName = firstName,
             lastName = lastName,
             email = email,
