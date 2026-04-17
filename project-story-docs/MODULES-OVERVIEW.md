@@ -12,22 +12,21 @@ This file provides a quick structural overview of the project so it is easy to u
 
 | Module | Purpose | Key files |
 |---|---|---|
-| `application/application/src/main/kotlin/com/example/api/controller` | HTTP API and page routing | `EcosystemController.kt`, `EcosystemLogController.kt`, `MaintenanceTaskController.kt`, `AuthController.kt`, `LoginPageController.kt` |
-| `application/application/src/main/kotlin/com/example/api/service` | Business logic and orchestration | `EcosystemService.kt`, `EcosystemLogService.kt`, `MaintenanceTaskService.kt`, `AuthService.kt` |
-| `application/application/src/main/kotlin/com/example/api/model` | JPA domain entities | `Ecosystem.kt`, `EcosystemLog.kt`, `MaintenanceTask.kt`, `AppUser.kt` |
-| `application/application/src/main/kotlin/com/example/api/repository` | Data access via Spring Data JPA | `EcosystemRepository.kt`, `EcosystemLogRepository.kt`, `MaintenanceTaskRepository.kt`, `AppUserRepository.kt` |
-| `application/application/src/main/kotlin/com/example/api/dto` | API request and response contracts | `CreateEcosystemRequest.kt`, `LogRequest.kt`, `CreateMaintenanceTaskRequest.kt`, `RegisterUserRequest.kt` |
+| `application/application/src/main/kotlin/com/example/api/controller` | HTTP API and page routing | `EcosystemController.kt`, `EcosystemLogController.kt`, `MaintenanceTaskController.kt`, `AutomationRuleController.kt`, `AuthController.kt`, `LoginPageController.kt` |
+| `application/application/src/main/kotlin/com/example/api/service` | Business logic and orchestration | `EcosystemService.kt`, `EcosystemLogService.kt`, `MaintenanceTaskService.kt`, `AutomationRuleService.kt`, `AuthService.kt` |
+| `application/application/src/main/kotlin/com/example/api/model` | JPA domain entities | `Ecosystem.kt`, `EcosystemLog.kt`, `MaintenanceTask.kt`, `AutomationRule.kt`, `AppUser.kt` |
+| `application/application/src/main/kotlin/com/example/api/repository` | Data access via Spring Data JPA | `EcosystemRepository.kt`, `EcosystemLogRepository.kt`, `MaintenanceTaskRepository.kt`, `AutomationRuleRepository.kt`, `AppUserRepository.kt` |
+| `application/application/src/main/kotlin/com/example/api/dto` | API request and response contracts | `CreateEcosystemRequest.kt`, `LogRequest.kt`, `CreateMaintenanceTaskRequest.kt`, `CreateAutomationRuleRequest.kt`, `RegisterUserRequest.kt` |
 | `application/application/src/main/kotlin/com/example/api/config` | Security, OpenAPI, and response delay configuration | `SecurityConfig.kt`, `OpenApiConfig.kt`, `ResponseDelayFilter.kt`, `ResponseDelayProperties.kt` |
 | `application/application/src/main/kotlin/com/example/api/exception` | Shared API error handling | `GlobalExceptionHandler.kt`, `ApiErrorResponse.kt` |
 | `application/application/src/main/kotlin/com/example/api/controller` | HTTP API and SSR page routing | `EcosystemController.kt`, `UiController.kt`, `LoginPageController.kt`, `UiSupport.kt` |
-| `application/application/src/main/resources/templates` | Freemarker pages and fragments | `pages/home.ftlh`, `pages/ecosystem.ftlh`, `fragments/workspace-panel.ftlh`, `fragments/task-list.ftlh`, `fragments/log-list.ftlh` |
-| `application/application/src/main/resources/static` | Embedded static assets for the SSR UI | `css/home.css`, `css/ecosystem.css`, `js/ssr-ui.js`, `favicon.svg` |
-| `application/application/src/main/resources/db/migration` | Versioned database schema through Flyway | `V1__init_schema.sql` ... `V7__add_optional_profile_fields.sql` |
+| `application/application/src/main/resources/templates` | Freemarker pages and fragments | `pages/home.ftlh`, `pages/ecosystem.ftlh`, `pages/automation-rules.ftlh`, `fragments/workspace-panel.ftlh`, `fragments/task-list.ftlh`, `fragments/log-list.ftlh`, `fragments/rule-list.ftlh` |
+| `application/application/src/main/resources/static` | Embedded static assets for the SSR UI | `css/home.css`, `css/ecosystem.css`, `css/automation-rules.css`, `js/ssr-ui.js`, `favicon.svg` |
+| `application/application/src/main/resources/db/migration` | Versioned database schema through Flyway | `V1__init_schema.sql` ... `V10__add_automation_rules.sql` |
 | `application/application/src/test` | Automated controller, integration, and configuration tests | `ApplicationTests.kt`, `ApiIntegrationTests.kt`, `AuthEnabledIntegrationTests.kt`, `EcosystemControllerTest.kt` |
 | `application/application` | Application operational layer | `README.md`, `Dockerfile`, `docker-compose.app.yml`, `Jenkinsfile`, `api-tests.http`, `api-tests-auth-enabled.http` |
 | `sql` | PostgreSQL operational layer | `docker-compose.yml`, `Jenkinsfile` |
-| `project-story-docs` | Russian analytical and architectural documentation | `README.md`, `MODULES-OVERVIEW.md`, `01-09 *.md` |
-| `project-story-docs/en` | English analytical and architectural documentation | `README.md`, `MODULES-OVERVIEW.md`, `01-09 *.md` |
+| `project-story-docs` | Analytical and architectural documentation | `README.md`, `MODULES-OVERVIEW.md`, `01-12 *.md` |
 
 ## How to read the project by perspective
 

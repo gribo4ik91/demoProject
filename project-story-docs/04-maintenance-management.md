@@ -79,26 +79,29 @@ The system:
 
 ## Suggested task engine
 
-The system can automatically create follow-up tasks using simple rules:
+The system can automatically create follow-up tasks using configurable automation rules.
 
-- after `WATERING`, create `Inspect moisture balance after watering`
-- after `FEEDING`, create `Log feeding response check`
+Current rule families in the MVP:
 
-Both tasks:
+- `AFTER_EVENT`
+- `AFTER_INACTIVITY`
 
-- use type `INSPECTION`
-- are created as `autoCreated = true`
-- receive a due date of `today + 1 day`
+Current runtime execution behavior:
 
-Suggested tasks appear only in these cases:
+- enabled `AFTER_EVENT` rules are evaluated when a new log is saved
+- rules can target all ecosystems or one ecosystem type
+- each rule defines the event type, optional delay, generated task title, generated task type, and duplicate-prevention behavior
 
-- after a new `WATERING` log is saved
-- after a new `FEEDING` log is saved
+Suggested tasks created through rules:
+
+- use `autoCreated = true`
+- are created with status `OPEN`
+- receive a due date derived from the matching rule for event-based scenarios
 
 Suggested tasks do not appear:
 
-- after `OBSERVATION`
-- if an identical open suggested task already exists
+- if no enabled rule matches the ecosystem and event
+- if an identical open suggested task already exists and the rule blocks duplicates
 - if the latest dismissed matching suggestion is still inside its cooldown window
 
 ## Duplicate prevention
@@ -147,8 +150,11 @@ Within the same status, sorting uses:
 ## Architectural implementation
 
 - `MaintenanceTaskController` exposes the API
-- `MaintenanceTaskService` implements filters, status rules, suggestion logic, and cooldown logic
+- `MaintenanceTaskService` implements filters, status rules, suggestion creation, and cooldown logic
+- `AutomationRuleController` exposes rule-management API operations
+- `AutomationRuleService` owns rule validation, CRUD behavior, and rule lookup for task generation
 - `MaintenanceTaskRepository` works with the `maintenance_tasks` table
+- `AutomationRuleRepository` works with the `automation_rules` table
 
 ## Summary
 

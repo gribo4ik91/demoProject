@@ -87,6 +87,25 @@ Stores:
 - creator display-name snapshot
 - creation timestamp
 
+### Table `automation_rules`
+
+Stores:
+
+- identifier
+- rule name
+- enabled flag
+- scope type (`ALL_ECOSYSTEMS`, `ECOSYSTEM_TYPE`)
+- optional ecosystem type restriction
+- trigger type (`AFTER_EVENT`, `AFTER_INACTIVITY`)
+- triggering event type
+- optional inactivity days
+- optional delay days
+- generated task title
+- generated task type
+- duplicate-prevention flag
+- creation timestamp
+- update timestamp
+
 ### Table `app_user`
 
 Stores:
@@ -116,6 +135,7 @@ The schema evolves through Flyway migrations:
 - `V7` - optional `location` and `bio`
 - `V8` - roles plus creator-tracking fields on ecosystems, logs, and maintenance tasks
 - `V9` - promote the earliest account to `SUPER_ADMIN` and keep later managed accounts as `ADMIN` or `USER`
+- `V10` - configurable automation rules for suggested task generation
 
 ## Runtime infrastructure
 
@@ -167,14 +187,14 @@ The project already contains:
 
 - ecosystems are still not ownership-isolated per user
 - the frontend is not modular and will be harder to scale
-- suggested-task rules are hardcoded
 - notifications and scheduled care reminders are not implemented
+- inactivity rules are configurable but not yet executed by a background scheduler
 
 ## Recommendations for the next phase
 
 1. Link `ecosystem` to `app_user`
 2. Add edit/update flows for ecosystems, logs, and manual tasks
-3. Move suggested-task rules into configuration or a dedicated table
+3. Add scheduled evaluation for inactivity-based automation rules
 4. Add notifications for overdue tasks
 5. Move integration testing to PostgreSQL via Testcontainers
 

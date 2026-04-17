@@ -28,6 +28,7 @@
         </div>
         <div class="d-flex gap-2">
             <a href="/" class="btn btn-outline-secondary">Back to Home</a>
+            <a href="/automation-rules" class="btn btn-outline-secondary">Automation Rules</a>
             <a href="/profile" class="btn btn-outline-secondary">My Profile</a>
             <form action="/logout" method="post" class="mb-0">
                 <button type="submit" class="btn btn-outline-secondary">Log out</button>

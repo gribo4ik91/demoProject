@@ -19,6 +19,7 @@ For runtime startup instructions, use the repository READMEs:
 - `02-ecosystem-management.md` - ecosystem creation, browsing, and deletion
 - `03-activity-logging.md` - activity, observation logging, and log editing
 - `04-maintenance-management.md` - maintenance task management, status handling, and manual task editing
+- automation rule behavior and suggested-task generation details
 - `05-authentication-and-profile.md` - registration, login, profile, and security modes
 - `06-frontend-journey.md` - user journey through the web interface
 - `07-architecture-and-data.md` - architecture, layers, entities, database, and infrastructure
@@ -45,6 +46,7 @@ The product combines:
 - a dedicated ecosystem workspace
 - an activity and observation log
 - manual and auto-suggested maintenance tasks
+- configurable automation rules for suggested tasks
 - optional authentication, user profile management, role-based user administration, and creator attribution
 - PostgreSQL + Flyway for stable persistence
 

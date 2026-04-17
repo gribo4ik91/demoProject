@@ -597,19 +597,131 @@ change the status of an existing task.
 #### Important rules
 
 - `DISMISSED` is allowed only for auto-created tasks
-- suggested tasks appear automatically only after new `WATERING` or `FEEDING` logs
-- an identical open suggested task is not duplicated
+- suggested tasks are generated from enabled automation rules instead of fixed hardcoded mappings
+- current runtime execution applies enabled `AFTER_EVENT` rules when a matching log is recorded
+- an identical open suggested task is not duplicated when the matching rule has `preventDuplicates = true`
 - a dismissed suggested task is not recreated during its cooldown window
 - suggested tasks cannot be edited directly; only their status can be changed
 - `dismissalReason` is mandatory for `DISMISSED`
 - `dismissalReason` must not be sent for `OPEN` or `DONE`
+
+## 5. Automation Rules API
+
+### `POST /api/v1/automation-rules`
+
+Purpose:
+create a configurable rule that can generate suggested maintenance tasks.
+
+#### Body
+
+| Field | Type | Required | Constraints / allowed values |
+|---|---|---|---|
+| `name` | string | yes | not blank, up to 120 characters |
+| `enabled` | boolean | no | defaults to `true` |
+| `scopeType` | string | yes | `ALL_ECOSYSTEMS`, `ECOSYSTEM_TYPE` |
+| `ecosystemType` | string \| null | no | required when `scopeType = ECOSYSTEM_TYPE`; allowed UI values: `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, `DIY_INCUBATOR` |
+| `triggerType` | string | yes | `AFTER_EVENT`, `AFTER_INACTIVITY` |
+| `eventType` | string | yes | `OBSERVATION`, `FEEDING`, `WATERING` |
+| `inactivityDays` | integer \| null | no | required when `triggerType = AFTER_INACTIVITY`; 1-365 |
+| `delayDays` | integer \| null | no | used when `triggerType = AFTER_EVENT`; 0-365 |
+| `taskTitle` | string | yes | not blank, up to 160 characters |
+| `taskType` | string | yes | `WATERING`, `FEEDING`, `CLEANING`, `INSPECTION` |
+| `preventDuplicates` | boolean | no | defaults to `true` |
+
+#### Response
+
+- `201 Created`
+- returns `AutomationRuleResponse`
+
+### `GET /api/v1/automation-rules`
+
+Purpose:
+return automation rules with optional status and trigger-family filtering.
+
+#### Query parameters
+
+| Parameter | Type | Required | Default | Allowed values |
+|---|---|---|---|---|
+| `status` | string | no | `ALL` | `ALL`, `ACTIVE`, `DISABLED` |
+| `trigger` | string | no | `ALL` | `ALL`, `AFTER_EVENT`, `AFTER_INACTIVITY` |
+
+#### Response
+
+Returns an array of `AutomationRuleResponse`.
+
+Fields of `AutomationRuleResponse`:
+
+| Field | Type |
+|---|---|
+| `id` | UUID |
+| `name` | string |
+| `enabled` | boolean |
+| `scopeType` | string |
+| `ecosystemType` | string \| null |
+| `triggerType` | string |
+| `eventType` | string \| null |
+| `inactivityDays` | integer \| null |
+| `delayDays` | integer \| null |
+| `taskTitle` | string |
+| `taskType` | string |
+| `preventDuplicates` | boolean |
+| `createdAt` | datetime |
+| `updatedAt` | datetime |
+
+### `GET /api/v1/automation-rules/{id}`
+
+Purpose:
+return one automation rule by identifier.
+
+### `PATCH /api/v1/automation-rules/{id}`
+
+Purpose:
+update a previously created automation rule.
+
+#### Important rules
+
+- event type is always required for the current MVP
+- `ecosystemType` is valid only when `scopeType = ECOSYSTEM_TYPE`
+- `delayDays` is valid only for `AFTER_EVENT`
+- `inactivityDays` is valid only for `AFTER_INACTIVITY`
+
+#### Response
+
+- `200 OK`
+- returns updated `AutomationRuleResponse`
+
+### `PATCH /api/v1/automation-rules/{id}/enabled`
+
+Purpose:
+enable or disable one automation rule.
+
+#### Body
+
+| Field | Type | Required | Allowed values / rules |
+|---|---|---|---|
+| `enabled` | boolean | yes | `true` or `false` |
+
+#### Response
+
+- `200 OK`
+- returns updated `AutomationRuleResponse`
+
+### `DELETE /api/v1/automation-rules/{id}`
+
+Purpose:
+delete an automation rule.
+
+#### Response
+
+- `204 No Content`
+- `404 Not Found` if the rule does not exist
 
 #### Response
 
 - `200 OK`
 - returns the updated `MaintenanceTaskResponse`
 
-## 5. Page routes outside `/api/v1`
+## 6. Page routes outside `/api/v1`
 
 These routes are not part of the REST API, but they matter for a complete application view.
 
@@ -637,6 +749,10 @@ These routes are not part of the REST API, but they matter for a complete applic
 
 - returns the users directory page
 
+### `GET /automation-rules`
+
+- returns the SSR automation rules page
+
 ### `POST /login`
 
 - Spring Security form login
@@ -653,7 +769,7 @@ Form fields:
 
 - ends the current user session
 
-## 6. Where to find the machine-readable spec
+## 7. Where to find the machine-readable spec
 
 The application already exposes the runtime specification through:
 

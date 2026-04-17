@@ -25,7 +25,8 @@ import java.util.UUID
 class MaintenanceTaskService(
     private val maintenanceTaskRepository: MaintenanceTaskRepository,
     private val ecosystemRepository: EcosystemRepository,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val automationRuleService: AutomationRuleService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -40,31 +41,6 @@ class MaintenanceTaskService(
             "NOT_RELEVANT" to 30L
         )
     }
-
-    /**
-     * Describes when an activity event should create a suggested follow-up task.
-     */
-    private data class SuggestedTaskRule(
-        val eventType: String,
-        val title: String,
-        val taskType: String,
-        val dueInDays: Long
-    )
-
-    private val suggestedTaskRules = listOf(
-        SuggestedTaskRule(
-            eventType = "WATERING",
-            title = "Inspect moisture balance after watering",
-            taskType = "INSPECTION",
-            dueInDays = 1
-        ),
-        SuggestedTaskRule(
-            eventType = "FEEDING",
-            title = "Log feeding response check",
-            taskType = "INSPECTION",
-            dueInDays = 1
-        )
-    )
 
     /**
      * Creates a manual maintenance task for the selected ecosystem.
@@ -216,51 +192,64 @@ class MaintenanceTaskService(
     @Transactional
     fun createSuggestedTaskIfNeeded(ecosystem: Ecosystem, eventType: String) {
         val ecosystemId = ecosystem.id ?: return
-        val rule = suggestedTaskRules.firstOrNull { it.eventType == eventType } ?: return
-
-        val duplicateExists = maintenanceTaskRepository.existsByEcosystemIdAndStatusAndTaskTypeAndTitle(
-            ecosystemId = ecosystemId,
-            status = OPEN_STATUS,
-            taskType = rule.taskType,
-            title = rule.title
-        )
-
-        if (duplicateExists) {
+        val rules = automationRuleService.getActiveEventRules(ecosystem.type, eventType)
+        if (rules.isEmpty()) {
             return
         }
 
-        val latestDismissedMatch = maintenanceTaskRepository.findTopByEcosystemIdAndStatusAndTaskTypeAndTitleOrderByCreatedAtDesc(
-            ecosystemId = ecosystemId,
-            status = DISMISSED_STATUS,
-            taskType = rule.taskType,
-            title = rule.title
-        )
+        rules.forEach { rule ->
+            if (rule.preventDuplicates) {
+                val duplicateExists = maintenanceTaskRepository.existsByEcosystemIdAndStatusAndTaskTypeAndTitle(
+                    ecosystemId = ecosystemId,
+                    status = OPEN_STATUS,
+                    taskType = rule.taskType,
+                    title = rule.taskTitle
+                )
 
-        if (latestDismissedMatch != null && shouldSkipSuggestedTask(latestDismissedMatch, LocalDateTime.now())) {
-            logger.info(
-                "Skipping suggested task ecosystemId={} eventType={} reason=cooldown",
-                ecosystemId,
-                eventType
-            )
-            return
-        }
+                if (duplicateExists) {
+                    return@forEach
+                }
+            }
 
-        logger.info("Creating suggested maintenance task ecosystemId={} eventType={}", ecosystemId, eventType)
-        val systemActor = authService.systemActorSnapshot()
-        maintenanceTaskRepository.save(
-            MaintenanceTask(
-                ecosystem = ecosystem,
-                title = rule.title,
+            val latestDismissedMatch = maintenanceTaskRepository.findTopByEcosystemIdAndStatusAndTaskTypeAndTitleOrderByCreatedAtDesc(
+                ecosystemId = ecosystemId,
+                status = DISMISSED_STATUS,
                 taskType = rule.taskType,
-                dueDate = LocalDate.now().plusDays(rule.dueInDays),
-                status = OPEN_STATUS,
-                autoCreated = true,
-                dismissalReason = null,
-                createdByUser = null,
-                createdByUsername = systemActor.username,
-                createdByDisplayName = systemActor.displayName
+                title = rule.taskTitle
             )
-        )
+
+            if (latestDismissedMatch != null && shouldSkipSuggestedTask(latestDismissedMatch, LocalDateTime.now())) {
+                logger.info(
+                    "Skipping suggested task ecosystemId={} eventType={} ruleId={} reason=cooldown",
+                    ecosystemId,
+                    eventType,
+                    rule.id
+                )
+                return@forEach
+            }
+
+            logger.info(
+                "Creating suggested maintenance task ecosystemId={} eventType={} ruleId={}",
+                ecosystemId,
+                eventType,
+                rule.id
+            )
+            val systemActor = authService.systemActorSnapshot()
+            maintenanceTaskRepository.save(
+                MaintenanceTask(
+                    ecosystem = ecosystem,
+                    title = rule.taskTitle,
+                    taskType = rule.taskType,
+                    dueDate = LocalDate.now().plusDays((rule.delayDays ?: 0).toLong()),
+                    status = OPEN_STATUS,
+                    autoCreated = true,
+                    dismissalReason = null,
+                    createdByUser = null,
+                    createdByUsername = systemActor.username,
+                    createdByDisplayName = systemActor.displayName
+                )
+            )
+        }
     }
 
     /**
