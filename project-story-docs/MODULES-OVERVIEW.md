@@ -19,7 +19,9 @@ This file provides a quick structural overview of the project so it is easy to u
 | `application/application/src/main/kotlin/com/example/api/dto` | API request and response contracts | `CreateEcosystemRequest.kt`, `LogRequest.kt`, `CreateMaintenanceTaskRequest.kt`, `RegisterUserRequest.kt` |
 | `application/application/src/main/kotlin/com/example/api/config` | Security, OpenAPI, and response delay configuration | `SecurityConfig.kt`, `OpenApiConfig.kt`, `ResponseDelayFilter.kt`, `ResponseDelayProperties.kt` |
 | `application/application/src/main/kotlin/com/example/api/exception` | Shared API error handling | `GlobalExceptionHandler.kt`, `ApiErrorResponse.kt` |
-| `application/application/src/main/resources/static` | Embedded frontend | `index.html`, `ecosystem.html`, `login.html`, `register.html`, `profile.html` |
+| `application/application/src/main/kotlin/com/example/api/controller` | HTTP API and SSR page routing | `EcosystemController.kt`, `UiController.kt`, `LoginPageController.kt`, `UiSupport.kt` |
+| `application/application/src/main/resources/templates` | Freemarker pages and fragments | `pages/home.ftlh`, `pages/ecosystem.ftlh`, `fragments/workspace-panel.ftlh`, `fragments/task-list.ftlh`, `fragments/log-list.ftlh` |
+| `application/application/src/main/resources/static` | Embedded static assets for the SSR UI | `css/home.css`, `css/ecosystem.css`, `js/ssr-ui.js`, `favicon.svg` |
 | `application/application/src/main/resources/db/migration` | Versioned database schema through Flyway | `V1__init_schema.sql` ... `V7__add_optional_profile_fields.sql` |
 | `application/application/src/test` | Automated controller, integration, and configuration tests | `ApplicationTests.kt`, `ApiIntegrationTests.kt`, `AuthEnabledIntegrationTests.kt`, `EcosystemControllerTest.kt` |
 | `application/application` | Application operational layer | `README.md`, `Dockerfile`, `docker-compose.app.yml`, `Jenkinsfile`, `api-tests.http`, `api-tests-auth-enabled.http` |
@@ -69,5 +71,5 @@ The project is organized quite cleanly:
 
 - business features are separated from infrastructure
 - database schema is separated from PostgreSQL runtime
-- the frontend is embedded in the backend but not mixed with the service layer
+- the frontend is embedded in the backend but still separated into SSR templates, UI helpers, and static assets
 - the documentation now covers business, architecture, and operational concerns

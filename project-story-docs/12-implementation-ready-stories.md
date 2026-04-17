@@ -161,16 +161,16 @@ As a user, I want to delete an ecosystem so that obsolete data is fully removed.
 
 ## Epic D. User governance and attribution
 
-### ST-21 Automatic admin assignment
+### ST-21 Automatic super-admin assignment
 
 **Goal**
-As a product owner, I want the first registered account to receive admin rights automatically so that the environment always has one governance user without manual setup.
+As a product owner, I want the first registered account to receive super-admin rights automatically so that the environment always has one governance user without manual setup.
 
 **API contract**
 
 - Endpoint: `POST /api/v1/auth/register`
 - Behavior:
-  - first successful registration persists role `ADMIN`
+  - first successful registration persists role `SUPER_ADMIN`
   - all later registrations persist role `USER`
 - Success response:
   - `201 Created`
@@ -184,11 +184,11 @@ As a product owner, I want the first registered account to receive admin rights 
 
 - table `app_user`
 - add column `role`
-- migrate existing data so one earliest user becomes `ADMIN` if no admin exists
+- migrate existing data so the earliest user becomes `SUPER_ADMIN`
 
 **Acceptance criteria**
 
-- first registered user is stored as `ADMIN`
+- first registered user is stored as `SUPER_ADMIN`
 - second and later users are stored as `USER`
 - role is visible in profile and auth-status payloads
 
@@ -227,36 +227,50 @@ As an authenticated user, I want a shared page listing all accounts so that I ca
 - response contains all registered users
 - frontend page `/users` renders the directory
 
-### ST-23 Admin-only user deletion
+### ST-23 Role-aware user governance
 
 **Goal**
-As an admin, I want to remove obsolete user accounts so that access stays clean without changing the rest of the business logic.
+As a governance user, I want account management to respect the role hierarchy so that access stays clean without changing the rest of the business logic.
 
 **API contract**
 
 - Endpoint: `DELETE /api/v1/auth/users/{userId}`
+- Endpoint: `PUT /api/v1/auth/users/{userId}/role`
 - Auth:
-  - requires authenticated admin session
+  - delete requires authenticated `ADMIN` or `SUPER_ADMIN` session
+  - role change requires authenticated `SUPER_ADMIN` session
 - Path params:
   - `userId: UUID` required
-- Success response:
+- Delete success response:
   - `204 No Content`
+- Role-update request body:
+  - `role: string` with practical values `ADMIN` or `USER`
+- Role-update success response:
+  - `200 OK`
+  - returns updated `AuthUserResponse`
 - Error expectations:
-  - `403 Forbidden` when caller is not admin
+  - `403 Forbidden` when caller lacks required role
   - `404 Not Found` when target user does not exist
-  - `400 Bad Request` when admin tries to delete their own account
+  - `400 Bad Request` when caller tries to delete their own account
+  - `400 Bad Request` when `SUPER_ADMIN` tries to change their own role
+  - `400 Bad Request` when role reassignment targets `SUPER_ADMIN`
 
 **SQL / data impact**
 
 - deletes rows from `app_user`
 - creator foreign keys use `ON DELETE SET NULL`
 - creator snapshots remain stored on business records
+- role updates modify `app_user.role`
 
 **Acceptance criteria**
 
-- admin can delete another user
+- `ADMIN` can delete `USER`
+- `ADMIN` cannot delete `ADMIN` or `SUPER_ADMIN`
+- `SUPER_ADMIN` can delete `ADMIN` and `USER`
 - regular users cannot delete accounts
-- admin self-deletion is rejected
+- only `SUPER_ADMIN` can change a user's role between `USER` and `ADMIN`
+- self-deletion is rejected
+- the single `SUPER_ADMIN` role remains reserved for the first user in the system
 
 ### ST-24 Creator attribution on business records
 

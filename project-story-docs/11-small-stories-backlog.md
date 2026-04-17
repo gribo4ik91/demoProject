@@ -121,20 +121,20 @@ As a user, I want to delete an ecosystem I no longer track so that obsolete dash
 
 ## Epic D. User governance and attribution
 
-### ST-21 Assign admin role to the first registered user
+### ST-21 Assign super-admin role to the first registered user
 
 **Story**
-As a product owner, I want the first registered account to become admin automatically so that the application always has one simple governance owner.
+As a product owner, I want the first registered account to become the super admin automatically so that the application always has one simple governance owner.
 
 **Scope**
 
-- assign `ADMIN` to the first created user
+- assign `SUPER_ADMIN` to the first created user
 - assign `USER` to every later registration
 - expose role in profile and auth-status responses
 
 **Acceptance criteria**
 
-- first registration returns role `ADMIN`
+- first registration returns role `SUPER_ADMIN`
 - second and later registrations return role `USER`
 - signed-in clients can see the current role
 
@@ -163,22 +163,27 @@ As an authenticated user, I want to see all registered accounts so that I know w
 
 - ST-21
 
-### ST-23 Delete users through admin-only access
+### ST-23 Manage users through role-aware access
 
 **Story**
-As an admin, I want to delete user accounts so that obsolete access can be removed safely.
+As a governance user, I want account management actions to follow the role hierarchy so that access can be removed safely without breaking the single-super-admin model.
 
 **Scope**
 
 - add `DELETE /api/v1/auth/users/{userId}`
-- show delete action only to admins
-- prevent admin self-deletion
+- add `PUT /api/v1/auth/users/{userId}/role`
+- show delete action according to role hierarchy
+- show admin-promotion actions only to the `SUPER_ADMIN`
+- prevent self-deletion and self-role-change through the directory
 
 **Acceptance criteria**
 
-- admin can delete another user
-- regular users receive forbidden access
-- admin cannot delete own account
+- `ADMIN` can delete a regular user
+- `SUPER_ADMIN` can delete an admin or a regular user
+- only `SUPER_ADMIN` can promote `USER` to `ADMIN`
+- only `SUPER_ADMIN` can demote `ADMIN` back to `USER`
+- regular users receive forbidden access for destructive governance actions
+- no user can delete their own account from the directory
 
 **Dependencies**
 

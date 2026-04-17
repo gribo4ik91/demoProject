@@ -90,7 +90,7 @@ class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.displayName").value("Demo Gardener"))
             .andExpect(jsonPath("$.username").value("demo-user"))
-            .andExpect(jsonPath("$.role").value("ADMIN"))
+            .andExpect(jsonPath("$.role").value("SUPER_ADMIN"))
 
         val loginResult = mockMvc.perform(
             formLogin("/login")
@@ -110,13 +110,13 @@ class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
         mockMvc.perform(get("/api/v1/auth/status").session(session))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.authenticated").value(true))
-            .andExpect(jsonPath("$.role").value("ADMIN"))
+            .andExpect(jsonPath("$.role").value("SUPER_ADMIN"))
 
         mockMvc.perform(get("/api/v1/auth/profile").session(session))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.displayName").value("Demo Gardener"))
             .andExpect(jsonPath("$.location").value("Chisinau"))
-            .andExpect(jsonPath("$.role").value("ADMIN"))
+            .andExpect(jsonPath("$.role").value("SUPER_ADMIN"))
 
         mockMvc.perform(
             put("/api/v1/auth/profile")
@@ -142,33 +142,69 @@ class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
     }
 
     @Test
-    fun `first user becomes admin and only admin can delete other users`() {
+    fun `super admin can manage admins and admin can delete only regular users`() {
+        registerUser("super-admin-user", "Super Admin", "super-admin@example.com")
         registerUser("admin-user", "Admin Person", "admin@example.com")
         registerUser("member-user", "Member Person", "member@example.com")
 
-        val adminSession = login("admin-user", "secret123")
+        val superAdminSession = login("super-admin-user", "secret123")
         val memberSession = login("member-user", "secret123")
-        val memberId = appUserRepository.findByUsername("member-user")?.id ?: error("Expected member id")
         val adminId = appUserRepository.findByUsername("admin-user")?.id ?: error("Expected admin id")
+        val memberId = appUserRepository.findByUsername("member-user")?.id ?: error("Expected member id")
+        val superAdminId = appUserRepository.findByUsername("super-admin-user")?.id ?: error("Expected super admin id")
 
-        mockMvc.perform(get("/api/v1/auth/users").session(adminSession))
+        mockMvc.perform(get("/api/v1/auth/users").session(superAdminSession))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].role").value("ADMIN"))
+            .andExpect(jsonPath("$.length()").value(3))
+            .andExpect(jsonPath("$[0].role").value("SUPER_ADMIN"))
             .andExpect(jsonPath("$[1].role").value("USER"))
+            .andExpect(jsonPath("$[2].role").value("USER"))
+
+        mockMvc.perform(delete("/api/v1/auth/users/$superAdminId").session(superAdminSession))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Users cannot delete their own account from the directory"))
+
+        mockMvc.perform(
+            put("/api/v1/auth/users/$adminId/role")
+                .session(memberSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"ADMIN"}""")
+        )
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.message").value("Only super admins can manage admin roles"))
+
+        mockMvc.perform(
+            put("/api/v1/auth/users/$adminId/role")
+                .session(superAdminSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"ADMIN"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.role").value("ADMIN"))
+
+        val adminSession = login("admin-user", "secret123")
 
         mockMvc.perform(delete("/api/v1/auth/users/$adminId").session(adminSession))
             .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value("Admins cannot delete their own account"))
+            .andExpect(jsonPath("$.message").value("Users cannot delete their own account from the directory"))
 
-        mockMvc.perform(delete("/api/v1/auth/users/$adminId").session(memberSession))
+        mockMvc.perform(delete("/api/v1/auth/users/$superAdminId").session(adminSession))
             .andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.message").value("Only admins can manage users"))
+            .andExpect(jsonPath("$.message").value("Admin can delete only regular users"))
 
         mockMvc.perform(delete("/api/v1/auth/users/$memberId").session(adminSession))
             .andExpect(status().isNoContent)
 
         check(appUserRepository.findByUsername("member-user") == null)
+
+        mockMvc.perform(
+            put("/api/v1/auth/users/$adminId/role")
+                .session(superAdminSession)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"USER"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.role").value("USER"))
     }
 
     @Test

@@ -52,7 +52,7 @@ The system:
 - checks `username` uniqueness
 - hashes the password with BCrypt
 - creates the user record
-- assigns role `ADMIN` to the first created account
+- assigns role `SUPER_ADMIN` to the first created account
 - assigns role `USER` to every later account
 
 ### Scenario 3. Sign in
@@ -87,22 +87,37 @@ The directory shows:
 
 ### Scenario 6. Delete a user
 
-Only an admin can delete user accounts.
+Admins and the super admin can delete user accounts, but with different limits.
 
 The system also prevents chaotic cleanup:
 
 - regular users cannot delete anyone
-- the admin cannot delete their own account
+- admins can delete only regular users
+- the super admin can delete admins and regular users
+- no user can delete their own account from the directory
 - creator labels on old ecosystems, logs, and tasks remain visible through stored creator snapshots
+
+### Scenario 7. Grant or remove admin rights
+
+Only the `SUPER_ADMIN` can change another user's role between `USER` and `ADMIN`.
+
+The system protects the hierarchy:
+
+- the first user remains the only `SUPER_ADMIN`
+- the super admin cannot change their own role
+- regular users cannot assign or remove admin rights
+- admin role can be granted to a regular user and later removed back to `USER`
 
 ## Business rules
 
 - `username` must be unique
-- the first created account becomes `ADMIN`
+- the first created account becomes `SUPER_ADMIN`
 - all later accounts become `USER`
 - every authenticated account can read the directory of users
-- only admins can delete user accounts
-- the admin cannot delete their own account
+- only the `SUPER_ADMIN` can assign or remove `ADMIN` rights
+- `ADMIN` can delete only `USER` accounts
+- `SUPER_ADMIN` can delete `ADMIN` and `USER` accounts
+- no user can delete their own account from the directory
 - password length must be between 6 and 72 characters
 - `displayName` must be between 3 and 60 characters
 - `firstName` and `lastName` must be between 2 and 60 characters
@@ -118,6 +133,7 @@ The system also prevents chaotic cleanup:
 - `GET /api/v1/auth/status`
 - `GET /api/v1/auth/users`
 - `DELETE /api/v1/auth/users/{userId}`
+- `PUT /api/v1/auth/users/{userId}/role`
 
 ## What auth status returns
 
@@ -138,8 +154,8 @@ The response includes:
 ## Architectural implementation
 
 - `SecurityConfig` switches between open mode and protected mode
-- `AuthController` exposes registration and profile endpoints
-- `AuthService` implements normalization, lookup, update, registration, role assignment, directory loading, and admin-only deletion logic
+- `AuthController` exposes registration, profile, directory, deletion, and role-update endpoints
+- `AuthService` implements normalization, lookup, update, registration, role assignment, directory loading, super-admin role governance, and role-aware deletion logic
 - `AppUserRepository` and the `app_user` table provide persistence
 
 ## Architectural note
@@ -147,8 +163,9 @@ The response includes:
 The current authentication model still protects entry into the product rather than implementing true multi-user ownership.
 At the same time, it now adds lightweight governance through:
 
-- one automatic admin account
+- one automatic super-admin account
 - a shared user directory
+- controlled promotion and demotion of admins
 - creator attribution on ecosystems, logs, and tasks
 
 ## Summary

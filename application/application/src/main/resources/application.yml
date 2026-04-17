@@ -4,6 +4,17 @@ server:
 app:
   auth:
     enabled: ${APP_AUTH_ENABLED:true}
+    default-user:
+      enabled: ${APP_AUTH_DEFAULT_USER_ENABLED:true}
+      username: ${APP_AUTH_DEFAULT_USER_USERNAME:demo_user_auth}
+      password: ${APP_AUTH_DEFAULT_USER_PASSWORD:secret123}
+      display-name: ${APP_AUTH_DEFAULT_USER_DISPLAY_NAME:Demo Gardener}
+      first-name: ${APP_AUTH_DEFAULT_USER_FIRST_NAME:Demo}
+      last-name: ${APP_AUTH_DEFAULT_USER_LAST_NAME:Gardener}
+      email: ${APP_AUTH_DEFAULT_USER_EMAIL:demo_user_auth@example.com}
+      location: ${APP_AUTH_DEFAULT_USER_LOCATION:Chisinau}
+      bio: ${APP_AUTH_DEFAULT_USER_BIO:Building calm terrarium routines and logging daily ecosystem changes.}
+      role: ${APP_AUTH_DEFAULT_USER_ROLE:SUPER_ADMIN}
   response-delay:
     enabled: ${APP_RESPONSE_DELAY_ENABLED:false}
     min-ms: ${APP_RESPONSE_DELAY_MIN_MS:1000}

@@ -6,18 +6,19 @@ As a user, I want to perform the main workflows through a simple web interface s
 
 ## Overall UI model
 
-The frontend is backend-hosted and built from static HTML pages with JavaScript.
+The frontend is backend-hosted and rendered through Spring MVC + Freemarker templates.
 It is not implemented as a separate SPA.
 
 This means:
 
 - backend and UI are delivered together
-- pages are loaded directly from the application
-- data is fetched via REST endpoints using `fetch`
+- full pages are rendered directly by the application
+- smaller interactions are updated through `htmx`
+- lightweight browser-only behavior is still allowed for cases such as local pinning or edit toggles
 
 ## Main pages
 
-### 1. Home page `index.html`
+### 1. Home page `/`
 
 Purpose:
 
@@ -34,33 +35,34 @@ User flow:
 4. Apply search, status filter, and sorting controls
 5. Review the "Needs Attention First" section
 6. Pin or unpin ecosystems locally in the browser
-7. Create a new ecosystem through the form
+7. Create a new ecosystem through the SSR form
 8. Trigger quick log or quick task actions directly from a card
-9. Load more ecosystem cards without leaving the page
+9. Move through paged ecosystem cards without leaving the page
 10. Open the selected ecosystem dashboard
 11. Open profile or users pages from the shared authenticated header
 
-### 2. Ecosystem page `ecosystem.html`
+### 2. Ecosystem page `/ecosystems/{id}`
 
 This is the main working screen of the product.
 
 It combines:
 
 - summary status
+- prominent current-status banner
 - task creation and browsing
 - task editing for manual tasks
 - task filtering
 - log creation and browsing
 - log editing
 - log pagination and filtering
-- ecosystem editing
+- ecosystem view mode plus explicit edit mode
 - ecosystem deletion
 - status changes for tasks
 - creator labels for the ecosystem, each log entry, and each maintenance task
 
 From a business perspective, this is where the day-to-day work happens.
 
-### 3. `login.html`
+### 3. `/login`
 
 Purpose:
 
@@ -68,14 +70,14 @@ Purpose:
 - display login error, logout, and post-registration messages
 - explain that authentication may be disabled by configuration
 
-### 4. `register.html`
+### 4. `/register`
 
 Purpose:
 
 - create a new user account
 - collect extended profile fields
 
-### 5. `profile.html`
+### 5. `/profile`
 
 Purpose:
 
@@ -83,31 +85,36 @@ Purpose:
 - allow editing of visible profile fields
 - show the current account role
 
-### 6. `users.html`
+### 6. `/users`
 
 Purpose:
 
 - list all registered users for authenticated accounts
 - show role-based access information
-- show delete actions only to admins
+- show `Make admin` / `Remove admin` actions only to the `SUPER_ADMIN`
+- show delete actions according to role hierarchy
 
 ## UI behavior highlights
 
 - the interface shows toast notifications for page-level success and error feedback
-- authentication status is blended into the page header via `auth/status`
+- authentication status is blended into the page header via server-rendered auth state
 - the home page combines a hero section, workspace counters, filters, urgency grouping, pinned grouping, and the main card grid
 - home page cards are now enriched by backend-computed status, freshness, log counts, and task counts
 - home page search and status filters are executed server-side so counters and card lists stay aligned
-- home page card loading is incremental through pagination rather than loading the entire workspace at once
-- quick log and quick task actions run through modal flows on the home page
+- home page card updates run through SSR fragments and htmx rather than bespoke page fetch logic
+- quick log and quick task actions run through inline panel flows on the home page
 - pinned ecosystems are still browser-local and currently use `localStorage`
-- the dashboard refreshes summary data after task and log changes
+- the dashboard refreshes SSR fragments or full page state after task and log changes
 - tasks can be filtered by both status and source
+- tasks can also be searched by title
 - logs are loaded page by page
 - manual task edit flows run inline in the dashboard
 - logs can also be corrected inline through the update flow
 - suggested tasks remain status-driven and are not content-editable
-- the users page is visible to every signed-in account but destructive actions are admin-only
+- the users page is visible to every signed-in account
+- regular users do not see destructive actions
+- admins see delete actions only for regular users
+- the super admin sees admin-role actions and can delete admins or regular users
 - creator labels are rendered from backend snapshots so history still makes sense after account deletion
 
 ## Architectural assessment of the frontend approach
@@ -122,12 +129,12 @@ Strengths:
 Limitations:
 
 - no frontend component model
-- page logic lives directly in HTML/JS files
+- page templates and a small browser enhancement layer still need manual coordination
 - UI scalability will become harder as the product grows
 
 ## Summary
 
-The current frontend approach fits the size and purpose of the solution well.
+The current SSR + htmx frontend approach fits the size and purpose of the solution well.
 It is a strong choice for a demo-oriented full-stack project and fully supports the main user journey without unnecessary infrastructure complexity.
 
 Recent iterations made the home page materially richer: instead of being only an entry list, it now acts as a lightweight workspace dashboard and delegates more filtering and aggregation logic to the backend.

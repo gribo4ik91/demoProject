@@ -12,6 +12,10 @@ body.modal-open { overflow: hidden; }
 .status-warning { background: #fff3d7; color: #8a6116; }
 .status-neutral { background: #edf2ef; color: #53615c; }
 .eco-card.pinned { border-color: #cadba1; background: #f7fbef; }
+.workspace-card,
+.priority-card { display: flex; }
+.workspace-card > .eco-card,
+.priority-card > .eco-card { width: 100%; }
 .mini-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .mini-metric { border: 1px solid #d7e2da; border-radius: .8rem; padding: .7rem .8rem; background: #f8fbf9; }
 .mini-label { color: #65716c; font-size: .78rem; }
@@ -36,6 +40,14 @@ body.modal-open { overflow: hidden; }
 .toast-info .toast-bar { background: #537da4; }
 .toast-warning { border-color: #efd79a; }
 .toast-warning .toast-bar { background: #d09a2f; }
+.quick-action-panel { animation: quickPanelIn .18s ease both; }
+.quick-action-panel form { margin: 0; }
+.pin-toggle { min-width: 5rem; }
+
+@keyframes quickPanelIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 @media (max-width: 991.98px) {
     .toolbar-grid { grid-template-columns: 1fr; }

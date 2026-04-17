@@ -102,7 +102,7 @@ Response fields:
 | `authenticated` | boolean | whether a user is currently authenticated |
 | `username` | string \| null | current username |
 | `displayName` | string \| null | current display name |
-| `role` | string \| null | current role, typically `ADMIN` or `USER` |
+| `role` | string \| null | current role, typically `SUPER_ADMIN`, `ADMIN`, or `USER` |
 
 ### `GET /api/v1/auth/users`
 
@@ -121,7 +121,7 @@ Response fields:
 | `id` | UUID | user identifier |
 | `displayName` | string | display name |
 | `username` | string | login |
-| `role` | string | `ADMIN` or `USER` |
+| `role` | string | `SUPER_ADMIN`, `ADMIN`, or `USER` |
 | `firstName` | string | first name |
 | `lastName` | string | last name |
 | `email` | string | contact email |
@@ -131,13 +131,32 @@ Response fields:
 ### `DELETE /api/v1/auth/users/{userId}`
 
 Purpose:
-delete a user account through admin access.
+delete a user account through role-based governance access.
 
 #### Important behavior
 
-- only admins can call it
-- admins cannot delete their own account
+- `ADMIN` can delete only `USER` accounts
+- `SUPER_ADMIN` can delete `ADMIN` and `USER` accounts
+- no user can delete their own account
 - successful deletion returns `204 No Content`
+
+### `PUT /api/v1/auth/users/{userId}/role`
+
+Purpose:
+change another user's role between `USER` and `ADMIN`.
+
+#### Body
+
+| Field | Type | Required | Constraints / allowed values |
+|---|---|---|---|
+| `role` | string | yes | `ADMIN` or `USER` in practice; `SUPER_ADMIN` is rejected for reassignment |
+
+#### Important behavior
+
+- only the `SUPER_ADMIN` can call it
+- the `SUPER_ADMIN` cannot change their own role
+- the unique `SUPER_ADMIN` role remains reserved for the first user in the system
+- successful update returns `200 OK` with the updated `AuthUserResponse`
 
 ## 2. Ecosystem API
 
@@ -236,7 +255,7 @@ Fields of one `EcosystemWorkspaceCardResponse`:
 - filtering is applied before pagination
 - sorting is applied before pagination
 - `OVERDUE` is a derived filter that matches ecosystems with overdue open tasks
-- the endpoint is intended to support incremental loading on `index.html`
+- the endpoint is intended to support the SSR home workspace and htmx-driven pagination/filtering
 
 ### `GET /api/v1/ecosystems/overview`
 
@@ -594,6 +613,14 @@ change the status of an existing task.
 
 These routes are not part of the REST API, but they matter for a complete application view.
 
+### `GET /`
+
+- returns the SSR home workspace page
+
+### `GET /ecosystems/{id}`
+
+- returns the SSR ecosystem dashboard page
+
 ### `GET /login`
 
 - returns the login page
@@ -605,6 +632,10 @@ These routes are not part of the REST API, but they matter for a complete applic
 ### `GET /profile`
 
 - returns the profile page
+
+### `GET /users`
+
+- returns the users directory page
 
 ### `POST /login`
 
