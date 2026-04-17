@@ -172,6 +172,7 @@ This keeps the home page cheaper than the detailed dashboard and reduces drift b
 - integration tests are being moved toward Testcontainers + PostgreSQL so the test database matches runtime behavior
 - focused integration scenarios now cover manual edit flows and richer dashboard summary analytics
 - controller coverage now also protects the workspace cards contract, including filter forwarding and paged response shape
+- auth-enabled integration scenarios now also protect the `SUPER_ADMIN` / `ADMIN` / `USER` hierarchy and role-aware user management rules
 
 ### Practical rule
 

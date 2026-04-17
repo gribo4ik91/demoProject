@@ -91,7 +91,8 @@ Purpose:
 
 - list all registered users for authenticated accounts
 - show role-based access information
-- show delete actions only to admins
+- show `Make admin` / `Remove admin` actions only to the `SUPER_ADMIN`
+- show delete actions according to role hierarchy
 
 ## UI behavior highlights
 
@@ -110,7 +111,10 @@ Purpose:
 - manual task edit flows run inline in the dashboard
 - logs can also be corrected inline through the update flow
 - suggested tasks remain status-driven and are not content-editable
-- the users page is visible to every signed-in account but destructive actions are admin-only
+- the users page is visible to every signed-in account
+- regular users do not see destructive actions
+- admins see delete actions only for regular users
+- the super admin sees admin-role actions and can delete admins or regular users
 - creator labels are rendered from backend snapshots so history still makes sense after account deletion
 
 ## Architectural assessment of the frontend approach

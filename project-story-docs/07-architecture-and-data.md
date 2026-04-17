@@ -100,7 +100,7 @@ Stores:
 - email
 - location
 - bio
-- role
+- role (`SUPER_ADMIN`, `ADMIN`, `USER`)
 - creation timestamp
 
 ## Database migrations
@@ -115,6 +115,7 @@ The schema evolves through Flyway migrations:
 - `V6` - expanded user profile fields
 - `V7` - optional `location` and `bio`
 - `V8` - roles plus creator-tracking fields on ecosystems, logs, and maintenance tasks
+- `V9` - promote the earliest account to `SUPER_ADMIN` and keep later managed accounts as `ADMIN` or `USER`
 
 ## Runtime infrastructure
 
@@ -159,7 +160,7 @@ The project already contains:
 - consistent API error format
 - understandable REST contracts
 - complete vertical slice from UI to database
-- lightweight role-based user administration without a heavy ACL model
+- lightweight role-based user administration without a heavy ACL model, including one fixed `SUPER_ADMIN`
 - creator attribution preserved by snapshot fields even after deleting an account
 
 ## Architectural limitations

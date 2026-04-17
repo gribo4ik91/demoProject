@@ -17,6 +17,8 @@ The system is designed to support the full core lifecycle of ecosystem care:
 ## Main roles
 
 - Guest: can use the system when authentication is disabled by configuration
+- Super admin: the first user in the system, can manage admin rights and delete admin or regular accounts
+- Admin: can work with the application and delete regular user accounts
 - Authenticated user: signs in, works with the application, and updates profile data
 - System: analyzes recent data and automatically creates suggested follow-up tasks
 
@@ -29,6 +31,7 @@ The project covers:
 - activity and observation logs
 - maintenance tasks
 - basic registration and login
+- lightweight user governance with `SUPER_ADMIN`, `ADMIN`, and `USER` roles
 - a static web UI served by the backend
 
 The project does not cover:
@@ -36,7 +39,6 @@ The project does not cover:
 - user-based ownership separation for ecosystems
 - advanced analytics and charts
 - email, push, or SMS notifications
-- administrator roles
 - bulk operations and complex workflows
 
 ## Core business entities

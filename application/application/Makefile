@@ -1,26 +1,18 @@
-# --- ПЕРЕМЕННЫЕ ---
-APP_DIR = ./api
+APP_DIR = .
+SQL_DIR = ../../sql
 
-# === JOB 1: Подготовка инфраструктуры (БД) ===
-start-db:
-	@echo "🐘 Запускаем PostgreSQL..."
-	docker compose up -d
-	@echo "⏳ Ждем 3 секунды для инициализации базы..."
-	sleep 3
-
-# === JOB 2: Запуск приложения ===
-start-app: start-db
-	@echo "🚀 Запускаем Spring Boot Backend..."
+start-app:
+	@echo "Starting Spring Boot against a locally running PostgreSQL instance..."
 	cd $(APP_DIR) && ./gradlew bootRun
 
-# === JOB 3: Остановка всего окружения ===
-stop:
-	@echo "🛑 Останавливаем Spring Boot и гасим базу..."
-	docker compose down
-	@echo "🧹 Окружение очищено."
+start-db-docker:
+	@echo "Starting PostgreSQL in Docker (optional helper for local development)..."
+	cd $(SQL_DIR) && docker compose up -d
 
-# === JOB 4 (ЗАДЕЛ НА БУДУЩЕЕ): Запуск тестов ===
+stop-db-docker:
+	@echo "Stopping the optional Docker PostgreSQL instance..."
+	cd $(SQL_DIR) && docker compose down
+
 test-api:
-	@echo "🧪 Запускаем API автотесты..."
-	# Здесь будет команда для твоего ATF, например:
-	# cd ../my-atf && ./gradlew test
+	@echo "Running API tests..."
+	cd $(APP_DIR) && ./gradlew test

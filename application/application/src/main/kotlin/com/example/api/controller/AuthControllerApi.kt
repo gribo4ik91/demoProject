@@ -3,6 +3,7 @@ package com.example.api.controller
 import com.example.api.dto.AuthStatusResponse
 import com.example.api.dto.AuthUserResponse
 import com.example.api.dto.RegisterUserRequest
+import com.example.api.dto.UpdateUserRoleRequest
 import com.example.api.dto.UpdateUserProfileRequest
 import com.example.api.dto.UserListItemResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -74,4 +75,15 @@ interface AuthControllerApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete user", description = "Deletes a user account. Only admins are allowed to do this.")
     fun deleteUser(authentication: Authentication, @PathVariable userId: UUID)
+
+    /**
+     * Changes a user role. Only the super admin may perform this action.
+     */
+    @PutMapping("/users/{userId}/role")
+    @Operation(summary = "Change user role", description = "Promotes or demotes a user. Only the super admin is allowed to do this.")
+    fun updateUserRole(
+        authentication: Authentication,
+        @PathVariable userId: UUID,
+        @Valid @RequestBody request: UpdateUserRoleRequest
+    ): AuthUserResponse
 }

@@ -9,6 +9,12 @@ import jakarta.persistence.Table
 import java.time.LocalDateTime
 import java.util.UUID
 
+object AppUserRoles {
+    const val SUPER_ADMIN = "SUPER_ADMIN"
+    const val ADMIN = "ADMIN"
+    const val USER = "USER"
+}
+
 /**
  * JPA entity representing an application user that can sign in and manage profile data.
  */
@@ -41,7 +47,7 @@ class AppUser(
     var bio: String? = null,
 
     @Column(nullable = false, length = 20)
-    var role: String = "USER",
+    var role: String = AppUserRoles.USER,
 
     @Column(name = "password_hash", nullable = false, length = 100)
     var passwordHash: String = "",

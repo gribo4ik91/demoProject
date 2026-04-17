@@ -5,6 +5,12 @@
 This folder describes the `EcoTracker` project as a set of business stories and architectural decisions.
 The documentation is written from the combined perspective of a business analyst and a solution architect: what business problem the system solves, who uses it, which scenarios it supports, and how those scenarios are implemented across the modules.
 
+For runtime startup instructions, use the repository READMEs:
+
+- root [`README.md`](../README.md) for the two supported startup variants
+- [`application/application/README.md`](../application/application/README.md) for app-level run details
+- [`sql/README.md`](../sql/README.md) for the PostgreSQL-specific path
+
 ## Documentation structure
 
 - `DOCUMENTATION-COVERAGE.md` - coverage checklist and list of areas intentionally not documented in detail

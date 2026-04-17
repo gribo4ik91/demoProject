@@ -9,6 +9,7 @@ import com.example.api.dto.UpdateLogRequest
 import com.example.api.dto.UpdateMaintenanceTaskRequest
 import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.dto.UpdateUserProfileRequest
+import com.example.api.dto.UpdateUserRoleRequest
 import com.example.api.service.AuthService
 import com.example.api.service.EcosystemLogService
 import com.example.api.service.EcosystemService
@@ -341,6 +342,14 @@ class UiController(
     @DeleteMapping("/ui/users/{userId}")
     fun deleteUser(authentication: Authentication, @PathVariable userId: UUID): ResponseEntity<String> =
         executeRefresh { authService.deleteUser(authentication.name, userId) }
+
+    @PutMapping("/ui/users/{userId}/role")
+    fun updateUserRole(
+        authentication: Authentication,
+        @PathVariable userId: UUID,
+        @RequestParam role: String
+    ): ResponseEntity<String> =
+        executeRefresh { authService.updateUserRole(authentication.name, userId, UpdateUserRoleRequest(role)) }
 
     private fun populateHomeModel(
         model: Model,

@@ -135,7 +135,11 @@ class UiSupport(
         }
 
     fun roleBadgeClass(value: String?): String =
-        if (value == "ADMIN") "badge rounded-pill text-bg-success" else "badge rounded-pill text-bg-secondary"
+        when (value) {
+            "SUPER_ADMIN" -> "badge rounded-pill text-bg-danger"
+            "ADMIN" -> "badge rounded-pill text-bg-success"
+            else -> "badge rounded-pill text-bg-secondary"
+        }
 
     fun formatDateTime(value: LocalDateTime?): String = value?.format(dateTimeFormatter) ?: "No data yet"
 

@@ -46,9 +46,10 @@ The project demonstrates a complete vertical slice:
 - Edit manual maintenance tasks inline from the dashboard
 - Review maintenance tasks by status and source
 - Mark suggested tasks as dismissed with a dismissal reason
-- Automatically assign the first registered account the `ADMIN` role and later accounts the `USER` role
+- Automatically assign the first registered account the `SUPER_ADMIN` role and later accounts the `USER` role
 - Expose a shared users directory to authenticated accounts
-- Allow user deletion only for admins while blocking admin self-deletion
+- Let the `SUPER_ADMIN` grant and revoke `ADMIN` rights
+- Allow `ADMIN` users to delete only regular users, while `SUPER_ADMIN` can also delete admins
 - Show who created each ecosystem, log entry, and maintenance task
 - Delete an ecosystem together with its logs
 - Receive structured validation and not-found responses from the API
@@ -93,27 +94,65 @@ Request flow:
 ### Prerequisites
 
 - Java 21
-- Docker with Compose support
 
-### Start PostgreSQL
+There are two supported startup modes.
+
+### Variant 1: PostgreSQL Mode
+
+Use this when you want the real PostgreSQL database and Flyway migrations.
+
+What you need:
+
+- Java 21
+- PostgreSQL running locally on `localhost:5432`
+
+Prepare the database once:
 
 ```powershell
-cd path\to\demoProject\sql
-docker compose up -d
+psql -U postgres -c "CREATE USER eco_user WITH PASSWORD 'eco_password';"
+psql -U postgres -c "CREATE DATABASE ecotracker_db OWNER eco_user;"
 ```
 
-### Start the application
+Start the app:
 
 ```powershell
-cd path\to\demoProject\application\application
-.\gradlew.bat bootRun
+cd path\to\demoProject
+.\run-postgres.bat
 ```
+
+This mode also creates the default bootstrap user automatically if the user table is still empty.
+
+### Variant 2: Fast Local Mode
+
+Use this when you want the fastest possible startup without PostgreSQL and without Docker.
+
+What you need:
+
+- Java 21
+
+Start the app:
+
+```powershell
+cd path\to\demoProject
+.\run-local.bat
+```
+
+That starts the app with the `local` Spring profile and a fresh in-memory `H2` database for each run.
+In this mode, Flyway is disabled and the schema is created automatically for quick local startup.
+
+The local profile also enables the H2 console at `http://localhost:8085/h2-console`.
+The local profile also creates a default user automatically:
+
+- username: `demo_user_auth`
+- password: `secret123`
 
 The app runs at `http://localhost:8085`.
 
-### Startup Sequence
+Docker is optional for the application runtime. It is still needed for integration tests because they use Testcontainers.
 
-1. Start PostgreSQL from the `sql` module
+### PostgreSQL Startup Sequence
+
+1. Ensure PostgreSQL is already running locally
 2. Start the Spring Boot application with Gradle
 3. Spring Boot connects to PostgreSQL using the configured datasource
 4. Flyway runs the migrations from `src/main/resources/db/migration`
@@ -140,6 +179,34 @@ Response delay can be toggled with:
 
 Default local values are defined in [`application.yml`](src/main/resources/application.yml).
 
+The default local datasource points to:
+
+- `jdbc:postgresql://localhost:5432/ecotracker_db`
+- username `eco_user`
+- password `eco_password`
+
+The separate [`application-local.yml`](src/main/resources/application-local.yml) profile switches the app to an in-memory `H2` database with Flyway disabled for quick local startup.
+
+Default user bootstrap can be configured with:
+
+- `APP_AUTH_DEFAULT_USER_ENABLED`
+- `APP_AUTH_DEFAULT_USER_USERNAME`
+- `APP_AUTH_DEFAULT_USER_PASSWORD`
+- `APP_AUTH_DEFAULT_USER_DISPLAY_NAME`
+- `APP_AUTH_DEFAULT_USER_FIRST_NAME`
+- `APP_AUTH_DEFAULT_USER_LAST_NAME`
+- `APP_AUTH_DEFAULT_USER_EMAIL`
+- `APP_AUTH_DEFAULT_USER_LOCATION`
+- `APP_AUTH_DEFAULT_USER_BIO`
+- `APP_AUTH_DEFAULT_USER_ROLE`
+
+The application Jenkins pipeline also exposes `APP_AUTH_DEFAULT_USER_ENABLED` as a build parameter for containerized runs.
+
+To run without a pre-created user, set `app.auth.default-user.enabled: false` in:
+
+- [`src/main/resources/application.yml`](src/main/resources/application.yml) for the PostgreSQL mode
+- [`src/main/resources/application-local.yml`](src/main/resources/application-local.yml) for the fast local mode
+
 ### Authentication Mode
 
 Authentication is enabled by default:
@@ -163,9 +230,10 @@ When authentication is enabled:
 - a local user can be created from the sign-up form
 - the app uses a server-side session after form login
 - the user store is persisted in the `app_user` table
-- the first registered user is promoted to `ADMIN`
+- the first registered user is promoted to `SUPER_ADMIN`
 - all authenticated users can open the `/users` directory page
-- only admins can delete user accounts
+- `SUPER_ADMIN` can assign and revoke `ADMIN` rights
+- `ADMIN` can delete only `USER` accounts, while `SUPER_ADMIN` can delete both `ADMIN` and `USER` accounts
 
 When authentication is disabled:
 
@@ -213,6 +281,7 @@ Endpoints:
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}/status`
 - `GET /auth/users`
 - `DELETE /auth/users/{userId}`
+- `PUT /auth/users/{userId}/role`
 
 Supported query options:
 
@@ -276,6 +345,8 @@ Current automated checks cover:
 - controller-level error handling
 - integration scenarios for ecosystem creation, updates, validation, summaries, log ordering, filtering, and cascade delete
 - maintenance task lifecycle scenarios including overdue, suggested, dismissed, and manual edit flows
+
+If you need a PostgreSQL containerized path later, see [`../../sql/README.md`](../../sql/README.md), but the normal Windows flow documented here assumes a locally running PostgreSQL instance.
 
 ## Trade-offs
 

@@ -44,10 +44,12 @@
             <div class="${ui.roleBadgeClass(auth.role)}">${auth.role!"USER"}</div>
         </div>
         <p class="text-muted small mb-0 mt-3">
-            <#if auth.role == "ADMIN">
-                You can review all accounts and delete users except your own admin account.
+            <#if auth.role == "SUPER_ADMIN">
+                You can assign or remove admin rights and delete admins or regular users.
+            <#elseif auth.role == "ADMIN">
+                You can review all accounts and delete only regular users.
             <#else>
-                You can view all registered users, but only admins can delete accounts.
+                You can view all registered users, but only admins and the super admin can manage accounts.
             </#if>
         </p>
     </section>
@@ -80,17 +82,44 @@
                                 <div>${user.location!"Location not set"}</div>
                                 <div>Created: ${ui.formatDateTime(user.createdAt)}</div>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                                 <span class="text-muted small">
-                                    <#if auth.username == user.username>This is your account<#else>Account member</#if>
+                                    <#if auth.username == user.username>
+                                        This is your account
+                                    <#elseif user.role == "SUPER_ADMIN">
+                                        System owner
+                                    <#elseif user.role == "ADMIN">
+                                        Admin account
+                                    <#else>
+                                        Regular user
+                                    </#if>
                                 </span>
-                                <#if auth.role == "ADMIN" && auth.username != user.username>
-                                    <button type="button" class="btn btn-outline-danger btn-sm"
-                                            hx-delete="/ui/users/${user.id}"
-                                            hx-confirm="Delete user ${user.displayName} (@${user.username})?"
-                                            hx-target="#users-feedback"
-                                            hx-swap="innerHTML">Delete</button>
-                                </#if>
+                                <div class="d-flex gap-2 flex-wrap justify-content-end">
+                                    <#if auth.role == "SUPER_ADMIN" && auth.username != user.username && user.role != "SUPER_ADMIN">
+                                        <#if user.role == "USER">
+                                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                                    hx-put="/ui/users/${user.id}/role"
+                                                    hx-vals='{"role":"ADMIN"}'
+                                                    hx-confirm="Grant admin rights to ${user.displayName} (@${user.username})?"
+                                                    hx-target="#users-feedback"
+                                                    hx-swap="innerHTML">Make admin</button>
+                                        <#elseif user.role == "ADMIN">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    hx-put="/ui/users/${user.id}/role"
+                                                    hx-vals='{"role":"USER"}'
+                                                    hx-confirm="Remove admin rights from ${user.displayName} (@${user.username})?"
+                                                    hx-target="#users-feedback"
+                                                    hx-swap="innerHTML">Remove admin</button>
+                                        </#if>
+                                    </#if>
+                                    <#if auth.username != user.username && ((auth.role == "SUPER_ADMIN" && user.role != "SUPER_ADMIN") || (auth.role == "ADMIN" && user.role == "USER"))>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                                hx-delete="/ui/users/${user.id}"
+                                                hx-confirm="Delete user ${user.displayName} (@${user.username})?"
+                                                hx-target="#users-feedback"
+                                                hx-swap="innerHTML">Delete</button>
+                                    </#if>
+                                </div>
                             </div>
                         </div>
                     </div>

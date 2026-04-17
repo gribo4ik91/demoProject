@@ -3,6 +3,7 @@ package com.example.api.controller
 import com.example.api.dto.AuthStatusResponse
 import com.example.api.dto.AuthUserResponse
 import com.example.api.dto.RegisterUserRequest
+import com.example.api.dto.UpdateUserRoleRequest
 import com.example.api.dto.UpdateUserProfileRequest
 import com.example.api.dto.UserListItemResponse
 import com.example.api.repository.AppUserRepository
@@ -77,4 +78,10 @@ class AuthController(
     override fun deleteUser(authentication: Authentication, userId: UUID) {
         authService.deleteUser(authentication.name, userId)
     }
+
+    /**
+     * Changes a user role when the current account is the super admin.
+     */
+    override fun updateUserRole(authentication: Authentication, userId: UUID, request: UpdateUserRoleRequest): AuthUserResponse =
+        authService.updateUserRole(authentication.name, userId, request)
 }
