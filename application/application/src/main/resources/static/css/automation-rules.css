@@ -1,0 +1,170 @@
+body.rules-page {
+    background:
+        radial-gradient(circle at top right, rgba(102, 163, 118, 0.16), transparent 34%),
+        linear-gradient(180deg, #f4f8f2 0%, #eef4ef 55%, #f8faf7 100%);
+    color: #223129;
+}
+
+.rules-shell {
+    max-width: 1280px;
+}
+
+.rules-hero,
+.rules-panel {
+    border: 1px solid #d9e3da;
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 45px rgba(36, 63, 45, 0.08);
+}
+
+.metric-card {
+    border: 1px solid #d7e1d5;
+    border-radius: 1rem;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f5faf4 100%);
+}
+
+.metric-label {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #4d6c58;
+    font-size: .74rem;
+    font-weight: 700;
+    margin-bottom: .4rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #214534;
+}
+
+.metric-note {
+    margin-top: .6rem;
+    color: #64746a;
+    font-size: .92rem;
+}
+
+.section-label {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #3f6c51;
+    font-weight: 700;
+}
+
+.rule-card,
+.empty-rules-state,
+.editor-section,
+.preview-card {
+    border: 1px solid #d9e3da;
+    border-radius: 1rem;
+    background: #ffffff;
+}
+
+.rule-card {
+    padding: 1rem 1.1rem;
+    animation: ruleCardIn 180ms ease both;
+}
+
+.rule-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+}
+
+.rule-meta-item {
+    border: 1px solid #e2e8e2;
+    border-radius: .9rem;
+    padding: .8rem .9rem;
+    background: #f8fbf8;
+}
+
+.rule-preview summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #2d5b43;
+}
+
+.rule-preview-body {
+    margin-top: .75rem;
+    color: #4f5e56;
+    line-height: 1.6;
+}
+
+.empty-rules-state {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    background: linear-gradient(180deg, #fbfdfb 0%, #f4f8f4 100%);
+}
+
+.empty-editor-state {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 248, 244, 0.96) 100%);
+}
+
+.empty-editor-card {
+    border: 1px dashed #bfd0c2;
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(248, 251, 248, 0.9);
+}
+
+.sticky-editor {
+    position: sticky;
+    top: 1.5rem;
+}
+
+.editor-section {
+    padding: 1rem;
+}
+
+.editor-section-title {
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #476452;
+    font-weight: 700;
+    margin-bottom: .9rem;
+}
+
+.radio-card,
+.checkbox-card {
+    display: flex;
+    gap: .85rem;
+    align-items: flex-start;
+    border: 1px solid #d9e3da;
+    border-radius: .95rem;
+    padding: .85rem .95rem;
+    background: #f9fcf9;
+}
+
+.radio-card input,
+.checkbox-card input {
+    margin-top: .2rem;
+}
+
+.preview-card {
+    padding: 1rem;
+    background: linear-gradient(135deg, #eff8f0 0%, #f8fcf8 100%);
+    color: #365441;
+    line-height: 1.6;
+    min-height: 5rem;
+}
+
+@keyframes ruleCardIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1199.98px) {
+    .sticky-editor {
+        position: static;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .rule-meta-grid {
+        grid-template-columns: 1fr;
+    }
+}

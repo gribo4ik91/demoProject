@@ -33,6 +33,14 @@ class UiSupport(
 
     fun taskSources(): List<String> = listOf("ALL", "MANUAL", "SUGGESTED")
 
+    fun automationRuleStatusFilters(): List<String> = listOf("ALL", "ACTIVE", "DISABLED")
+
+    fun automationRuleTriggerFilters(): List<String> = listOf("ALL", "AFTER_EVENT", "AFTER_INACTIVITY")
+
+    fun automationRuleScopeTypes(): List<String> = listOf("ALL_ECOSYSTEMS", "ECOSYSTEM_TYPE")
+
+    fun automationRuleTriggerTypes(): List<String> = listOf("AFTER_EVENT", "AFTER_INACTIVITY")
+
     fun authStatus(authentication: Authentication?): AuthStatusResponse {
         val principal = authentication?.principal as? UserDetails
         val authenticated = authEnabled &&
@@ -117,6 +125,25 @@ class UiSupport(
 
     fun taskSourceBadgeClass(autoCreated: Boolean): String =
         if (autoCreated) "badge badge-eco badge-eco-suggested" else "badge badge-eco badge-eco-manual"
+
+    fun automationRuleStatusLabel(enabled: Boolean): String = if (enabled) "Active" else "Disabled"
+
+    fun automationRuleStatusBadgeClass(enabled: Boolean): String =
+        if (enabled) "badge rounded-pill text-bg-success" else "badge rounded-pill text-bg-secondary"
+
+    fun automationRuleScopeLabel(value: String?): String =
+        when (value) {
+            "ALL_ECOSYSTEMS" -> "All ecosystems"
+            "ECOSYSTEM_TYPE" -> "By ecosystem type"
+            else -> value ?: "Unknown"
+        }
+
+    fun automationRuleTriggerLabel(value: String?): String =
+        when (value) {
+            "AFTER_EVENT" -> "After event"
+            "AFTER_INACTIVITY" -> "After inactivity"
+            else -> value ?: "Unknown"
+        }
 
     fun eventTypeBadgeClass(value: String?): String =
         when (value) {

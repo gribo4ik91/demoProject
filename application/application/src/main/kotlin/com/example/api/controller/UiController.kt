@@ -1,9 +1,11 @@
 package com.example.api.controller
 
 import com.example.api.dto.CreateEcosystemRequest
+import com.example.api.dto.CreateAutomationRuleRequest
 import com.example.api.dto.CreateMaintenanceTaskRequest
 import com.example.api.dto.LogRequest
 import com.example.api.dto.RegisterUserRequest
+import com.example.api.dto.UpdateAutomationRuleRequest
 import com.example.api.dto.UpdateEcosystemRequest
 import com.example.api.dto.UpdateLogRequest
 import com.example.api.dto.UpdateMaintenanceTaskRequest
@@ -11,6 +13,7 @@ import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.dto.UpdateUserProfileRequest
 import com.example.api.dto.UpdateUserRoleRequest
 import com.example.api.service.AuthService
+import com.example.api.service.AutomationRuleService
 import com.example.api.service.EcosystemLogService
 import com.example.api.service.EcosystemService
 import com.example.api.service.MaintenanceTaskService
@@ -40,6 +43,7 @@ class UiController(
     private val ecosystemService: EcosystemService,
     private val ecosystemLogService: EcosystemLogService,
     private val maintenanceTaskService: MaintenanceTaskService,
+    private val automationRuleService: AutomationRuleService,
     private val authService: AuthService,
     private val validator: Validator
 ) {
@@ -145,6 +149,45 @@ class UiController(
         return "pages/users"
     }
 
+    @GetMapping("/automation-rules")
+    fun automationRulesPage(
+        @RequestParam(required = false, defaultValue = "ALL") statusFilter: String,
+        @RequestParam(required = false, defaultValue = "ALL") triggerFilter: String,
+        model: Model
+    ): String {
+        populateAutomationRulesModel(model, statusFilter, triggerFilter)
+        model.addAttribute("editingRule", null)
+        return "pages/automation-rules"
+    }
+
+    @GetMapping("/rules")
+    fun legacyAutomationRulesRedirect(): String = "redirect:/automation-rules"
+
+    @GetMapping("/ui/automation-rules/list")
+    fun automationRulesListFragment(
+        @RequestParam(required = false, defaultValue = "ALL") statusFilter: String,
+        @RequestParam(required = false, defaultValue = "ALL") triggerFilter: String,
+        model: Model
+    ): String {
+        populateAutomationRulesModel(model, statusFilter, triggerFilter)
+        return "fragments/rule-list"
+    }
+
+    @GetMapping("/ui/automation-rules/editor")
+    fun automationRuleCreateEditor(model: Model): String {
+        model.addAttribute("editingRule", null)
+        return "fragments/rule-editor"
+    }
+
+    @GetMapping("/ui/automation-rules/editor/empty")
+    fun automationRuleEmptyEditor(): String = "fragments/rule-editor-empty"
+
+    @GetMapping("/ui/automation-rules/{id}/editor")
+    fun automationRuleEditEditor(@PathVariable id: UUID, model: Model): String {
+        model.addAttribute("editingRule", automationRuleService.getRule(id))
+        return "fragments/rule-editor"
+    }
+
     @PostMapping("/ui/ecosystems")
     fun createEcosystem(
         authentication: Authentication?,
@@ -243,6 +286,88 @@ class UiController(
 
         return executeRefresh { maintenanceTaskService.createTask(authentication?.name, id, request) }
     }
+
+    @PostMapping("/ui/automation-rules")
+    fun createAutomationRule(
+        @RequestParam name: String,
+        @RequestParam(defaultValue = "false") enabled: Boolean,
+        @RequestParam scopeType: String,
+        @RequestParam(required = false) ecosystemType: String?,
+        @RequestParam triggerType: String,
+        @RequestParam eventType: String,
+        @RequestParam(required = false) inactivityDays: Int?,
+        @RequestParam(required = false) delayDays: Int?,
+        @RequestParam taskTitle: String,
+        @RequestParam taskType: String,
+        @RequestParam(defaultValue = "false") preventDuplicates: Boolean
+    ): ResponseEntity<String> {
+        val request = CreateAutomationRuleRequest(
+            name = name,
+            enabled = enabled,
+            scopeType = scopeType,
+            ecosystemType = ecosystemType,
+            triggerType = triggerType,
+            eventType = eventType,
+            inactivityDays = inactivityDays,
+            delayDays = delayDays,
+            taskTitle = taskTitle,
+            taskType = taskType,
+            preventDuplicates = preventDuplicates
+        )
+        val errors = validate(request)
+        if (errors.isNotEmpty()) {
+            return okError(errors)
+        }
+
+        return executeRefresh { automationRuleService.createRule(request) }
+    }
+
+    @PatchMapping("/ui/automation-rules/{id}")
+    fun updateAutomationRule(
+        @PathVariable id: UUID,
+        @RequestParam name: String,
+        @RequestParam(defaultValue = "false") enabled: Boolean,
+        @RequestParam scopeType: String,
+        @RequestParam(required = false) ecosystemType: String?,
+        @RequestParam triggerType: String,
+        @RequestParam eventType: String,
+        @RequestParam(required = false) inactivityDays: Int?,
+        @RequestParam(required = false) delayDays: Int?,
+        @RequestParam taskTitle: String,
+        @RequestParam taskType: String,
+        @RequestParam(defaultValue = "false") preventDuplicates: Boolean
+    ): ResponseEntity<String> {
+        val request = UpdateAutomationRuleRequest(
+            name = name,
+            enabled = enabled,
+            scopeType = scopeType,
+            ecosystemType = ecosystemType,
+            triggerType = triggerType,
+            eventType = eventType,
+            inactivityDays = inactivityDays,
+            delayDays = delayDays,
+            taskTitle = taskTitle,
+            taskType = taskType,
+            preventDuplicates = preventDuplicates
+        )
+        val errors = validate(request)
+        if (errors.isNotEmpty()) {
+            return okError(errors)
+        }
+
+        return executeRefresh { automationRuleService.updateRule(id, request) }
+    }
+
+    @PatchMapping("/ui/automation-rules/{id}/enabled")
+    fun updateAutomationRuleEnabled(
+        @PathVariable id: UUID,
+        @RequestParam enabled: Boolean
+    ): ResponseEntity<String> =
+        executeRefresh { automationRuleService.setRuleEnabled(id, enabled) }
+
+    @DeleteMapping("/ui/automation-rules/{id}")
+    fun deleteAutomationRule(@PathVariable id: UUID): ResponseEntity<String> =
+        executeRefresh { automationRuleService.deleteRule(id) }
 
     @PatchMapping("/ui/ecosystems/{ecosystemId}/tasks/{taskId}")
     fun updateTask(
@@ -396,6 +521,23 @@ class UiController(
         model.addAttribute("taskSearch", normalizedTaskSearch)
         model.addAttribute("logEventType", normalizedEventType ?: "")
         model.addAttribute("logPage", ecosystemLogService.getLogs(id, normalizedEventType, logPage, 5))
+    }
+
+    private fun populateAutomationRulesModel(
+        model: Model,
+        statusFilter: String,
+        triggerFilter: String
+    ) {
+        val normalizedStatus = normalizeFilter(statusFilter, "ALL")
+        val normalizedTrigger = normalizeFilter(triggerFilter, "ALL")
+        val rules = automationRuleService.getRules(normalizedStatus, normalizedTrigger)
+
+        model.addAttribute("ruleStatusFilter", normalizedStatus)
+        model.addAttribute("ruleTriggerFilter", normalizedTrigger)
+        model.addAttribute("rules", rules)
+        model.addAttribute("activeRuleCount", rules.count { it.enabled })
+        model.addAttribute("eventRuleCount", rules.count { it.triggerType == "AFTER_EVENT" })
+        model.addAttribute("inactivityRuleCount", rules.count { it.triggerType == "AFTER_INACTIVITY" })
     }
 
     private fun tasksFor(id: UUID, taskFilter: String, taskSource: String, taskSearch: String) =

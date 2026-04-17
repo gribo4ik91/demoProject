@@ -94,6 +94,18 @@ Purpose:
 - show `Make admin` / `Remove admin` actions only to the `SUPER_ADMIN`
 - show delete actions according to role hierarchy
 
+### 7. `/automation-rules`
+
+Purpose:
+
+- list configurable suggested-task rules
+- filter rules by status and rule family
+- create a new rule through the SSR builder
+- edit existing rules
+- enable or disable rules
+- delete rules
+- preview what kind of suggested task a rule will generate
+
 ## UI behavior highlights
 
 - the interface shows toast notifications for page-level success and error feedback
@@ -111,6 +123,7 @@ Purpose:
 - manual task edit flows run inline in the dashboard
 - logs can also be corrected inline through the update flow
 - suggested tasks remain status-driven and are not content-editable
+- automation rules are managed from a dedicated SSR page rather than through code changes
 - the users page is visible to every signed-in account
 - regular users do not see destructive actions
 - admins see delete actions only for regular users

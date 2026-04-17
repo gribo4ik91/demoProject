@@ -2,6 +2,8 @@
 @ecosystemId = 982f2ed8-2c60-4c09-9cb6-013117063b91
 @logId = 11111111-1111-1111-1111-111111111111
 @taskId = 7e74cb50-b2c6-4ba4-a4ea-c4ef290d9880
+@ruleId = 6f6fcb24-bfd7-4ab6-9f9d-1f8a0c4f6401
+@secondaryRuleId = 57ce1035-f40a-4381-b5fe-8fca4413e4e7
 
 ### Create an ecosystem
 POST {{baseUrl}}/api/v1/ecosystems
@@ -181,6 +183,168 @@ Content-Type: application/json
 {
   "status": "DISMISSED"
 }
+
+### List all automation rules
+GET {{baseUrl}}/api/v1/automation-rules
+
+### List only active automation rules
+GET {{baseUrl}}/api/v1/automation-rules?status=ACTIVE
+
+### List event-based automation rules
+GET {{baseUrl}}/api/v1/automation-rules?trigger=AFTER_EVENT
+
+### Get one automation rule by ID
+GET {{baseUrl}}/api/v1/automation-rules/{{ruleId}}
+
+### Create an event-based rule for all ecosystems
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "Watering follow-up for all ecosystems",
+  "enabled": true,
+  "scopeType": "ALL_ECOSYSTEMS",
+  "triggerType": "AFTER_EVENT",
+  "eventType": "WATERING",
+  "delayDays": 2,
+  "taskTitle": "Check soil moisture",
+  "taskType": "INSPECTION",
+  "preventDuplicates": true
+}
+
+### Create an event-based rule for florariums only
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "Florarium feeding observation",
+  "enabled": true,
+  "scopeType": "ECOSYSTEM_TYPE",
+  "ecosystemType": "FLORARIUM",
+  "triggerType": "AFTER_EVENT",
+  "eventType": "FEEDING",
+  "delayDays": 1,
+  "taskTitle": "Observe feeding response in florarium",
+  "taskType": "INSPECTION",
+  "preventDuplicates": true
+}
+
+### Create an inactivity rule for formicariums
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "Formicarium observation gap check",
+  "enabled": true,
+  "scopeType": "ECOSYSTEM_TYPE",
+  "ecosystemType": "FORMICARIUM",
+  "triggerType": "AFTER_INACTIVITY",
+  "eventType": "OBSERVATION",
+  "inactivityDays": 7,
+  "taskTitle": "Record fresh colony observation",
+  "taskType": "INSPECTION",
+  "preventDuplicates": false
+}
+
+### Create an observation follow-up rule for indoor plants
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "Indoor plants observation follow-up",
+  "enabled": false,
+  "scopeType": "ECOSYSTEM_TYPE",
+  "ecosystemType": "INDOOR_PLANTS",
+  "triggerType": "AFTER_EVENT",
+  "eventType": "OBSERVATION",
+  "delayDays": 5,
+  "taskTitle": "Review leaf health after observation",
+  "taskType": "INSPECTION",
+  "preventDuplicates": true
+}
+
+### Create a watering inactivity rule for all ecosystems
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "Global watering inactivity reminder",
+  "enabled": true,
+  "scopeType": "ALL_ECOSYSTEMS",
+  "triggerType": "AFTER_INACTIVITY",
+  "eventType": "WATERING",
+  "inactivityDays": 4,
+  "taskTitle": "Check watering needs",
+  "taskType": "WATERING",
+  "preventDuplicates": true
+}
+
+### Create a DIY incubator feeding reminder
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": "DIY incubator feeding reminder",
+  "enabled": true,
+  "scopeType": "ECOSYSTEM_TYPE",
+  "ecosystemType": "DIY_INCUBATOR",
+  "triggerType": "AFTER_EVENT",
+  "eventType": "FEEDING",
+  "delayDays": 2,
+  "taskTitle": "Check incubator feeding cycle",
+  "taskType": "FEEDING",
+  "preventDuplicates": false
+}
+
+### Update an automation rule
+PATCH {{baseUrl}}/api/v1/automation-rules/{{ruleId}}
+Content-Type: application/json
+
+{
+  "name": "Watering follow-up for all ecosystems updated",
+  "enabled": true,
+  "scopeType": "ALL_ECOSYSTEMS",
+  "triggerType": "AFTER_EVENT",
+  "eventType": "WATERING",
+  "delayDays": 3,
+  "taskTitle": "Check soil moisture and glass condensation",
+  "taskType": "INSPECTION",
+  "preventDuplicates": true
+}
+
+### Disable an automation rule
+PATCH {{baseUrl}}/api/v1/automation-rules/{{secondaryRuleId}}/enabled
+Content-Type: application/json
+
+{
+  "enabled": false
+}
+
+### Re-enable an automation rule
+PATCH {{baseUrl}}/api/v1/automation-rules/{{secondaryRuleId}}/enabled
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+### Example invalid automation rule request
+POST {{baseUrl}}/api/v1/automation-rules
+Content-Type: application/json
+
+{
+  "name": " ",
+  "enabled": true,
+  "scopeType": "ECOSYSTEM_TYPE",
+  "triggerType": "AFTER_INACTIVITY",
+  "eventType": "OBSERVATION",
+  "taskTitle": "",
+  "taskType": "UNKNOWN",
+  "preventDuplicates": true
+}
+
+### Delete an automation rule
+DELETE {{baseUrl}}/api/v1/automation-rules/{{secondaryRuleId}}
 
 ### Delete an ecosystem
 DELETE {{baseUrl}}/api/v1/ecosystems/{{ecosystemId}}

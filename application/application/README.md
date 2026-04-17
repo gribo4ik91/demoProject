@@ -46,6 +46,7 @@ The project demonstrates a complete vertical slice:
 - Edit manual maintenance tasks inline from the dashboard
 - Review maintenance tasks by status and source
 - Mark suggested tasks as dismissed with a dismissal reason
+- Configure automation rules for suggested tasks through the SSR UI and REST API
 - Automatically assign the first registered account the `SUPER_ADMIN` role and later accounts the `USER` role
 - Expose a shared users directory to authenticated accounts
 - Let the `SUPER_ADMIN` grant and revoke `ADMIN` rights
@@ -71,11 +72,11 @@ Main package structure:
 The backend-hosted UI now uses Spring MVC + Freemarker templates with htmx-driven partial updates:
 
 - `src/main/resources/templates/pages/`
-  full SSR pages such as `home.ftlh`, `ecosystem.ftlh`, `login.ftlh`, `register.ftlh`, `profile.ftlh`, and `users.ftlh`
+  full SSR pages such as `home.ftlh`, `ecosystem.ftlh`, `automation-rules.ftlh`, `login.ftlh`, `register.ftlh`, `profile.ftlh`, and `users.ftlh`
 - `src/main/resources/templates/fragments/`
-  reusable htmx fragments such as `workspace-panel.ftlh`, `task-list.ftlh`, and `log-list.ftlh`
+  reusable htmx fragments such as `workspace-panel.ftlh`, `task-list.ftlh`, `log-list.ftlh`, and the automation-rule editor/list fragments
 - `src/main/resources/static/css/`
-  page and shared styles such as `home.css`, `ecosystem.css`, `auth.css`, `login.css`, `register.css`, and `profile.css`
+  page and shared styles such as `home.css`, `ecosystem.css`, `automation-rules.css`, `auth.css`, `login.css`, `register.css`, and `profile.css`
 - `src/main/resources/static/js/`
   lightweight browser-side enhancements such as `ssr-ui.js` for local pinning, quick actions, and edit/view toggles
 
@@ -279,6 +280,12 @@ Endpoints:
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}`
 - `GET /ecosystems/{ecosystemId}/tasks`
 - `PATCH /ecosystems/{ecosystemId}/tasks/{taskId}/status`
+- `POST /automation-rules`
+- `GET /automation-rules`
+- `GET /automation-rules/{id}`
+- `PATCH /automation-rules/{id}`
+- `PATCH /automation-rules/{id}/enabled`
+- `DELETE /automation-rules/{id}`
 - `GET /auth/users`
 - `DELETE /auth/users/{userId}`
 - `PUT /auth/users/{userId}/role`

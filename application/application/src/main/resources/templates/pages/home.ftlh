@@ -19,6 +19,7 @@
         <#if auth.authenticated>
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <span class="text-muted small">${auth.displayName!"Signed in"}<#if auth.role??> | ${auth.role}</#if></span>
+                <a href="/automation-rules" class="btn btn-outline-success btn-sm">Automation Rules</a>
                 <a href="/users" class="btn btn-outline-success btn-sm">Users</a>
                 <a href="/profile" class="btn btn-outline-success btn-sm">My Profile</a>
                 <form action="/logout" method="post" class="mb-0">

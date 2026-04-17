@@ -112,6 +112,68 @@
         view.classList.remove('d-none');
     }
 
+    function updateRuleForm(root) {
+        const form = root.matches && root.matches('[data-rule-form]') ? root : root.querySelector && root.querySelector('[data-rule-form]');
+        if (!form) return;
+
+        const scopeType = form.querySelector('input[name="scopeType"]:checked')?.value || 'ALL_ECOSYSTEMS';
+        const triggerType = form.querySelector('input[name="triggerType"]:checked')?.value || 'AFTER_EVENT';
+        const scopeSelect = form.querySelector('select[name="ecosystemType"]');
+        const delayInput = form.querySelector('input[name="delayDays"]');
+        const inactivityInput = form.querySelector('input[name="inactivityDays"]');
+        const eventType = form.querySelector('select[name="eventType"]')?.value || 'OBSERVATION';
+        const taskTitle = form.querySelector('input[name="taskTitle"]')?.value?.trim() || 'your suggested task';
+        const taskType = form.querySelector('select[name="taskType"]')?.selectedOptions?.[0]?.textContent || 'Inspection';
+        const preventDuplicates = !!form.querySelector('input[name="preventDuplicates"]')?.checked;
+        const preview = form.querySelector('[data-rule-preview]');
+
+        form.querySelectorAll('[data-scope-target]').forEach((element) => {
+            const visible = element.dataset.scopeTarget === scopeType;
+            element.classList.toggle('d-none', !visible);
+            const select = element.querySelector('select');
+            if (select) {
+                select.disabled = !visible;
+            }
+        });
+
+        form.querySelectorAll('[data-trigger-target]').forEach((element) => {
+            const visible = element.dataset.triggerTarget === triggerType;
+            element.classList.toggle('d-none', !visible);
+            const input = element.querySelector('input');
+            if (input) {
+                input.disabled = !visible;
+            }
+        });
+
+        const ecosystemTypeText = scopeType === 'ECOSYSTEM_TYPE' && scopeSelect?.selectedOptions?.[0]?.value
+            ? scopeSelect.selectedOptions[0].textContent
+            : 'all ecosystems';
+        const delayValue = Number(delayInput?.value || 0);
+        const inactivityValue = Number(inactivityInput?.value || 0);
+        const eventLabel = eventType.toLowerCase().replace('_', ' ');
+        const duplicateText = preventDuplicates ? 'Duplicate open tasks will be blocked.' : 'Duplicate open tasks are allowed.';
+
+        if (preview) {
+            preview.textContent = triggerType === 'AFTER_EVENT'
+                ? `After a ${eventLabel} log for ${ecosystemTypeText}, suggest "${taskTitle}" as a ${taskType} task in ${delayValue} day(s). ${duplicateText}`
+                : `If no ${eventLabel} log appears for ${ecosystemTypeText} in ${inactivityValue} day(s), suggest "${taskTitle}" as a ${taskType} task. ${duplicateText}`;
+        }
+    }
+
+    function bindRuleFormEvents(root) {
+        root.querySelectorAll('[data-rule-form]').forEach((form) => {
+            if (form.dataset.ruleFormBound === 'true') {
+                updateRuleForm(form);
+                return;
+            }
+
+            form.dataset.ruleFormBound = 'true';
+            form.addEventListener('input', () => updateRuleForm(form));
+            form.addEventListener('change', () => updateRuleForm(form));
+            updateRuleForm(form);
+        });
+    }
+
     function bindGlobalEvents() {
         document.addEventListener('click', (event) => {
             const pinButton = event.target.closest('[data-pin-toggle]');
@@ -181,6 +243,7 @@
 
         document.body.addEventListener('htmx:afterSwap', (event) => {
             applyPinnedState(event.target);
+            bindRuleFormEvents(event.target);
         });
 
         document.body.addEventListener('htmx:beforeRequest', (event) => {
@@ -209,9 +272,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             bindGlobalEvents();
             applyPinnedState(document);
+            bindRuleFormEvents(document);
         });
     } else {
         bindGlobalEvents();
         applyPinnedState(document);
+        bindRuleFormEvents(document);
     }
 })();

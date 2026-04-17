@@ -16,12 +16,14 @@ The repository is split into three main areas:
 - Record activity logs and observations
 - Edit existing logs inline from the dashboard
 - Manage maintenance tasks
+- Configure suggested task automation rules from the UI and API
 - Edit manual maintenance tasks inline from the dashboard
 - View richer summary analytics including recent readings, 30-day activity, logging streaks, and lightweight trend indicators
 - Use optional user registration, login, profile, and lightweight role-based access
 - Automatically assign the first account in the system to `SUPER_ADMIN`
 - Let every signed-in account view the shared users directory, allow `SUPER_ADMIN` to manage admins, and restrict `ADMIN` deletion rights to regular users
 - Show who created each ecosystem, log, and task entry
+- Manage event-based and inactivity-based suggested-task rules
 - Persist data in PostgreSQL with Flyway migrations
 
 ## Tech Stack
@@ -238,6 +240,7 @@ If you want one compact walkthrough for a presentation:
 4. Show how creator information is attached to the records.
 5. Open `/users`, promote another account to `ADMIN`, and explain the difference between `SUPER_ADMIN`, `ADMIN`, and `USER`.
 6. Mention that the same project can also run with `APP_AUTH_ENABLED=false` for a faster no-login demo.
+7. Open `/automation-rules` and show how follow-up suggestions can now be configured without changing code.
 
 ## Useful Commands
 
