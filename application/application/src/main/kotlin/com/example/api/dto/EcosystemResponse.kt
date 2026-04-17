@@ -31,6 +31,6 @@ data class EcosystemResponse(
     @field:Schema(description = "Display name of the user who created the ecosystem, if known.", example = "Demo Gardener")
     val createdByDisplayName: String?,
 
-    @field:Schema(description = "Timestamp when the ecosystem was created.", example = "2026-04-07T14:30:00")
-    val createdAt: LocalDateTime
+    @field:Schema(description = "Timestamp when the ecosystem was created, if available.", example = "2026-04-07T14:30:00")
+    val createdAt: LocalDateTime?
 )

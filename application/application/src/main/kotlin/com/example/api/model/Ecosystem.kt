@@ -33,6 +33,6 @@ data class Ecosystem(
     @Column(name = "created_by_display_name", length = 60)
     val createdByDisplayName: String? = null,
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    @Column(name = "created_at", updatable = false)
+    val createdAt: LocalDateTime? = LocalDateTime.now()
 )

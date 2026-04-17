@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="task-actions-row">
-                        <#if task.status != "DONE">
+                        <#if task.status == "OPEN">
                             <button class="btn btn-outline-success btn-sm"
                                     hx-patch="/ui/ecosystems/${ecosystemId}/tasks/${task.id}/status"
                                     hx-vals='{"status":"DONE"}'
@@ -46,7 +46,7 @@
                                     hx-target="#task-form-feedback"
                                     hx-swap="innerHTML">Reopen</button>
                         </#if>
-                        <#if task.autoCreated && task.status != "DISMISSED">
+                        <#if task.autoCreated && task.status == "OPEN">
                             <button class="btn btn-outline-danger btn-sm"
                                     hx-patch="/ui/ecosystems/${ecosystemId}/tasks/${task.id}/status"
                                     hx-vals='{"status":"DISMISSED","dismissalReason":"ALREADY_HANDLED"}'

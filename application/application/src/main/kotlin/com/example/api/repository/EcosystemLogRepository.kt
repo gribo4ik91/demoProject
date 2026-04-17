@@ -56,13 +56,17 @@ interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
      */
     @Query(
         value = """
-            SELECT DISTINCT ON (ecosystem_id)
-                ecosystem_id AS ecosystemId,
-                recorded_at AS lastRecordedAt,
-                temperature_c AS temperatureC,
-                humidity_percent AS humidityPercent
-            FROM logs
-            ORDER BY ecosystem_id, recorded_at DESC
+            SELECT
+                CAST(l.ecosystem_id AS VARCHAR) AS ecosystemId,
+                l.recorded_at AS lastRecordedAt,
+                l.temperature_c AS temperatureC,
+                l.humidity_percent AS humidityPercent
+            FROM logs l
+            WHERE l.recorded_at = (
+                SELECT MAX(l2.recorded_at)
+                FROM logs l2
+                WHERE l2.ecosystem_id = l.ecosystem_id
+            )
         """,
         nativeQuery = true
     )
@@ -74,7 +78,7 @@ interface EcosystemLogRepository : JpaRepository<EcosystemLog, UUID> {
     @Query(
         value = """
             SELECT
-                ecosystem_id AS ecosystemId,
+                CAST(ecosystem_id AS VARCHAR) AS ecosystemId,
                 COUNT(*) AS logsLast7Days
             FROM logs
             WHERE recorded_at > :recordedAfter
@@ -99,7 +103,7 @@ interface EcosystemLatestLogView {
     /**
      * Returns the ecosystem identifier for the projected row.
      */
-    fun getEcosystemId(): UUID
+    fun getEcosystemId(): String
 
     /**
      * Returns when the latest projected log was recorded.
@@ -124,7 +128,7 @@ interface EcosystemRecentLogCountView {
     /**
      * Returns the ecosystem identifier for the grouped counter row.
      */
-    fun getEcosystemId(): UUID
+    fun getEcosystemId(): String
 
     /**
      * Returns the number of logs recorded within the recent counting window.

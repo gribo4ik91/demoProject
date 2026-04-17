@@ -77,7 +77,7 @@ interface MaintenanceTaskRepository : JpaRepository<MaintenanceTask, UUID> {
     @Query(
         value = """
             SELECT
-                ecosystem_id AS ecosystemId,
+                CAST(ecosystem_id AS VARCHAR) AS ecosystemId,
                 SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) AS openTasks,
                 SUM(CASE WHEN status = 'OPEN' AND due_date < :today THEN 1 ELSE 0 END) AS overdueTasks
             FROM maintenance_tasks
@@ -95,7 +95,7 @@ interface EcosystemTaskCountView {
     /**
      * Returns the ecosystem identifier for the grouped counter row.
      */
-    fun getEcosystemId(): UUID
+    fun getEcosystemId(): String
 
     /**
      * Returns the number of open tasks for the ecosystem, if the query produced a value.

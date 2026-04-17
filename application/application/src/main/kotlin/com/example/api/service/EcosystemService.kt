@@ -91,11 +91,11 @@ class EcosystemService(
      */
     private fun buildWorkspaceCardsSnapshot(): List<EcosystemWorkspaceCardResponse> {
         val latestLogsByEcosystem = ecosystemLogRepository.findLatestLogSnapshots()
-            .associateBy { it.getEcosystemId() }
+            .associateBy { UUID.fromString(it.getEcosystemId()) }
         val recentLogCountsByEcosystem = ecosystemLogRepository.countLogsByEcosystemRecordedAfter(LocalDateTime.now().minusDays(7))
-            .associate { it.getEcosystemId() to it.getLogsLast7Days() }
+            .associate { UUID.fromString(it.getEcosystemId()) to it.getLogsLast7Days() }
         val taskCountsByEcosystem = maintenanceTaskRepository.findTaskCountsByEcosystem(LocalDate.now())
-            .associateBy { it.getEcosystemId() }
+            .associateBy { UUID.fromString(it.getEcosystemId()) }
 
         return ecosystemRepository.findAll().map { ecosystem ->
             val ecosystemId = ecosystem.id ?: error("Expected generated ecosystem id")
@@ -318,7 +318,7 @@ class EcosystemService(
     private fun com.example.api.repository.EcosystemLatestLogView.toSummaryLog(): EcosystemLog =
         EcosystemLog(
             ecosystem = com.example.api.model.Ecosystem(
-                id = getEcosystemId(),
+                id = UUID.fromString(getEcosystemId()),
                 name = "",
                 type = "",
                 description = null
@@ -377,7 +377,8 @@ class EcosystemService(
     private fun workspaceCardComparator(sort: String): Comparator<EcosystemWorkspaceCardResponse> =
         when (sort) {
             "NAME" -> compareBy<EcosystemWorkspaceCardResponse> { it.name.lowercase() }
-            "NEWEST" -> compareByDescending<EcosystemWorkspaceCardResponse> { it.createdAt }
+            "NEWEST" -> compareBy<EcosystemWorkspaceCardResponse> { it.createdAt == null }
+                .thenByDescending { it.createdAt }
             "LAST_ACTIVITY" -> compareBy<EcosystemWorkspaceCardResponse> { it.lastRecordedAt == null }
                 .thenByDescending { it.lastRecordedAt }
             else -> compareBy<EcosystemWorkspaceCardResponse> { workspaceStatusRank(it.status) }

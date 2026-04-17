@@ -40,6 +40,6 @@ data class EcosystemWorkspaceCardResponse(
     @field:Schema(description = "Number of overdue open maintenance tasks.", example = "1")
     val overdueTasks: Long,
 
-    @field:Schema(description = "Timestamp when the ecosystem was created.", example = "2026-04-07T14:30:00")
-    val createdAt: LocalDateTime
+    @field:Schema(description = "Timestamp when the ecosystem was created, if available.", example = "2026-04-07T14:30:00")
+    val createdAt: LocalDateTime?
 )
