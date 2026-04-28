@@ -8,7 +8,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 import java.util.concurrent.ThreadLocalRandom
 
 /**
- * Adds an optional random delay to API responses so clients can exercise timeout and retry behavior.
+ * Adds an optional random delay to dynamic HTTP responses so clients can exercise timeout and retry behavior.
  */
 @Component
 class ResponseDelayFilter(
@@ -16,10 +16,16 @@ class ResponseDelayFilter(
 ) : OncePerRequestFilter() {
 
     /**
-     * Limits artificial delays to API routes so static pages and assets remain responsive.
+     * Skips static assets so page chrome still loads quickly while dynamic routes can be throttled.
      */
-    override fun shouldNotFilter(request: HttpServletRequest): Boolean =
-        !request.requestURI.startsWith("/api/")
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        val path = request.requestURI
+        return path.startsWith("/css/") ||
+            path.startsWith("/js/") ||
+            path.startsWith("/images/") ||
+            path.startsWith("/webjars/") ||
+            path == "/favicon.ico"
+    }
 
     /**
      * Applies the configured delay before delegating to the rest of the filter chain.
