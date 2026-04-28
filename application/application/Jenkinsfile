@@ -95,7 +95,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --build --force-recreate"
                                     }
                                     break
                                 case 'down':
@@ -110,7 +110,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
+                                        sh "docker compose -f ${APP_COMPOSE_FILE} up -d --build --force-recreate"
                                     }
                                     break
                                 case 'logs':
@@ -166,7 +166,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --build --force-recreate"
                                     }
                                     break
                                 case 'down':
@@ -181,7 +181,7 @@ ps      - show current container status'''
                                         "APP_RESPONSE_DELAY_MIN_MS=${params.APP_RESPONSE_DELAY_MIN_MS}",
                                         "APP_RESPONSE_DELAY_MAX_MS=${params.APP_RESPONSE_DELAY_MAX_MS}"
                                     ]) {
-                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --force-recreate"
+                                        bat "docker compose -f ${APP_COMPOSE_FILE} up -d --build --force-recreate"
                                     }
                                     break
                                 case 'logs':
@@ -249,7 +249,13 @@ ps      - show current container status'''
 
     post {
         always {
-            junit testResults: 'application/application/build/test-results/test/*.xml', allowEmptyResults: true
+            script {
+                if ((params.ACTION ?: 'full') in ['full', 'test']) {
+                    junit testResults: 'application/application/build/test-results/test/*.xml', allowEmptyResults: true
+                } else {
+                    echo "Skipping JUnit report publishing because ACTION=${params.ACTION} does not run tests."
+                }
+            }
         }
         success {
             echo "Application job finished successfully. ACTION=${params.ACTION}"

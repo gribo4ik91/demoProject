@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   app:
     container_name: ecotracker-app
@@ -22,4 +20,5 @@ services:
 
 networks:
   ecotracker-network:
+    external: true
     name: ecotracker-network
