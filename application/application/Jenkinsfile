@@ -77,6 +77,8 @@ ps      - show current container status'''
                                     sh './gradlew clean bootJar'
                                     break
                                 case 'image':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean bootJar'
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_AUTH_DEFAULT_USER_ENABLED=${params.APP_AUTH_DEFAULT_USER_ENABLED}",
@@ -88,6 +90,8 @@ ps      - show current container status'''
                                     }
                                     break
                                 case 'up':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean bootJar'
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_AUTH_DEFAULT_USER_ENABLED=${params.APP_AUTH_DEFAULT_USER_ENABLED}",
@@ -102,6 +106,8 @@ ps      - show current container status'''
                                     sh "docker compose -f ${APP_COMPOSE_FILE} down"
                                     break
                                 case 'restart':
+                                    sh 'chmod +x gradlew'
+                                    sh './gradlew clean bootJar'
                                     sh "docker compose -f ${APP_COMPOSE_FILE} down"
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
@@ -148,6 +154,7 @@ ps      - show current container status'''
                                     bat '.\\gradlew.bat clean bootJar'
                                     break
                                 case 'image':
+                                    bat '.\\gradlew.bat clean bootJar'
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_AUTH_DEFAULT_USER_ENABLED=${params.APP_AUTH_DEFAULT_USER_ENABLED}",
@@ -159,6 +166,7 @@ ps      - show current container status'''
                                     }
                                     break
                                 case 'up':
+                                    bat '.\\gradlew.bat clean bootJar'
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
                                         "APP_AUTH_DEFAULT_USER_ENABLED=${params.APP_AUTH_DEFAULT_USER_ENABLED}",
@@ -173,6 +181,7 @@ ps      - show current container status'''
                                     bat "docker compose -f ${APP_COMPOSE_FILE} down"
                                     break
                                 case 'restart':
+                                    bat '.\\gradlew.bat clean bootJar'
                                     bat "docker compose -f ${APP_COMPOSE_FILE} down"
                                     withEnv([
                                         "APP_AUTH_ENABLED=${params.APP_AUTH_ENABLED}",
