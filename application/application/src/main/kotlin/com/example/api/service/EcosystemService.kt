@@ -9,6 +9,7 @@ import com.example.api.dto.PagedResponse
 import com.example.api.dto.UpdateEcosystemRequest
 import com.example.api.mapper.applyTo
 import com.example.api.mapper.toResponse
+import com.example.api.model.AuditEntityTypes
 import com.example.api.model.EcosystemLog
 import com.example.api.service.AuthService.ActorSnapshot
 import com.example.api.repository.EcosystemLogRepository
@@ -31,7 +32,8 @@ class EcosystemService(
     private val ecosystemRepository: EcosystemRepository,
     private val ecosystemLogRepository: EcosystemLogRepository,
     private val maintenanceTaskRepository: MaintenanceTaskRepository,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val auditLogService: AuditLogService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -43,19 +45,46 @@ class EcosystemService(
     fun createEcosystem(username: String?, request: CreateEcosystemRequest): EcosystemResponse {
         logger.info("Creating ecosystem name={} type={}", request.name.trim(), request.type.trim())
         val actor = authService.resolveActorSnapshot(username)
-        return ecosystemRepository.save(request.toEntity(actor)).toResponse()
+        val normalizedName = request.name.trim()
+        ensureUniqueEcosystemName(normalizedName)
+
+        val saved = ecosystemRepository.save(request.toEntity(actor))
+        auditLogService.recordCreated(
+            entityType = AuditEntityTypes.ECOSYSTEM,
+            entityId = saved.id,
+            entityName = saved.name,
+            newValue = "Created ecosystem ${saved.name} (${saved.type})",
+            actor = actor
+        )
+
+        return saved.toResponse()
     }
 
     /**
      * Updates and persists an existing ecosystem.
      */
     @Transactional
-    fun updateEcosystem(id: UUID, request: UpdateEcosystemRequest): EcosystemResponse {
+    fun updateEcosystem(username: String?, id: UUID, request: UpdateEcosystemRequest): EcosystemResponse {
         logger.info("Updating ecosystem id={}", id)
         val existing = ecosystemRepository.findById(id)
             .orElseThrow { notFound() }
+        val actor = authService.resolveActorSnapshot(username)
+        ensureUniqueEcosystemName(request.name.trim(), id)
+        val updated = request.applyTo(existing)
 
-        return ecosystemRepository.save(request.applyTo(existing)).toResponse()
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.ECOSYSTEM,
+            entityId = id,
+            entityName = updated.name,
+            changes = listOf(
+                AuditFieldChange("name", existing.name, updated.name),
+                AuditFieldChange("type", existing.type, updated.type),
+                AuditFieldChange("description", existing.description, updated.description)
+            ),
+            actor = actor
+        )
+
+        return ecosystemRepository.save(updated).toResponse()
     }
 
     /**
@@ -235,11 +264,19 @@ class EcosystemService(
      * Deletes an ecosystem together with its logs and maintenance tasks.
      */
     @Transactional
-    fun deleteEcosystem(id: UUID) {
+    fun deleteEcosystem(username: String?, id: UUID) {
         logger.info("Deleting ecosystem id={}", id)
-        if (!ecosystemRepository.existsById(id)) {
-            throw notFound()
-        }
+        val existing = ecosystemRepository.findById(id)
+            .orElseThrow { notFound() }
+        val actor = authService.resolveActorSnapshot(username)
+
+        auditLogService.recordDeleted(
+            entityType = AuditEntityTypes.ECOSYSTEM,
+            entityId = id,
+            entityName = existing.name,
+            oldValue = "Deleted ecosystem ${existing.name} (${existing.type})",
+            actor = actor
+        )
 
         maintenanceTaskRepository.deleteByEcosystemId(id)
         ecosystemLogRepository.deleteByEcosystemId(id)
@@ -335,12 +372,22 @@ class EcosystemService(
     private fun CreateEcosystemRequest.toEntity(actor: ActorSnapshot) =
         com.example.api.model.Ecosystem(
             name = name.trim(),
-            type = type.trim(),
+            type = type.trim().uppercase(),
             description = description?.trim()?.takeIf { it.isNotEmpty() },
             createdByUser = actor.user,
             createdByUsername = actor.username,
             createdByDisplayName = actor.displayName
         )
+
+    /**
+     * Ensures ecosystem names remain unique for clear inventory navigation.
+     */
+    private fun ensureUniqueEcosystemName(name: String, excludedId: UUID? = null) {
+        val existing = ecosystemRepository.findByNameIgnoreCase(name)
+        if (existing != null && existing.id != excludedId) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Ecosystem name already exists")
+        }
+    }
 
     /**
      * Checks whether a workspace card matches the active search term.

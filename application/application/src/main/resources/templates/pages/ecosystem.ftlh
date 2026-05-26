@@ -118,7 +118,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small text-muted mb-1">Description</label>
-                                <textarea class="form-control ecosystem-description-input" name="description" maxlength="500" rows="4" placeholder="Description">${ecosystem.description!""}</textarea>
+                                <textarea class="form-control ecosystem-description-input" name="description" maxlength="500" rows="4" placeholder="Description" required>${ecosystem.description!""}</textarea>
                             </div>
                             <div class="col-12 d-flex justify-content-end gap-2">
                                 <button type="button" class="btn btn-outline-secondary" data-cancel-ecosystem-edit>Cancel Changes</button>
@@ -224,8 +224,8 @@
                         <p class="text-muted small mb-0">Capture a new observation, feeding, or watering event for this ecosystem.</p>
                     </div>
                     <form class="row g-2 mb-4" hx-post="/ui/ecosystems/${ecosystem.id}/logs" hx-target="#log-form-feedback" hx-swap="innerHTML">
-                        <div class="col-md-2"><input type="number" step="0.1" class="form-control" name="temperatureC" placeholder="Temp C"></div>
-                        <div class="col-md-2"><input type="number" class="form-control" name="humidityPercent" placeholder="Humidity %"></div>
+                        <div class="col-md-2"><input type="number" step="0.1" min="-100" max="100" class="form-control" name="temperatureC" placeholder="Temp C"></div>
+                        <div class="col-md-2"><input type="number" min="0" max="100" class="form-control" name="humidityPercent" placeholder="Humidity %"></div>
                         <div class="col-md-3">
                             <select class="form-select" name="eventType" required>
                                 <#list ui.logEventTypes() as option>

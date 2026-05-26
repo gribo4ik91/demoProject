@@ -2,6 +2,7 @@ package com.example.api.dto
 
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 /**
@@ -10,18 +11,34 @@ import jakarta.validation.constraints.Size
 data class RegisterUserRequest(
     @field:NotBlank(message = "Display name must not be blank")
     @field:Size(min = 3, max = 60, message = "Display name must be between 3 and 60 characters")
+    @field:Pattern(
+        regexp = ValidationPatterns.DISPLAY_NAME,
+        message = "Display name may contain letters, numbers, spaces, apostrophes, dots, and hyphens"
+    )
     val displayName: String,
 
     @field:NotBlank(message = "Login must not be blank")
     @field:Size(min = 3, max = 40, message = "Login must be between 3 and 40 characters")
+    @field:Pattern(
+        regexp = ValidationPatterns.USERNAME,
+        message = "Login may contain lowercase letters, numbers, dots, underscores, and hyphens"
+    )
     val username: String,
 
     @field:NotBlank(message = "First name must not be blank")
     @field:Size(min = 2, max = 60, message = "First name must be between 2 and 60 characters")
+    @field:Pattern(
+        regexp = ValidationPatterns.PERSON_NAME,
+        message = "First name may contain letters, spaces, apostrophes, dots, and hyphens"
+    )
     val firstName: String,
 
     @field:NotBlank(message = "Last name must not be blank")
     @field:Size(min = 2, max = 60, message = "Last name must be between 2 and 60 characters")
+    @field:Pattern(
+        regexp = ValidationPatterns.PERSON_NAME,
+        message = "Last name may contain letters, spaces, apostrophes, dots, and hyphens"
+    )
     val lastName: String,
 
     @field:NotBlank(message = "Email must not be blank")
@@ -30,12 +47,16 @@ data class RegisterUserRequest(
     val email: String,
 
     @field:Size(max = 80, message = "Location must be 80 characters or fewer")
+    @field:Pattern(
+        regexp = ValidationPatterns.LOCATION,
+        message = "Location may contain letters, numbers, spaces, commas, apostrophes, dots, and hyphens"
+    )
     val location: String? = null,
 
     @field:Size(max = 500, message = "Bio must be 500 characters or fewer")
     val bio: String? = null,
 
     @field:NotBlank(message = "Password must not be blank")
-    @field:Size(min = 6, max = 72, message = "Password must be between 6 and 72 characters")
+    @field:Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters")
     val password: String
 )

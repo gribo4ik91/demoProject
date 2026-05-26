@@ -75,6 +75,7 @@ interface EcosystemControllerApi {
         ]
     )
     fun updateEcosystem(
+        authentication: Authentication?,
         @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateEcosystemRequest
@@ -182,6 +183,7 @@ interface EcosystemControllerApi {
         ]
     )
     fun deleteEcosystem(
+        authentication: Authentication?,
         @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
         @PathVariable id: UUID
     )

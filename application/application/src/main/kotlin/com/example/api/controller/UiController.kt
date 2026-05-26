@@ -12,6 +12,7 @@ import com.example.api.dto.UpdateMaintenanceTaskRequest
 import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.dto.UpdateUserProfileRequest
 import com.example.api.dto.UpdateUserRoleRequest
+import com.example.api.service.AuditLogService
 import com.example.api.service.AuthService
 import com.example.api.service.AutomationRuleService
 import com.example.api.service.EcosystemLogService
@@ -45,6 +46,7 @@ class UiController(
     private val maintenanceTaskService: MaintenanceTaskService,
     private val automationRuleService: AutomationRuleService,
     private val authService: AuthService,
+    private val auditLogService: AuditLogService,
     private val validator: Validator
 ) {
 
@@ -54,9 +56,10 @@ class UiController(
         @RequestParam(required = false, defaultValue = "ALL") status: String,
         @RequestParam(required = false, defaultValue = "PRIORITY") sort: String,
         @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "0") auditPage: Int,
         model: Model
     ): String {
-        populateHomeModel(model, search, status, sort, page)
+        populateHomeModel(model, search, status, sort, page, auditPage)
         return "pages/home"
     }
 
@@ -95,9 +98,10 @@ class UiController(
         @RequestParam(required = false, defaultValue = "ALL") status: String,
         @RequestParam(required = false, defaultValue = "PRIORITY") sort: String,
         @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "0") auditPage: Int,
         model: Model
     ): String {
-        populateHomeModel(model, search, status, sort, page)
+        populateHomeModel(model, search, status, sort, page, auditPage)
         return "fragments/workspace-panel"
     }
 
@@ -206,6 +210,7 @@ class UiController(
 
     @PatchMapping("/ui/ecosystems/{id}")
     fun updateEcosystem(
+        authentication: Authentication?,
         @PathVariable id: UUID,
         @RequestParam name: String,
         @RequestParam type: String,
@@ -217,12 +222,12 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { ecosystemService.updateEcosystem(id, request) }
+        return executeRefresh { ecosystemService.updateEcosystem(authentication?.name, id, request) }
     }
 
     @DeleteMapping("/ui/ecosystems/{id}")
-    fun deleteEcosystem(@PathVariable id: UUID): ResponseEntity<String> =
-        executeRedirect("/") { ecosystemService.deleteEcosystem(id) }
+    fun deleteEcosystem(authentication: Authentication?, @PathVariable id: UUID): ResponseEntity<String> =
+        executeRedirect("/") { ecosystemService.deleteEcosystem(authentication?.name, id) }
 
     @PostMapping("/ui/ecosystems/{id}/logs")
     fun createLog(
@@ -249,6 +254,7 @@ class UiController(
 
     @PatchMapping("/ui/ecosystems/{ecosystemId}/logs/{logId}")
     fun updateLog(
+        authentication: Authentication?,
         @PathVariable ecosystemId: UUID,
         @PathVariable logId: UUID,
         @RequestParam(required = false) temperatureC: Double?,
@@ -267,7 +273,7 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { ecosystemLogService.updateLog(ecosystemId, logId, request) }
+        return executeRefresh { ecosystemLogService.updateLog(authentication?.name, ecosystemId, logId, request) }
     }
 
     @PostMapping("/ui/ecosystems/{id}/tasks")
@@ -371,6 +377,7 @@ class UiController(
 
     @PatchMapping("/ui/ecosystems/{ecosystemId}/tasks/{taskId}")
     fun updateTask(
+        authentication: Authentication?,
         @PathVariable ecosystemId: UUID,
         @PathVariable taskId: UUID,
         @RequestParam title: String,
@@ -383,11 +390,12 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { maintenanceTaskService.updateTask(ecosystemId, taskId, request) }
+        return executeRefresh { maintenanceTaskService.updateTask(authentication?.name, ecosystemId, taskId, request) }
     }
 
     @PatchMapping("/ui/ecosystems/{ecosystemId}/tasks/{taskId}/status")
     fun updateTaskStatus(
+        authentication: Authentication?,
         @PathVariable ecosystemId: UUID,
         @PathVariable taskId: UUID,
         @RequestParam status: String,
@@ -399,7 +407,7 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { maintenanceTaskService.updateTaskStatus(ecosystemId, taskId, request) }
+        return executeRefresh { maintenanceTaskService.updateTaskStatus(authentication?.name, ecosystemId, taskId, request) }
     }
 
     @PostMapping("/ui/register")
@@ -481,7 +489,8 @@ class UiController(
         search: String,
         status: String,
         sort: String,
-        page: Int
+        page: Int,
+        auditPage: Int
     ) {
         val normalizedSearch = search.trim()
         val normalizedStatus = normalizeFilter(status, "ALL")
@@ -495,6 +504,7 @@ class UiController(
         model.addAttribute("workspacePage", pageData)
         model.addAttribute("workspaceOverview", ecosystemService.getWorkspaceOverview(normalizedSearch, normalizedStatus))
         model.addAttribute("priorityCards", cards.filter { it.status == "NEEDS_ATTENTION" || it.overdueTasks > 0 }.take(4))
+        model.addAttribute("auditPage", auditLogService.getAuditLogs(auditPage, 8))
     }
 
     private fun populateEcosystemModel(

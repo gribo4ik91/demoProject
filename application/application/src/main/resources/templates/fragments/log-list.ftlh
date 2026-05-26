@@ -37,10 +37,10 @@
                           hx-target="#log-form-feedback"
                           hx-swap="innerHTML">
                         <div class="col-md-2">
-                            <input type="number" step="0.1" name="temperatureC" class="form-control" value="${log.temperatureC!""}" placeholder="Temp C">
+                            <input type="number" step="0.1" min="-100" max="100" name="temperatureC" class="form-control" value="${log.temperatureC!""}" placeholder="Temp C">
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="humidityPercent" class="form-control" value="${log.humidityPercent!""}" placeholder="Humidity %">
+                            <input type="number" min="0" max="100" name="humidityPercent" class="form-control" value="${log.humidityPercent!""}" placeholder="Humidity %">
                         </div>
                         <div class="col-md-3">
                             <select name="eventType" class="form-select" required>

@@ -3,6 +3,7 @@ package com.example.api.repository
 import com.example.api.model.MaintenanceTask
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.UUID
@@ -40,6 +41,33 @@ interface MaintenanceTaskRepository : JpaRepository<MaintenanceTask, UUID> {
         status: String,
         taskType: String,
         title: String
+    ): Boolean
+
+    /**
+     * Checks whether an open manual task with the same user-visible signature already exists.
+     */
+    @Query(
+        """
+            SELECT COUNT(task) > 0
+            FROM MaintenanceTask task
+            WHERE task.ecosystem.id = :ecosystemId
+              AND task.autoCreated = false
+              AND task.status = 'OPEN'
+              AND UPPER(task.taskType) = UPPER(:taskType)
+              AND LOWER(task.title) = LOWER(:title)
+              AND (
+                  (:dueDate IS NULL AND task.dueDate IS NULL)
+                  OR task.dueDate = :dueDate
+              )
+              AND (:excludedTaskId IS NULL OR task.id <> :excludedTaskId)
+        """
+    )
+    fun existsDuplicateOpenManualTask(
+        @Param("ecosystemId") ecosystemId: UUID,
+        @Param("taskType") taskType: String,
+        @Param("title") title: String,
+        @Param("dueDate") dueDate: LocalDate?,
+        @Param("excludedTaskId") excludedTaskId: UUID? = null
     ): Boolean
 
     /**

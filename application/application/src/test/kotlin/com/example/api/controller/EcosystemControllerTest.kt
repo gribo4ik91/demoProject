@@ -79,12 +79,32 @@ class EcosystemControllerTest {
     }
 
     @Test
+    fun `create ecosystem rejects unsupported type and missing description`() {
+        val requestJson = """
+            {
+              "name": "Rainforest Terrarium",
+              "type": "UNKNOWN"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/v1/ecosystems")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.validationErrors.type").exists())
+            .andExpect(jsonPath("$.validationErrors.description").exists())
+    }
+
+
+    @Test
     fun `delete ecosystem returns 404 with standard error body when ecosystem does not exist`() {
         val ecosystemId = UUID.randomUUID()
 
         Mockito.doThrow(ResponseStatusException(HttpStatus.NOT_FOUND, "Ecosystem not found"))
             .`when`(ecosystemService)
-            .deleteEcosystem(ecosystemId)
+            .deleteEcosystem(null, ecosystemId)
 
         mockMvc.perform(delete("/api/v1/ecosystems/$ecosystemId"))
             .andExpect(status().isNotFound)

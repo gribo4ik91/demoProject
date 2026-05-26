@@ -32,7 +32,7 @@ class SecurityConfig {
     fun userDetailsService(
         userRepository: AppUserRepository
     ): UserDetailsService = UserDetailsService { username ->
-        val user = userRepository.findByUsername(username)
+        val user = userRepository.findByUsernameIgnoreCase(username.trim())
             ?: throw UsernameNotFoundException("User not found")
 
         User.withUsername(user.username)

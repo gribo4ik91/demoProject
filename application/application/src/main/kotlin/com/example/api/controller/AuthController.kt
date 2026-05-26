@@ -55,7 +55,7 @@ class AuthController(
             authentication.isAuthenticated &&
             principal != null &&
             principal.username != "anonymousUser"
-        val user = if (authenticated) appUserRepository.findByUsername(principal!!.username) else null
+        val user = if (authenticated) appUserRepository.findByUsernameIgnoreCase(principal!!.username) else null
 
         return AuthStatusResponse(
             enabled = authEnabled,

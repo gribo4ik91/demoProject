@@ -9,4 +9,14 @@ import java.util.UUID
  * Provides persistence operations for ecosystem entities.
  */
 @Repository
-interface EcosystemRepository : JpaRepository<Ecosystem, UUID>
+interface EcosystemRepository : JpaRepository<Ecosystem, UUID> {
+    /**
+     * Returns an ecosystem by display name regardless of case.
+     */
+    fun findByNameIgnoreCase(name: String): Ecosystem?
+
+    /**
+     * Checks whether an ecosystem name is already used.
+     */
+    fun existsByNameIgnoreCase(name: String): Boolean
+}

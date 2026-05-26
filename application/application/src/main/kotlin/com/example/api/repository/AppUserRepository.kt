@@ -14,9 +14,29 @@ interface AppUserRepository : JpaRepository<AppUser, UUID> {
     fun findByUsername(username: String): AppUser?
 
     /**
+     * Returns a user by username ignoring case, or null when no user exists.
+     */
+    fun findByUsernameIgnoreCase(username: String): AppUser?
+
+    /**
+     * Returns a user by email ignoring case, or null when no user exists.
+     */
+    fun findByEmailIgnoreCase(email: String): AppUser?
+
+    /**
      * Checks whether a username is already taken.
      */
     fun existsByUsername(username: String): Boolean
+
+    /**
+     * Checks whether a username is already taken regardless of case.
+     */
+    fun existsByUsernameIgnoreCase(username: String): Boolean
+
+    /**
+     * Checks whether an email address is already attached to a user.
+     */
+    fun existsByEmailIgnoreCase(email: String): Boolean
 
     /**
      * Returns all users sorted from oldest to newest registration.

@@ -1,5 +1,6 @@
 package com.example.api.integration
 
+import com.example.api.repository.AuditLogRepository
 import com.example.api.repository.EcosystemLogRepository
 import com.example.api.repository.EcosystemRepository
 import com.example.api.repository.MaintenanceTaskRepository
@@ -40,11 +41,15 @@ class ApiIntegrationTest : PostgresIntegrationTest() {
     @Autowired
     private lateinit var maintenanceTaskRepository: MaintenanceTaskRepository
 
+    @Autowired
+    private lateinit var auditLogRepository: AuditLogRepository
+
     /**
      * Clears persisted test data before each integration scenario.
      */
     @BeforeEach
     fun cleanDatabase() {
+        auditLogRepository.deleteAll()
         maintenanceTaskRepository.deleteAll()
         ecosystemLogRepository.deleteAll()
         ecosystemRepository.deleteAll()

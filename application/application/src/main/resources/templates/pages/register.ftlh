@@ -31,13 +31,13 @@
         <form hx-post="/ui/register" hx-target="#register-feedback" hx-swap="innerHTML">
             <div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Display name</label><input name="displayName" class="form-control" minlength="3" maxlength="60" required></div>
-                <div class="col-md-6"><label class="form-label">Login</label><input name="username" class="form-control" minlength="3" maxlength="40" required></div>
+                <div class="col-md-6"><label class="form-label">Login</label><input name="username" class="form-control" minlength="3" maxlength="40" pattern="[a-z0-9._-]+" required></div>
                 <div class="col-md-6"><label class="form-label">First name</label><input name="firstName" class="form-control" minlength="2" maxlength="60" required></div>
                 <div class="col-md-6"><label class="form-label">Last name</label><input name="lastName" class="form-control" minlength="2" maxlength="60" required></div>
                 <div class="col-md-6"><label class="form-label">Email</label><input name="email" type="email" class="form-control" maxlength="120" required></div>
                 <div class="col-md-6"><label class="form-label">Location</label><input name="location" class="form-control" maxlength="80"></div>
                 <div class="col-12"><label class="form-label">Bio</label><textarea name="bio" class="form-control" rows="4" maxlength="500"></textarea></div>
-                <div class="col-md-6"><label class="form-label">Password</label><input name="password" type="password" class="form-control" minlength="6" maxlength="72" required></div>
+                <div class="col-md-6"><label class="form-label">Password</label><input name="password" type="password" class="form-control" minlength="8" maxlength="72" required></div>
             </div>
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
                 <p class="text-muted small mb-0">After registration you will be redirected back to login.</p>

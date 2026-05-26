@@ -2,6 +2,7 @@ package com.example.api.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 /**
@@ -14,8 +15,12 @@ data class UpdateMaintenanceTaskStatusRequest(
         example = "DONE",
         allowableValues = ["OPEN", "DONE", "DISMISSED"]
     )
-    @field:NotBlank
-    @field:Size(max = 20)
+    @field:NotBlank(message = "Task status must not be blank")
+    @field:Size(max = 20, message = "Task status must be 20 characters or fewer")
+    @field:Pattern(
+        regexp = ValidationPatterns.TASK_STATUS,
+        message = "Task status must be one of OPEN, DONE, or DISMISSED"
+    )
     val status: String,
 
     @field:Schema(
@@ -23,6 +28,10 @@ data class UpdateMaintenanceTaskStatusRequest(
         example = "ALREADY_HANDLED",
         allowableValues = ["TOO_SOON", "NOT_RELEVANT", "ALREADY_HANDLED"]
     )
-    @field:Size(max = 40)
+    @field:Size(max = 40, message = "Dismissal reason must be 40 characters or fewer")
+    @field:Pattern(
+        regexp = ValidationPatterns.DISMISSAL_REASON_OPTIONAL,
+        message = "Dismissal reason must be one of TOO_SOON, NOT_RELEVANT, or ALREADY_HANDLED"
+    )
     val dismissalReason: String? = null
 )

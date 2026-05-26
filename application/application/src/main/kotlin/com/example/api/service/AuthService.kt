@@ -106,11 +106,16 @@ class AuthService(
     fun updateCurrentUserProfile(username: String, request: UpdateUserProfileRequest): AuthUserResponse {
         logger.info("Updating user profile username={}", username)
         val user = findUserByUsername(username)
+        val normalizedEmail = request.email.trim().lowercase()
+        val emailOwner = appUserRepository.findByEmailIgnoreCase(normalizedEmail)
+        if (emailOwner != null && emailOwner.id != user.id) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Email already exists")
+        }
 
         user.displayName = request.displayName.trim()
         user.firstName = request.firstName.trim()
         user.lastName = request.lastName.trim()
-        user.email = request.email.trim().lowercase()
+        user.email = normalizedEmail
         user.location = request.location?.trim()?.takeIf { it.isNotEmpty() }
         user.bio = request.bio?.trim()?.takeIf { it.isNotEmpty() }
 
@@ -209,7 +214,7 @@ class AuthService(
             return ActorSnapshot(user = null, username = null, displayName = null)
         }
 
-        val user = appUserRepository.findByUsername(username)
+        val user = appUserRepository.findByUsernameIgnoreCase(username.trim())
         return ActorSnapshot(
             user = user,
             username = user?.username ?: username,
@@ -227,7 +232,7 @@ class AuthService(
      * Loads a user by username or throws a not-found error.
      */
     fun findUserByUsername(username: String): AppUser =
-        appUserRepository.findByUsername(username)
+        appUserRepository.findByUsernameIgnoreCase(username.trim())
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
     /**
@@ -274,7 +279,7 @@ class AuthService(
         role: String,
         failOnDuplicate: Boolean
     ): AppUser {
-        val normalizedUsername = username.trim()
+        val normalizedUsername = username.trim().lowercase()
         val normalizedDisplayName = displayName.trim()
         val normalizedFirstName = firstName.trim()
         val normalizedLastName = lastName.trim()
@@ -282,13 +287,17 @@ class AuthService(
         val normalizedLocation = location?.trim()?.takeIf { it.isNotEmpty() }
         val normalizedBio = bio?.trim()?.takeIf { it.isNotEmpty() }
 
-        if (appUserRepository.existsByUsername(normalizedUsername)) {
+        if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
             if (failOnDuplicate) {
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Username already exists")
             }
 
-            return appUserRepository.findByUsername(normalizedUsername)
+            return appUserRepository.findByUsernameIgnoreCase(normalizedUsername)
                 ?: throw ResponseStatusException(HttpStatus.CONFLICT, "Username already exists")
+        }
+
+        if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Email already exists")
         }
 
         return appUserRepository.save(

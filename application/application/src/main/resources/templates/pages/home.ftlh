@@ -48,7 +48,7 @@
                         </#list>
                     </select>
                 </div>
-                <div class="col-md-3 mb-2"><input type="text" class="form-control" name="description" maxlength="500" placeholder="Description"></div>
+                <div class="col-md-3 mb-2"><input type="text" class="form-control" name="description" maxlength="500" placeholder="Description" required></div>
                 <div class="col-md-1 mb-2"><button type="submit" class="btn btn-success w-100">Add</button></div>
             </div>
         </form>

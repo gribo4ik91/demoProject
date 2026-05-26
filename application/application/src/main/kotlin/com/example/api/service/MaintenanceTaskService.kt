@@ -5,6 +5,7 @@ import com.example.api.dto.MaintenanceTaskResponse
 import com.example.api.dto.UpdateMaintenanceTaskRequest
 import com.example.api.dto.UpdateMaintenanceTaskStatusRequest
 import com.example.api.mapper.toResponse
+import com.example.api.model.AuditEntityTypes
 import com.example.api.model.Ecosystem
 import com.example.api.model.MaintenanceTask
 import com.example.api.repository.EcosystemRepository
@@ -26,7 +27,8 @@ class MaintenanceTaskService(
     private val maintenanceTaskRepository: MaintenanceTaskRepository,
     private val ecosystemRepository: EcosystemRepository,
     private val authService: AuthService,
-    private val automationRuleService: AutomationRuleService
+    private val automationRuleService: AutomationRuleService,
+    private val auditLogService: AuditLogService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -51,11 +53,14 @@ class MaintenanceTaskService(
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { ecosystemNotFound() }
         val actor = authService.resolveActorSnapshot(username)
+        val normalizedTitle = request.title.trim()
+        val normalizedTaskType = request.taskType.trim().uppercase()
+        ensureUniqueOpenManualTask(ecosystemId, normalizedTitle, normalizedTaskType, request.dueDate)
 
         val task = MaintenanceTask(
             ecosystem = ecosystem,
-            title = request.title.trim(),
-            taskType = request.taskType.trim(),
+            title = normalizedTitle,
+            taskType = normalizedTaskType,
             dueDate = request.dueDate,
             autoCreated = false,
             dismissalReason = null,
@@ -64,7 +69,16 @@ class MaintenanceTaskService(
             createdByDisplayName = actor.displayName
         )
 
-        return maintenanceTaskRepository.save(task).toResponse()
+        val saved = maintenanceTaskRepository.save(task)
+        auditLogService.recordCreated(
+            entityType = AuditEntityTypes.TASK,
+            entityId = saved.id,
+            entityName = saved.title,
+            newValue = "Created manual task ${saved.title} (${saved.taskType}) due ${saved.dueDate ?: "No due date"}",
+            actor = actor
+        )
+
+        return saved.toResponse()
     }
 
     /**
@@ -72,6 +86,7 @@ class MaintenanceTaskService(
      */
     @Transactional
     fun updateTask(
+        username: String?,
         ecosystemId: UUID,
         taskId: UUID,
         request: UpdateMaintenanceTaskRequest
@@ -87,11 +102,26 @@ class MaintenanceTaskService(
         if (existing.autoCreated) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Suggested tasks cannot be edited manually")
         }
+        val actor = authService.resolveActorSnapshot(username)
+        val normalizedTitle = request.title.trim()
+        val normalizedTaskType = request.taskType.trim().uppercase()
+        ensureUniqueOpenManualTask(ecosystemId, normalizedTitle, normalizedTaskType, request.dueDate, taskId)
 
         val updatedTask = existing.copy(
-            title = request.title.trim(),
-            taskType = request.taskType.trim(),
+            title = normalizedTitle,
+            taskType = normalizedTaskType,
             dueDate = request.dueDate
+        )
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.TASK,
+            entityId = taskId,
+            entityName = updatedTask.title,
+            changes = listOf(
+                AuditFieldChange("title", existing.title, updatedTask.title),
+                AuditFieldChange("taskType", existing.taskType, updatedTask.taskType),
+                AuditFieldChange("dueDate", existing.dueDate, updatedTask.dueDate)
+            ),
+            actor = actor
         )
 
         return maintenanceTaskRepository.save(updatedTask).toResponse()
@@ -135,6 +165,7 @@ class MaintenanceTaskService(
      */
     @Transactional
     fun updateTaskStatus(
+        username: String?,
         ecosystemId: UUID,
         taskId: UUID,
         request: UpdateMaintenanceTaskStatusRequest
@@ -177,13 +208,23 @@ class MaintenanceTaskService(
         if (normalizedStatus != DISMISSED_STATUS && normalizedDismissalReason != null) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Dismissal reason can only be set when dismissing a suggestion")
         }
+        val actor = authService.resolveActorSnapshot(username)
+        val updatedTask = task.copy(
+            status = normalizedStatus,
+            dismissalReason = if (normalizedStatus == DISMISSED_STATUS) normalizedDismissalReason else null
+        )
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.TASK,
+            entityId = taskId,
+            entityName = task.title,
+            changes = listOf(
+                AuditFieldChange("status", task.status, updatedTask.status),
+                AuditFieldChange("dismissalReason", task.dismissalReason, updatedTask.dismissalReason)
+            ),
+            actor = actor
+        )
 
-        return maintenanceTaskRepository.save(
-            task.copy(
-                status = normalizedStatus,
-                dismissalReason = if (normalizedStatus == DISMISSED_STATUS) normalizedDismissalReason else null
-            )
-        ).toResponse()
+        return maintenanceTaskRepository.save(updatedTask).toResponse()
     }
 
     /**
@@ -235,7 +276,7 @@ class MaintenanceTaskService(
                 rule.id
             )
             val systemActor = authService.systemActorSnapshot()
-            maintenanceTaskRepository.save(
+            val saved = maintenanceTaskRepository.save(
                 MaintenanceTask(
                     ecosystem = ecosystem,
                     title = rule.taskTitle,
@@ -248,6 +289,13 @@ class MaintenanceTaskService(
                     createdByUsername = systemActor.username,
                     createdByDisplayName = systemActor.displayName
                 )
+            )
+            auditLogService.recordCreated(
+                entityType = AuditEntityTypes.TASK,
+                entityId = saved.id,
+                entityName = saved.title,
+                newValue = "Created suggested task ${saved.title} (${saved.taskType})",
+                actor = systemActor
             )
         }
     }
@@ -263,6 +311,28 @@ class MaintenanceTaskService(
      */
     private fun taskNotFound(): ResponseStatusException =
         ResponseStatusException(HttpStatus.NOT_FOUND, "Maintenance task not found")
+
+    /**
+     * Blocks accidental duplicate open manual tasks for the same ecosystem.
+     */
+    private fun ensureUniqueOpenManualTask(
+        ecosystemId: UUID,
+        title: String,
+        taskType: String,
+        dueDate: LocalDate?,
+        excludedTaskId: UUID? = null
+    ) {
+        val duplicateExists = maintenanceTaskRepository.existsDuplicateOpenManualTask(
+            ecosystemId = ecosystemId,
+            taskType = taskType,
+            title = title,
+            dueDate = dueDate,
+            excludedTaskId = excludedTaskId
+        )
+        if (duplicateExists) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Open task already exists for this ecosystem")
+        }
+    }
 
     /**
      * Applies the dashboard task ordering used by the UI.

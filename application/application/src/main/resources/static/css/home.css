@@ -43,6 +43,13 @@ body.modal-open { overflow: hidden; }
 .quick-action-panel { animation: quickPanelIn .18s ease both; }
 .quick-action-panel form { margin: 0; }
 .pin-toggle { min-width: 5rem; }
+.audit-list { display: grid; gap: .75rem; }
+.audit-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: start; border: 1px solid #d7e2da; border-radius: .8rem; padding: .85rem 1rem; background: #f8fbf9; }
+.audit-change-line { margin-top: .35rem; color: #52625a; font-size: .88rem; overflow-wrap: anywhere; }
+.audit-field { color: #264c37; font-weight: 700; }
+.audit-value { display: inline-block; max-width: 16rem; vertical-align: top; }
+.audit-arrow { color: #7b8982; margin: 0 .35rem; }
+.audit-entry-meta { min-width: 10rem; text-align: right; }
 
 @keyframes quickPanelIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -51,4 +58,6 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 991.98px) {
     .toolbar-grid { grid-template-columns: 1fr; }
+    .audit-entry { grid-template-columns: 1fr; }
+    .audit-entry-meta { text-align: left; }
 }

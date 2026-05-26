@@ -31,10 +31,11 @@ class MaintenanceTaskController(
      * Updates a manual maintenance task for the selected ecosystem.
      */
     override fun updateTask(
+        authentication: Authentication?,
         ecosystemId: UUID,
         taskId: UUID,
         @Valid request: UpdateMaintenanceTaskRequest
-    ): MaintenanceTaskResponse = maintenanceTaskService.updateTask(ecosystemId, taskId, request)
+    ): MaintenanceTaskResponse = maintenanceTaskService.updateTask(authentication?.name, ecosystemId, taskId, request)
 
     /**
      * Returns maintenance tasks for the selected ecosystem, optionally filtered by status.
@@ -48,8 +49,9 @@ class MaintenanceTaskController(
      * Updates the status of an existing maintenance task.
      */
     override fun updateTaskStatus(
+        authentication: Authentication?,
         ecosystemId: UUID,
         taskId: UUID,
         @Valid request: UpdateMaintenanceTaskStatusRequest
-    ): MaintenanceTaskResponse = maintenanceTaskService.updateTaskStatus(ecosystemId, taskId, request)
+    ): MaintenanceTaskResponse = maintenanceTaskService.updateTaskStatus(authentication?.name, ecosystemId, taskId, request)
 }

@@ -17,6 +17,68 @@
     </div>
 </section>
 
+<section class="panel p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+        <div>
+            <p class="section-label mb-1">Audit</p>
+            <h3 class="h5 mb-0">Inventory Change Log</h3>
+        </div>
+        <div class="text-muted small">
+            <#if auditPage.totalElements == 0>
+                No changes recorded yet
+            <#else>
+                Showing ${auditPage.items?size} of ${auditPage.totalElements} changes
+            </#if>
+        </div>
+    </div>
+
+    <#if auditPage.items?size == 0>
+        <div class="border rounded-3 p-4 text-center text-muted">Changes to ecosystems, tasks, and logs will appear here.</div>
+    <#else>
+        <div class="audit-list">
+            <#list auditPage.items as audit>
+                <div class="audit-entry">
+                    <div class="audit-entry-main">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="${ui.auditActionBadgeClass(audit.action)}">${ui.auditActionLabel(audit.action)}</span>
+                            <span class="text-muted small">${ui.auditEntityTypeLabel(audit.entityType)}</span>
+                        </div>
+                        <div class="fw-semibold">${audit.entityName!"Unnamed item"}</div>
+                        <#if audit.fieldName??>
+                            <div class="audit-change-line">
+                                <span class="audit-field">${audit.fieldName}</span>
+                                <span class="audit-value">${audit.oldValue!"Empty"}</span>
+                                <span class="audit-arrow">-&gt;</span>
+                                <span class="audit-value">${audit.newValue!"Empty"}</span>
+                            </div>
+                        <#elseif audit.newValue??>
+                            <div class="audit-change-line">${audit.newValue}</div>
+                        <#elseif audit.oldValue??>
+                            <div class="audit-change-line">${audit.oldValue}</div>
+                        </#if>
+                    </div>
+                    <div class="audit-entry-meta text-muted small">
+                        <div>${ui.formatDateTime(audit.createdAt)}</div>
+                        <div>By ${ui.createdByLabel(audit.createdByDisplayName, audit.createdByUsername)}</div>
+                    </div>
+                </div>
+            </#list>
+        </div>
+
+        <#if auditPage.totalPages gt 1>
+            <div class="d-flex justify-content-between align-items-center mt-3 gap-3 flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" <#if !auditPage.hasPrevious>disabled</#if>
+                        hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page}&auditPage=${auditPage.page - 1}"
+                        hx-target="#workspace-panel" hx-swap="innerHTML">Previous audit</button>
+                <span class="text-muted small">Audit page ${auditPage.page + 1} of ${auditPage.totalPages}</span>
+                <button class="btn btn-outline-success btn-sm" <#if !auditPage.hasNext>disabled</#if>
+                        hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page}&auditPage=${auditPage.page + 1}"
+                        hx-target="#workspace-panel" hx-swap="innerHTML">Next audit</button>
+            </div>
+        </#if>
+    </#if>
+</section>
+
 <section class="panel p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
         <div>
@@ -126,8 +188,8 @@
                                                 </#list>
                                             </select>
                                         </div>
-                                        <div class="col-md-4"><input type="number" step="0.1" name="temperatureC" class="form-control" placeholder="Temp C"></div>
-                                        <div class="col-md-4"><input type="number" name="humidityPercent" class="form-control" placeholder="Humidity %"></div>
+                                        <div class="col-md-4"><input type="number" step="0.1" min="-100" max="100" name="temperatureC" class="form-control" placeholder="Temp C"></div>
+                                        <div class="col-md-4"><input type="number" min="0" max="100" name="humidityPercent" class="form-control" placeholder="Humidity %"></div>
                                         <div class="col-12"><input type="text" name="notes" maxlength="500" class="form-control" placeholder="Notes"></div>
                                         <div class="col-12 d-flex justify-content-end gap-2">
                                             <button type="button" class="btn btn-outline-secondary btn-sm" data-quick-close="${card.id}">Cancel</button>
@@ -168,11 +230,11 @@
     <#if workspacePage.totalPages gt 1>
         <div class="d-flex justify-content-between align-items-center mt-4 gap-3 flex-wrap">
             <button class="btn btn-outline-secondary" <#if !workspacePage.hasPrevious>disabled</#if>
-                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page - 1}"
+                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page - 1}&auditPage=${auditPage.page}"
                     hx-target="#workspace-panel" hx-swap="innerHTML">Previous</button>
             <span class="text-muted small">Page ${workspacePage.page + 1} of ${workspacePage.totalPages}</span>
             <button class="btn btn-outline-success" <#if !workspacePage.hasNext>disabled</#if>
-                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page + 1}"
+                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page + 1}&auditPage=${auditPage.page}"
                     hx-target="#workspace-panel" hx-swap="innerHTML">Next</button>
         </div>
     </#if>

@@ -31,9 +31,10 @@ class EcosystemController(
      * Updates an existing ecosystem from the request payload.
      */
     override fun updateEcosystem(
+        authentication: Authentication?,
         id: UUID,
         @Valid request: UpdateEcosystemRequest
-    ): EcosystemResponse = ecosystemService.updateEcosystem(id, request)
+    ): EcosystemResponse = ecosystemService.updateEcosystem(authentication?.name, id, request)
 
     /**
      * Returns all ecosystems currently tracked by the application.
@@ -76,5 +77,6 @@ class EcosystemController(
     /**
      * Deletes the selected ecosystem together with its dependent data.
      */
-    override fun deleteEcosystem(id: UUID) = ecosystemService.deleteEcosystem(id)
+    override fun deleteEcosystem(authentication: Authentication?, id: UUID) =
+        ecosystemService.deleteEcosystem(authentication?.name, id)
 }

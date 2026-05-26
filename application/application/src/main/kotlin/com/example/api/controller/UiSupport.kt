@@ -48,7 +48,7 @@ class UiSupport(
             authentication.isAuthenticated &&
             principal != null &&
             principal.username != "anonymousUser"
-        val user = if (authenticated) appUserRepository.findByUsername(principal!!.username) else null
+        val user = if (authenticated) appUserRepository.findByUsernameIgnoreCase(principal!!.username) else null
 
         return AuthStatusResponse(
             enabled = authEnabled,
@@ -166,6 +166,30 @@ class UiSupport(
             "SUPER_ADMIN" -> "badge rounded-pill text-bg-danger"
             "ADMIN" -> "badge rounded-pill text-bg-success"
             else -> "badge rounded-pill text-bg-secondary"
+        }
+
+    fun auditActionLabel(value: String?): String =
+        when (value) {
+            "CREATED" -> "Created"
+            "UPDATED" -> "Updated"
+            "DELETED" -> "Deleted"
+            else -> value ?: "Changed"
+        }
+
+    fun auditActionBadgeClass(value: String?): String =
+        when (value) {
+            "CREATED" -> "badge text-bg-success"
+            "UPDATED" -> "badge text-bg-primary"
+            "DELETED" -> "badge text-bg-danger"
+            else -> "badge text-bg-secondary"
+        }
+
+    fun auditEntityTypeLabel(value: String?): String =
+        when (value) {
+            "ECOSYSTEM" -> "Ecosystem"
+            "TASK" -> "Task"
+            "LOG" -> "Log"
+            else -> value ?: "Item"
         }
 
     fun formatDateTime(value: LocalDateTime?): String = value?.format(dateTimeFormatter) ?: "No data yet"

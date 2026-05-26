@@ -31,10 +31,11 @@ class EcosystemLogController(
      * Updates an existing log entry for the selected ecosystem.
      */
     override fun updateLog(
+        authentication: Authentication?,
         ecosystemId: UUID,
         logId: UUID,
         @Valid request: UpdateLogRequest
-    ): EcosystemLogResponse = ecosystemLogService.updateLog(ecosystemId, logId, request)
+    ): EcosystemLogResponse = ecosystemLogService.updateLog(authentication?.name, ecosystemId, logId, request)
 
     /**
      * Returns a paged list of logs, optionally filtered by event type.

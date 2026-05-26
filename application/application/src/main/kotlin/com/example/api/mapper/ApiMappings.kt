@@ -14,7 +14,7 @@ import com.example.api.model.EcosystemLog
 fun CreateEcosystemRequest.toEntity(): Ecosystem =
     Ecosystem(
         name = name.trim(),
-        type = type.trim(),
+        type = type.trim().uppercase(),
         description = description?.trim()?.takeIf { it.isNotEmpty() }
     )
 
@@ -24,7 +24,7 @@ fun CreateEcosystemRequest.toEntity(): Ecosystem =
 fun UpdateEcosystemRequest.applyTo(existing: Ecosystem): Ecosystem =
     existing.copy(
         name = name.trim(),
-        type = type.trim(),
+        type = type.trim().uppercase(),
         description = description?.trim()?.takeIf { it.isNotEmpty() }
     )
 

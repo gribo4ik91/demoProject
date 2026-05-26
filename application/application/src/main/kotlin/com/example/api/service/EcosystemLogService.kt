@@ -6,6 +6,7 @@ import com.example.api.dto.PagedResponse
 import com.example.api.dto.UpdateLogRequest
 import com.example.api.mapper.applyTo
 import com.example.api.mapper.toResponse
+import com.example.api.model.AuditEntityTypes
 import com.example.api.model.EcosystemLog
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -26,7 +27,8 @@ class EcosystemLogService(
     private val ecosystemLogRepository: EcosystemLogRepository,
     private val ecosystemRepository: EcosystemRepository,
     private val maintenanceTaskService: MaintenanceTaskService,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val auditLogService: AuditLogService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -40,6 +42,7 @@ class EcosystemLogService(
         val ecosystem = ecosystemRepository.findById(ecosystemId)
             .orElseThrow { notFound() }
 
+        ensureMeaningfulLog(request.temperatureC, request.humidityPercent, request.notes)
         val normalizedEventType = request.eventType.trim().uppercase()
 
         val actor = authService.resolveActorSnapshot(username)
@@ -55,6 +58,13 @@ class EcosystemLogService(
         )
 
         val savedLog = ecosystemLogRepository.save(newLog)
+        auditLogService.recordCreated(
+            entityType = AuditEntityTypes.LOG,
+            entityId = savedLog.id,
+            entityName = savedLog.eventType,
+            newValue = "Created ${savedLog.eventType} log for ${ecosystem.name}",
+            actor = actor
+        )
 
         maintenanceTaskService.createSuggestedTaskIfNeeded(ecosystem, normalizedEventType)
 
@@ -65,16 +75,31 @@ class EcosystemLogService(
      * Updates an existing log entry for one ecosystem.
      */
     @Transactional
-    fun updateLog(ecosystemId: UUID, logId: UUID, request: UpdateLogRequest): EcosystemLogResponse {
+    fun updateLog(username: String?, ecosystemId: UUID, logId: UUID, request: UpdateLogRequest): EcosystemLogResponse {
         logger.info("Updating activity log ecosystemId={} logId={}", ecosystemId, logId)
         if (!ecosystemRepository.existsById(ecosystemId)) {
             throw notFound()
         }
+        ensureMeaningfulLog(request.temperatureC, request.humidityPercent, request.notes)
 
         val existing = ecosystemLogRepository.findByIdAndEcosystemId(logId, ecosystemId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Log entry not found")
+        val actor = authService.resolveActorSnapshot(username)
+        val updated = request.applyTo(existing)
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.LOG,
+            entityId = logId,
+            entityName = updated.eventType,
+            changes = listOf(
+                AuditFieldChange("temperatureC", existing.temperatureC, updated.temperatureC),
+                AuditFieldChange("humidityPercent", existing.humidityPercent, updated.humidityPercent),
+                AuditFieldChange("eventType", existing.eventType, updated.eventType),
+                AuditFieldChange("notes", existing.notes, updated.notes)
+            ),
+            actor = actor
+        )
 
-        return ecosystemLogRepository.save(request.applyTo(existing)).toResponse()
+        return ecosystemLogRepository.save(updated).toResponse()
     }
 
     /**
@@ -125,4 +150,13 @@ class EcosystemLogService(
      */
     private fun notFound(): ResponseStatusException =
         ResponseStatusException(HttpStatus.NOT_FOUND, "Ecosystem not found")
+
+    /**
+     * Prevents empty activity records that have only an event type and no observation detail.
+     */
+    private fun ensureMeaningfulLog(temperatureC: Double?, humidityPercent: Int?, notes: String?) {
+        if (temperatureC == null && humidityPercent == null && notes.isNullOrBlank()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Log must include temperature, humidity, or notes")
+        }
+    }
 }

@@ -81,6 +81,7 @@ interface MaintenanceTaskControllerApi {
         ]
     )
     fun updateTask(
+        authentication: Authentication?,
         @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
         @PathVariable ecosystemId: UUID,
         @Parameter(description = "Maintenance task identifier", example = "7e74cb50-b2c6-4ba4-a4ea-c4ef290d9880")
@@ -140,6 +141,7 @@ interface MaintenanceTaskControllerApi {
         ]
     )
     fun updateTaskStatus(
+        authentication: Authentication?,
         @Parameter(description = "Ecosystem identifier", example = "2a5ab0f5-8a81-44ba-a8f6-f2862b4a7c0d")
         @PathVariable ecosystemId: UUID,
         @Parameter(description = "Maintenance task identifier", example = "7e74cb50-b2c6-4ba4-a4ea-c4ef290d9880")
