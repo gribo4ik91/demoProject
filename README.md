@@ -23,6 +23,9 @@ The repository is split into three main areas:
 - Automatically assign the first account in the system to `SUPER_ADMIN`
 - Let every signed-in account view the shared users directory, allow `SUPER_ADMIN` to manage admins, and restrict `ADMIN` deletion rights to regular users
 - Show who created each ecosystem, log, and task entry
+- Validate supported field values and prevent duplicate user logins/emails, ecosystem names, and open manual task duplicates
+- Show field-level form feedback, including login failures under the login or password field that caused the failure
+- Record an inventory audit log for ecosystem, log, task, and automation-rule changes, show a compact home preview, and provide a full `/audit` page
 - Manage event-based and inactivity-based suggested-task rules
 - Persist data in PostgreSQL with Flyway migrations
 
@@ -192,9 +195,10 @@ What the user does:
 3. Open the home page and create a new ecosystem.
 4. Add a log entry like `WATERING` or `OBSERVATION`.
 5. Add a manual maintenance task with a due date.
-6. Open the ecosystem page to review summary, activity history, and tasks.
-7. Open `/users` to see the shared directory.
-8. As the bootstrap `SUPER_ADMIN`, promote another account to `ADMIN` or remove that right again.
+6. Return to the home page and show the compact recent-changes preview, then open `/audit` for the full history.
+7. Open the ecosystem page to review summary, activity history, and tasks.
+8. Open `/users` to see the shared directory.
+9. As the bootstrap `SUPER_ADMIN`, promote another account to `ADMIN` or remove that right again.
 
 
 ### Scenario 2: Authentication enabled without bootstrap user
@@ -228,6 +232,7 @@ What the user does:
 3. Create several ecosystems from the home page.
 4. Open one ecosystem and add logs and tasks.
 5. Edit ecosystem details, logs, and manual tasks inline.
+6. Return to the home page and review the compact recent-changes preview.
 
 
 ### Suggested short live demo
@@ -237,10 +242,12 @@ If you want one compact walkthrough for a presentation:
 1. Start with authentication enabled and log in as the bootstrap `SUPER_ADMIN`.
 2. Create one ecosystem and explain the workspace card, status, and quick actions.
 3. Open the ecosystem and add one log plus one task.
-4. Show how creator information is attached to the records.
-5. Open `/users`, promote another account to `ADMIN`, and explain the difference between `SUPER_ADMIN`, `ADMIN`, and `USER`.
-6. Mention that the same project can also run with `APP_AUTH_ENABLED=false` for a faster no-login demo.
-7. Open `/automation-rules` and show how follow-up suggestions can now be configured without changing code.
+4. Return to the home page and show the recent-changes preview, then open `/audit` for the full paged history.
+5. Show how creator information is attached to the records.
+6. Open `/users`, promote another account to `ADMIN`, and explain the difference between `SUPER_ADMIN`, `ADMIN`, and `USER`.
+7. Mention that duplicate login/email, ecosystem name, and open manual task submissions are rejected.
+8. Show that invalid form values and failed login attempts display field-level messages next to the affected input.
+9. Open `/automation-rules` and show how follow-up suggestions can now be configured without changing code.
 
 ## Useful Commands
 

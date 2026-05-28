@@ -17,12 +17,14 @@ The user enters:
 
 - a name
 - a type
-- a description if needed
+- a description
 
 The system:
 
 - validates the required fields
+- rejects an unsupported type or a duplicate ecosystem name
 - stores the new ecosystem
+- writes an audit entry for the created ecosystem
 - returns the created record
 - makes it available in the main list
 
@@ -50,6 +52,7 @@ The system:
 - deletes the ecosystem itself
 - deletes related logs
 - deletes related maintenance tasks
+- writes an audit entry for the deleted ecosystem
 
 ### Scenario 5. Update ecosystem details
 
@@ -58,16 +61,19 @@ The system:
 
 - loads the current name, type, and description
 - validates the updated values
+- rejects a duplicate ecosystem name
 - saves the changes
+- writes audit entries for changed fields
 - refreshes the displayed dashboard context
 
 ## Business rules
 
 - `name` is required, up to 100 characters
-- `type` is required, up to 50 characters
-- UI-supported types are `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, and `DIY_INCUBATOR`
-- `description` is optional, up to 500 characters
+- `name` must be unique, checked case-insensitively
+- `type` is required and must be one of `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, and `DIY_INCUBATOR`
+- `description` is required, up to 500 characters
 - when an ecosystem is deleted, dependent data must also be removed
+- create, update, and delete actions are recorded in `audit_logs`
 
 ## API operations
 
@@ -118,9 +124,10 @@ Otherwise the status is `STABLE`.
 ## Architectural implementation
 
 - `EcosystemController` exposes the API
-- `EcosystemService` contains the business logic
+- `EcosystemService` contains the business logic, duplicate-name checks, and audit calls
 - `EcosystemRepository` works with the `ecosystems` table
 - `EcosystemLogRepository` and `MaintenanceTaskRepository` are used to build the summary
+- `AuditLogService` records created, updated, and deleted ecosystem events
 
 ## Summary
 

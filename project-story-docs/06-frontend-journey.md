@@ -25,6 +25,7 @@ Purpose:
 - act as a workspace dashboard for the full ecosystem portfolio
 - provide a form to create a new ecosystem
 - surface overview counters, urgent ecosystems, pinned ecosystems, and quick actions
+- show a compact inventory audit preview
 - display the current user status when auth is enabled
 
 User flow:
@@ -38,8 +39,10 @@ User flow:
 7. Create a new ecosystem through the SSR form
 8. Trigger quick log or quick task actions directly from a card
 9. Move through paged ecosystem cards without leaving the page
-10. Open the selected ecosystem dashboard
-11. Open profile or users pages from the shared authenticated header
+10. Review the compact recent-changes preview
+11. Open `/audit` when the full paged inventory change log is needed
+12. Open the selected ecosystem dashboard
+13. Open profile or users pages from the shared authenticated header
 
 ### 2. Ecosystem page `/ecosystems/{id}`
 
@@ -106,15 +109,27 @@ Purpose:
 - delete rules
 - preview what kind of suggested task a rule will generate
 
+### 8. `/audit`
+
+Purpose:
+
+- browse the full inventory change history
+- page through older ecosystem, log, task, and automation-rule changes
+- keep detailed audit history available without making the home page visually heavy
+
 ## UI behavior highlights
 
 - the interface shows toast notifications for page-level success and error feedback
 - authentication status is blended into the page header via server-rendered auth state
 - the home page combines a hero section, workspace counters, filters, urgency grouping, pinned grouping, and the main card grid
+- the home page renders only a compact audit preview, while `/audit` carries the full paged history
 - home page cards are now enriched by backend-computed status, freshness, log counts, and task counts
 - home page search and status filters are executed server-side so counters and card lists stay aligned
 - home page card updates run through SSR fragments and htmx rather than bespoke page fetch logic
 - quick log and quick task actions run through inline panel flows on the home page
+- home and dashboard forms expose browser-side constraints that mirror backend validation where possible
+- htmx form failures show field-level feedback next to the affected controls
+- login failures distinguish login-field errors from password-field errors
 - pinned ecosystems are still browser-local and currently use `localStorage`
 - the dashboard refreshes SSR fragments or full page state after task and log changes
 - tasks can be filtered by both status and source
@@ -151,3 +166,4 @@ The current SSR + htmx frontend approach fits the size and purpose of the soluti
 It is a strong choice for a demo-oriented full-stack project and fully supports the main user journey without unnecessary infrastructure complexity.
 
 Recent iterations made the home page materially richer: instead of being only an entry list, it now acts as a lightweight workspace dashboard and delegates more filtering and aggregation logic to the backend.
+It also now acts as a lightweight change feed by showing a compact recent-changes preview for ecosystem, log, task, and automation-rule changes.

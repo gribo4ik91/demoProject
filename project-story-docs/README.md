@@ -27,6 +27,7 @@ For runtime startup instructions, use the repository READMEs:
 - `08-sql-module.md` - dedicated description of the SQL area, PostgreSQL environment, and pipeline control
 - `09-delivery-and-operations.md` - containerization, application pipeline, manual API collections, and runtime operations
 - `10-implementation-notes.md` - implementation rules for mappers, errors, OpenAPI, response delay, and tests
+- `13-validation-and-audit.md` - cross-cutting validation, duplicate protection, and inventory audit trail
 
 ## How to read it
 
@@ -47,10 +48,13 @@ The product combines:
 - an activity and observation log
 - manual and auto-suggested maintenance tasks
 - configurable automation rules for suggested tasks
+- validation and duplicate protection for the main inventory workflows
+- a compact home-page audit preview and full `/audit` history for inventory changes
 - optional authentication, user profile management, role-based user administration, and creator attribution
 - PostgreSQL + Flyway for stable persistence
 
 The main value of the system is not only to store records, but to help the user understand the current state of an ecosystem, notice risks early, and stay on top of recurring care actions.
 
 Recent iterations also added inline dashboard editing flows and broader summary analytics so the main working screen stays useful without leaving the ecosystem page.
+The latest iteration adds stricter data-quality rules, a compact audit preview on the home page, and a full paged audit log at `/audit`.
 The current UI delivery model is server-side rendered through Freemarker templates with htmx updates for focused interactions.

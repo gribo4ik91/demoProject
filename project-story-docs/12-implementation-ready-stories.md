@@ -34,7 +34,7 @@ As a user, I want to create a new ecosystem so that I can start tracking a concr
 - Body:
   - `name: string` required, not blank, max 100
   - `type: string` required, not blank, max 50
-  - `description: string | null` optional, max 500
+  - `description: string` required, not blank, max 500
 - Allowed UI values for `type`:
   - `FORMICARIUM`
   - `FLORARIUM`
@@ -45,10 +45,12 @@ As a user, I want to create a new ecosystem so that I can start tracking a concr
   - returns `EcosystemResponse`
 - Error expectations:
   - `400 Bad Request` for invalid payload
+  - `409 Conflict` when another ecosystem already uses the same name
 
 **SQL / data impact**
 
 - Writes to table `ecosystems`
+- Writes create event to `audit_logs`
 - Required stored fields:
   - `id`
   - `name`
@@ -63,6 +65,8 @@ As a user, I want to create a new ecosystem so that I can start tracking a concr
 - valid payload creates a new ecosystem row
 - blank `name` is rejected
 - blank `type` is rejected
+- blank `description` is rejected
+- duplicate ecosystem name is rejected
 - too-long `name`, `type`, or `description` is rejected
 - response contains the created ecosystem data
 
@@ -128,24 +132,28 @@ As a user, I want to edit ecosystem metadata so that the dashboard remains accur
   - `id: UUID` required
 - Body:
   - `name: string` required, not blank, max 100
-  - `type: string` required, not blank, max 50
-  - `description: string | null` optional, max 500
+  - `type: string` required, fixed ecosystem type value
+  - `description: string` required, not blank, max 500
 - Success response:
   - `200 OK`
   - returns updated `EcosystemResponse`
 - Error expectations:
   - `400 Bad Request` for invalid payload
+  - `409 Conflict` when another ecosystem already uses the same name
   - `404 Not Found` if ecosystem does not exist
 
 **SQL / data impact**
 
 - Updates row in `ecosystems`
+- Inserts changed-field rows into `audit_logs`
 - Does not create a new row
 
 **Acceptance criteria**
 
 - existing ecosystem can be updated
 - invalid values are rejected
+- duplicate ecosystem name is rejected
+- changed fields are recorded in audit
 - returned object contains saved values
 
 ### ST-05 Delete ecosystem and dependent records
@@ -491,13 +499,16 @@ As a user, I want to save an observation or care event so that ecosystem history
 **Implementation notes**
 
 - event type should be normalized to uppercase
+- at least one of temperature, humidity, or notes must be supplied
 - ecosystem existence must be checked before save
 - after save, maintenance suggestion logic may be triggered
+- creation should write an audit event
 
 **SQL / data impact**
 
 - Reads `ecosystems` to validate parent existence
 - Inserts into `logs`
+- Inserts into `audit_logs`
 - May also insert into `maintenance_tasks` if suggestion rules apply
 
 **Acceptance criteria**
@@ -505,6 +516,7 @@ As a user, I want to save an observation or care event so that ecosystem history
 - valid log creates a row in `logs`
 - invalid measurements are rejected
 - missing `eventType` is rejected
+- empty log without temperature, humidity, or notes is rejected
 - `WATERING` and `FEEDING` trigger suggestion evaluation
 
 ### ST-10 Get paged ecosystem logs with optional event filter
@@ -605,15 +617,19 @@ As a user, I want to add my own maintenance reminder so that I can track work th
 - manual tasks are saved with:
   - `status = OPEN`
   - `autoCreated = false`
+- duplicate open manual tasks with the same ecosystem, title, task type, and due date are rejected
+- creation should write an audit event
 
 **SQL / data impact**
 
 - Reads `ecosystems`
 - Inserts into `maintenance_tasks`
+- Inserts into `audit_logs`
 
 **Acceptance criteria**
 
 - manual task is saved as open
+- duplicate open manual task signature is rejected
 - optional due date is accepted in correct date format
 - invalid title or type is rejected
 
@@ -811,13 +827,13 @@ As a new user, I want to register so that I can access the secured application m
 - Endpoint: `POST /api/v1/auth/register`
 - Body:
   - `displayName: string` required, `3..60`
-  - `username: string` required, `3..40`, unique
+  - `username: string` required, `3..40`, lowercase letters/numbers/dot/underscore/hyphen, unique
   - `firstName: string` required, `2..60`
   - `lastName: string` required, `2..60`
-  - `email: string` required, valid, max 120
+  - `email: string` required, valid, unique, max 120
   - `location: string | null` optional, max 80
   - `bio: string | null` optional, max 500
-  - `password: string` required, `6..72`
+  - `password: string` required, `8..72`
 - Success response:
   - `201 Created`
   - returns created user profile
@@ -826,17 +842,20 @@ As a new user, I want to register so that I can access the secured application m
 
 - normalize text fields
 - lowercase email
+- check username and email uniqueness case-insensitively
 - hash password with BCrypt
 
 **SQL / data impact**
 
 - Inserts into `app_user`
 - Requires unique constraint or equivalent uniqueness check for `username`
+- Requires uniqueness check for `email`
 - Stores password hash, not raw password
 
 **Acceptance criteria**
 
 - unique username is enforced
+- unique email is enforced
 - password is stored hashed
 - normalized profile is returned after creation
 
@@ -1026,6 +1045,10 @@ As a developer, I want the schema to evolve through versioned migrations so that
   - `V5` base user table
   - `V6` expanded user profile
   - `V7` optional `location` and `bio`
+  - `V8` roles and creator tracking
+  - `V9` super-admin role migration
+  - `V10` automation rules
+  - `V11` audit logs
 
 **SQL / data impact**
 
@@ -1033,13 +1056,62 @@ As a developer, I want the schema to evolve through versioned migrations so that
   - `ecosystems`
   - `logs`
   - `maintenance_tasks`
+  - `automation_rules`
   - `app_user`
+  - `audit_logs`
 
 **Acceptance criteria**
 
 - schema can be created from migrations only
 - fresh environment gets latest structure without manual SQL steps
 - migrations stay aligned with API fields used by implemented features
+
+## Epic F. Validation and audit
+
+### ST-26 Record and display inventory audit log
+
+**Goal**
+As a user, I want to see what changed in the inventory so that ecosystem, log, task, and automation-rule changes remain transparent.
+
+**Implementation contract**
+
+- Audit storage:
+  - table `audit_logs`
+  - model `AuditLog`
+  - repository `AuditLogRepository`
+  - service `AuditLogService`
+- Recorded actions:
+  - `CREATED`
+  - `UPDATED`
+  - `DELETED`
+- Recorded entity types:
+  - `ECOSYSTEM`
+  - `LOG`
+  - `TASK`
+  - `AUTOMATION_RULE`
+- Home page:
+  - `UiController` loads a compact audit preview
+  - `workspace-panel.ftlh` renders only the latest few entries
+- Audit page:
+  - `UiController` loads paged audit entries
+  - `audit.ftlh` and `audit-list.ftlh` render the full history with navigation
+
+**SQL / data impact**
+
+- Inserts into `audit_logs` when inventory mutations happen
+- Reads a compact audit preview for the SSR home page
+- Reads paged audit entries for the dedicated `/audit` page
+- Uses `V11__add_audit_logs.sql` for table and indexes
+
+**Acceptance criteria**
+
+- ecosystem create/update/delete writes audit entries
+- log create/update writes audit entries
+- task create/update/status changes write audit entries
+- automation rule create/update/enabled-state/delete writes audit entries
+- field updates include old and new values
+- home page shows a compact recent-changes preview
+- `/audit` shows paged audit entries with actor and timestamp
 
 ## Notes
 

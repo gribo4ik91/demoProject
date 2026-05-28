@@ -16,6 +16,7 @@ The project uses a classic layered architecture:
 - `mapper` - entity/DTO conversion
 - `exception` - shared error handling
 - `resources/static` - embedded frontend
+- audit logging is implemented as a service/repository/model slice, previewed by the SSR home page, and browsed on `/audit`
 
 ## Technology stack
 
@@ -36,9 +37,10 @@ The project uses a classic layered architecture:
 1. The user opens a page or calls the API
 2. the `controller` receives and validates the request DTO
 3. the `service` executes the business logic
-4. the `repository` reads or writes entities
-5. data is returned through DTOs
-6. errors are converted into a consistent API format
+4. service-level duplicate checks and audit logging run when a mutation changes inventory data
+5. the `repository` reads or writes entities
+6. data is returned through DTOs
+7. errors are converted into a consistent API format
 
 ## Data model
 
@@ -106,6 +108,22 @@ Stores:
 - creation timestamp
 - update timestamp
 
+### Table `audit_logs`
+
+Stores:
+
+- identifier
+- entity type
+- entity identifier
+- entity display name
+- action (`CREATED`, `UPDATED`, `DELETED`)
+- changed field name
+- old value
+- new value
+- actor username snapshot
+- actor display-name snapshot
+- creation timestamp
+
 ### Table `app_user`
 
 Stores:
@@ -136,6 +154,7 @@ The schema evolves through Flyway migrations:
 - `V8` - roles plus creator-tracking fields on ecosystems, logs, and maintenance tasks
 - `V9` - promote the earliest account to `SUPER_ADMIN` and keep later managed accounts as `ADMIN` or `USER`
 - `V10` - configurable automation rules for suggested task generation
+- `V11` - inventory audit log table and indexes
 
 ## Runtime infrastructure
 
@@ -178,10 +197,15 @@ The project already contains:
 - clear separation of layers
 - versioned database schema
 - consistent API error format
+- shared validation patterns for supported input values
+- service-level duplicate protection for users, ecosystems, and open manual tasks
+- inventory audit trail for visible changes
 - understandable REST contracts
 - complete vertical slice from UI to database
 - lightweight role-based user administration without a heavy ACL model, including one fixed `SUPER_ADMIN`
 - creator attribution preserved by snapshot fields even after deleting an account
+- compact audit preview shown on the home page
+- full paged audit history shown on `/audit`
 
 ## Architectural limitations
 
@@ -192,11 +216,11 @@ The project already contains:
 
 ## Recommendations for the next phase
 
-1. Link `ecosystem` to `app_user`
-2. Add edit/update flows for ecosystems, logs, and manual tasks
-3. Add scheduled evaluation for inactivity-based automation rules
-4. Add notifications for overdue tasks
-5. Move integration testing to PostgreSQL via Testcontainers
+1. Link `ecosystem` visibility to user/team ownership if the domain needs isolation
+2. Add scheduled evaluation for inactivity-based automation rules
+3. Add notifications for overdue tasks
+4. Add filtering/export on the dedicated audit trail if the change history grows further
+5. Keep integration testing aligned with PostgreSQL via Testcontainers
 
 ## Final conclusion
 

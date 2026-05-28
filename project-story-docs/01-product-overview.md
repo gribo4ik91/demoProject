@@ -13,6 +13,7 @@ The system is designed to support the full core lifecycle of ecosystem care:
 3. View a summarized status
 4. Manage maintenance tasks
 5. Restrict access through login when needed
+6. Review recent inventory changes through a compact preview and full audit history
 
 ## Main roles
 
@@ -30,9 +31,11 @@ The project covers:
 - basic temperature and humidity monitoring
 - activity and observation logs
 - maintenance tasks
+- validation and duplicate protection for important inventory fields
+- audit logging for inventory changes
 - basic registration and login
 - lightweight user governance with `SUPER_ADMIN`, `ADMIN`, and `USER` roles
-- a static web UI served by the backend
+- a server-rendered Freemarker UI served by the backend with htmx updates
 
 The project does not cover:
 
@@ -47,6 +50,7 @@ The project does not cover:
 - `EcosystemLog`: an observation or activity event
 - `MaintenanceTask`: a maintenance reminder
 - `AppUser`: an application user for secured access mode
+- `AuditLog`: a visible record of inventory changes
 
 ## Key product logic
 
@@ -54,6 +58,8 @@ The project does not cover:
 - each ecosystem can have many maintenance tasks
 - a `WATERING` or `FEEDING` log can generate a suggested follow-up task
 - ecosystem status is calculated automatically from recent logs and tasks
+- duplicate user logins/emails, ecosystem names, and open manual task signatures are rejected
+- create, update, delete, and status-change actions on inventory records are captured in an audit log
 - authentication can be turned on or off through configuration
 
 ## Architectural meaning

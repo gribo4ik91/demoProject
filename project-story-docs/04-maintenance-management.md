@@ -27,6 +27,8 @@ The user creates a task and defines:
 - due date
 
 The system saves the task with status `OPEN`.
+If an identical open manual task already exists for the same ecosystem, title, type, and due date, the request is rejected.
+The creation is recorded in the audit trail.
 
 ### Scenario 2. View tasks
 
@@ -51,11 +53,13 @@ The frontend also provides a source filter:
 
 The user marks a task as completed.
 The system changes the status to `DONE`.
+The status change is recorded in the audit trail.
 
 ### Scenario 4. Reopen a task
 
 The user can return a task to active work.
 The system changes the status back to `OPEN`.
+The status change is recorded in the audit trail.
 
 ### Scenario 5. Dismiss a suggested task
 
@@ -74,6 +78,8 @@ The system:
 
 - verifies that the task belongs to the selected ecosystem
 - validates the updated fields
+- rejects the update if it would duplicate another open manual task in the same ecosystem
+- records changed fields in the audit trail
 - allows the change only for manual tasks
 - rejects manual editing for auto-created suggestions
 
@@ -107,6 +113,7 @@ Suggested tasks do not appear:
 ## Duplicate prevention
 
 If an open suggested task with the same title and type already exists, a new one is not created.
+For manual tasks, duplicate open task signatures are also blocked when ecosystem, title, task type, and due date match.
 
 ## Cooldown after dismiss
 
@@ -126,6 +133,7 @@ The cooldown depends on the dismissal reason:
 - a dismissal reason is mandatory for `DISMISSED`
 - a dismissal reason cannot be sent for `OPEN` or `DONE`
 - a task is overdue when its status is `OPEN` and `dueDate < today`
+- manual task create/update and task status changes are recorded in `audit_logs`
 
 ## Task sorting
 
@@ -150,11 +158,12 @@ Within the same status, sorting uses:
 ## Architectural implementation
 
 - `MaintenanceTaskController` exposes the API
-- `MaintenanceTaskService` implements filters, status rules, suggestion creation, and cooldown logic
+- `MaintenanceTaskService` implements filters, status rules, manual duplicate checks, suggestion creation, cooldown logic, and audit calls
 - `AutomationRuleController` exposes rule-management API operations
 - `AutomationRuleService` owns rule validation, CRUD behavior, and rule lookup for task generation
 - `MaintenanceTaskRepository` works with the `maintenance_tasks` table
 - `AutomationRuleRepository` works with the `automation_rules` table
+- `AuditLogService` records task create/update/status-change events and system-created suggestions
 
 ## Summary
 

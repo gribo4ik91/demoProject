@@ -7,6 +7,7 @@ The project demonstrates a complete vertical slice:
 - PostgreSQL persistence with Flyway migrations
 - Server-side rendered UI served by the application
 - Validation, structured API errors, and automated tests
+- Duplicate protection and audit logging for inventory-changing workflows
 
 ## Highlights
 
@@ -17,6 +18,7 @@ The project demonstrates a complete vertical slice:
 - Consistent JSON error responses
 - Controller and integration test coverage
 - Lightweight UI for end-to-end interaction with the API
+- Compact home-page audit preview plus a dedicated paged `/audit` history
 
 ## Tech Stack
 
@@ -52,15 +54,20 @@ The project demonstrates a complete vertical slice:
 - Let the `SUPER_ADMIN` grant and revoke `ADMIN` rights
 - Allow `ADMIN` users to delete only regular users, while `SUPER_ADMIN` can also delete admins
 - Show who created each ecosystem, log entry, and maintenance task
+- Enforce allowed values for ecosystem types, log event types, task types, task statuses, and dismissal reasons
+- Prevent duplicate user logins/emails, duplicate ecosystem names, and duplicate open manual task signatures
+- Record inventory audit entries for ecosystem, log, task, and automation-rule creates, updates, deletes, and status changes
+- Review a compact recent-changes preview on the home page and browse the full paged audit log at `/audit`
 - Delete an ecosystem together with its logs
 - Receive structured validation and not-found responses from the API
+- See field-level validation feedback in SSR and htmx forms, including failed login attempts under the login or password input
 
 ## Architecture
 
 Main package structure:
 
 - `controller`: HTTP endpoints and response codes
-- `service`: business flow and orchestration
+- `service`: business flow, orchestration, duplicate checks, and audit logging
 - `dto`: API request/response contracts
 - `mapper`: entity-to-DTO mapping
 - `model`: JPA entities
@@ -72,9 +79,9 @@ Main package structure:
 The backend-hosted UI now uses Spring MVC + Freemarker templates with htmx-driven partial updates:
 
 - `src/main/resources/templates/pages/`
-  full SSR pages such as `home.ftlh`, `ecosystem.ftlh`, `automation-rules.ftlh`, `login.ftlh`, `register.ftlh`, `profile.ftlh`, and `users.ftlh`
+  full SSR pages such as `home.ftlh`, `ecosystem.ftlh`, `audit.ftlh`, `automation-rules.ftlh`, `login.ftlh`, `register.ftlh`, `profile.ftlh`, and `users.ftlh`
 - `src/main/resources/templates/fragments/`
-  reusable htmx fragments such as `workspace-panel.ftlh`, `task-list.ftlh`, `log-list.ftlh`, and the automation-rule editor/list fragments
+  reusable htmx fragments such as `workspace-panel.ftlh`, `audit-list.ftlh`, `task-list.ftlh`, `log-list.ftlh`, and the automation-rule editor/list fragments
 - `src/main/resources/static/css/`
   page and shared styles such as `home.css`, `ecosystem.css`, `automation-rules.css`, `auth.css`, `login.css`, `register.css`, and `profile.css`
 - `src/main/resources/static/js/`
@@ -86,7 +93,7 @@ Request flow:
 
 1. The client sends an HTTP request.
 2. The controller validates and forwards the request to a service.
-3. The service coordinates repositories and domain logic.
+3. The service coordinates repositories, validation-sensitive domain logic, duplicate checks, audit logging, and persistence.
 4. Entities are mapped to response DTOs.
 5. Errors are returned through a shared exception handler.
 
@@ -244,7 +251,7 @@ When authentication is disabled:
 
 ## Database Strategy
 
-The runtime schema is managed by Flyway in [`V1__init_schema.sql`](src/main/resources/db/migration/V1__init_schema.sql).
+The runtime schema is managed by Flyway in [`src/main/resources/db/migration`](src/main/resources/db/migration).
 
 This means:
 - schema changes are explicit and versioned
@@ -252,6 +259,55 @@ This means:
 - database state is easier to reproduce across environments
 
 The integration test suite is configured to run against PostgreSQL through Testcontainers so the test database matches runtime behavior more closely.
+
+Current business tables include:
+
+- `ecosystems`
+- `logs`
+- `maintenance_tasks`
+- `automation_rules`
+- `app_user`
+- `audit_logs`
+
+`audit_logs` is added by `V11__add_audit_logs.sql` and stores the entity type, entity id/name, action, changed field, old value, new value, actor snapshot, and timestamp for inventory-visible changes.
+
+## Validation and Duplicate Protection
+
+Request DTOs use Bean Validation for field-level rules, while services enforce business uniqueness rules.
+The SSR layer returns those validation failures with field metadata so htmx forms can highlight the specific invalid controls.
+The login form also shows whether the login field or password field caused the failure.
+
+Important validation rules:
+
+- user login accepts lowercase letters, numbers, dots, underscores, and hyphens
+- password length is 8-72 characters
+- ecosystem type must be one of `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, or `DIY_INCUBATOR`
+- ecosystem description is required on create/update
+- log event type must be one of `OBSERVATION`, `FEEDING`, or `WATERING`
+- log entries must include at least temperature, humidity, or notes
+- task type must be one of `WATERING`, `FEEDING`, `CLEANING`, or `INSPECTION`
+- task status must be one of `OPEN`, `DONE`, or `DISMISSED`
+
+Duplicate protection:
+
+- registration rejects duplicate `username`
+- registration and profile update reject duplicate `email`
+- ecosystem create/update rejects duplicate ecosystem names
+- manual task create/update rejects duplicate open manual tasks with the same ecosystem, title, type, and due date
+
+## Audit Trail
+
+Inventory changes are recorded through `AuditLogService`, previewed on the home page, and browsed in full on `/audit`.
+
+Audited changes include:
+
+- ecosystem create, update, and delete
+- activity log create and update
+- manual task create, update, and status changes
+- suggested task creation when automation rules generate a task
+- automation rule create, update, enabled-state change, and delete
+
+For updates, the audit entry stores the changed field plus old and new values. For create/delete events, it stores a compact summary message. The home page renders only the latest three entries, while `/audit` renders the full paged history.
 
 ## API Summary
 
@@ -302,7 +358,7 @@ Supported query options:
 
 ### Workspace home endpoints
 
-The home page now relies on two backend endpoints:
+The home page now relies on backend endpoints for workspace cards, overview counters, and audit preview state:
 
 - `GET /api/v1/ecosystems/cards`
   returns `PagedResponse<EcosystemWorkspaceCardResponse>` for the dashboard card grid
@@ -323,6 +379,14 @@ Important behavior:
 - the home page uses server-rendered cards plus htmx updates for filtering and pagination
 - pinned ecosystems remain stored in browser `localStorage`
 - quick log and quick task interactions are opened from the workspace cards and submitted through the SSR UI layer
+- a compact audit preview is rendered on the home page, with the full paged history available at `/audit`
+
+### Audit UI endpoints
+
+- `GET /audit`
+  renders the dedicated full inventory change history page
+- `GET /ui/audit?page=0`
+  returns the paged audit-list fragment used by htmx pagination
 
 Example validation error:
 
@@ -352,6 +416,7 @@ Current automated checks cover:
 - controller-level error handling
 - integration scenarios for ecosystem creation, updates, validation, summaries, log ordering, filtering, and cascade delete
 - maintenance task lifecycle scenarios including overdue, suggested, dismissed, and manual edit flows
+- focused service/controller checks for duplicate user registration and duplicate ecosystem validation
 
 If you need a PostgreSQL containerized path later, see [`../../sql/README.md`](../../sql/README.md), but the normal Windows flow documented here assumes a locally running PostgreSQL instance.
 
@@ -366,5 +431,4 @@ If you need a PostgreSQL containerized path later, see [`../../sql/README.md`](.
 
 - Build out a Smart Monitoring Hub with richer trend visualizations, health scoring, alert states, anomaly indicators, and weekly ecosystem summaries
 - Evolve maintenance workflows into a Care Automation Engine with recurring tasks, ecosystem-specific care templates, smarter suggested follow-up actions, snooze and reschedule flows, and bulk task updates
-- Expand the SSR home workspace with richer insight cards, overdue and attention-needed counters, recent activity snapshots, filter and sort controls, search, pinned ecosystems, and one-click actions for creating logs or tasks directly from the ecosystem list
-- Add a dashboard-level overview for the full workspace so the home page can highlight stale ecosystems, recently updated setups, and the most urgent maintenance items before the user opens a specific ecosystem
+- Add filtering or export for the dedicated audit trail if the change history needs deeper analysis

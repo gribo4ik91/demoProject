@@ -49,7 +49,8 @@ The system:
 
 - normalizes text fields
 - lowercases the email
-- checks `username` uniqueness
+- checks `username` uniqueness case-insensitively
+- checks `email` uniqueness case-insensitively
 - hashes the password with BCrypt
 - creates the user record
 - assigns role `SUPER_ADMIN` to the first created account
@@ -59,6 +60,10 @@ The system:
 
 The user goes through form login.
 After successful authentication, the system redirects to the home page and keeps a server-side session.
+When authentication fails, the login page shows field-level feedback:
+
+- invalid or unknown login is shown under the login field
+- missing, malformed, or incorrect password is shown under the password field
 
 ### Scenario 4. View and edit profile
 
@@ -111,6 +116,8 @@ The system protects the hierarchy:
 ## Business rules
 
 - `username` must be unique
+- `username` may contain lowercase letters, numbers, dots, underscores, and hyphens
+- `email` must be unique
 - the first created account becomes `SUPER_ADMIN`
 - all later accounts become `USER`
 - every authenticated account can read the directory of users
@@ -118,7 +125,7 @@ The system protects the hierarchy:
 - `ADMIN` can delete only `USER` accounts
 - `SUPER_ADMIN` can delete `ADMIN` and `USER` accounts
 - no user can delete their own account from the directory
-- password length must be between 6 and 72 characters
+- password length must be between 8 and 72 characters
 - `displayName` must be between 3 and 60 characters
 - `firstName` and `lastName` must be between 2 and 60 characters
 - `email` must be valid and at most 120 characters
@@ -154,8 +161,9 @@ The response includes:
 ## Architectural implementation
 
 - `SecurityConfig` switches between open mode and protected mode
+- `LoginAuthenticationFailureHandler` maps failed form-login attempts to field-level UI errors
 - `AuthController` exposes registration, profile, directory, deletion, and role-update endpoints
-- `AuthService` implements normalization, lookup, update, registration, role assignment, directory loading, super-admin role governance, and role-aware deletion logic
+- `AuthService` implements normalization, lookup, duplicate login/email checks, update, registration, role assignment, directory loading, super-admin role governance, and role-aware deletion logic
 - `AppUserRepository` and the `app_user` table provide persistence
 
 ## Architectural note

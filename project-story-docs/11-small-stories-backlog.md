@@ -24,7 +24,8 @@ As a user, I want to create a new ecosystem from the home page so that I can sta
 **Scope**
 
 - create ecosystem form on the home page
-- validation of `name`, `type`, and optional `description`
+- validation of `name`, `type`, and required `description`
+- duplicate-name protection
 - persist ecosystem through `POST /api/v1/ecosystems`
 - show the created ecosystem in the workspace list
 
@@ -32,6 +33,7 @@ As a user, I want to create a new ecosystem from the home page so that I can sta
 
 - user can submit `name` and `type`
 - system rejects blank required fields
+- system rejects duplicate ecosystem names
 - system rejects `name` longer than 100 characters
 - system rejects `type` longer than 50 characters
 - successful creation shows the new ecosystem in the workspace card list
@@ -243,6 +245,7 @@ As a user, I want to add a log entry to an ecosystem so that I can capture measu
 - `temperatureC`, when provided, must be between -100 and 100
 - `humidityPercent`, when provided, must be between 0 and 100
 - `notes` must not exceed 500 characters
+- a log must include at least temperature, humidity, or notes
 - saved log appears at the top of the log list
 
 **Dependencies**
@@ -333,6 +336,7 @@ As a user, I want to create a manual maintenance task so that I can remember an 
 - task is saved with status `OPEN`
 - `title` is required and limited to 120 characters
 - `taskType` supports `WATERING`, `FEEDING`, `CLEANING`, and `INSPECTION`
+- duplicate open manual task signatures are rejected
 - created task appears in the task list
 
 **Dependencies**
@@ -575,8 +579,9 @@ As a new user, I want to register an account so that I can use the application i
 **Acceptance criteria**
 
 - username must be unique
+- email must be unique
 - email is lowercased before save
-- password is accepted only in 6-72 character range
+- password is accepted only in 8-72 character range
 - successful registration returns created profile and allows next login step
 
 **Dependencies**
@@ -635,6 +640,7 @@ As an authenticated user, I want to view and edit my profile so that my account 
 5. ST-15, ST-16, ST-13, ST-14
 6. ST-03, ST-04, ST-05
 7. ST-20, ST-21, ST-22, ST-23
+8. Add a compact audit preview on the home page and a full paged `/audit` history for ecosystem, log, task, and automation-rule changes
 
 ## Notes for refinement
 

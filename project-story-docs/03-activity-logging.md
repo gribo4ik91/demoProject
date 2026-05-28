@@ -30,8 +30,10 @@ The user selects an ecosystem and enters:
 The system:
 
 - verifies that the ecosystem exists
+- validates that at least one observation detail is present
 - normalizes the event type to uppercase
 - creates the log entry
+- writes an audit entry for the created log
 - triggers the suggested task mechanism when applicable
 
 ### Scenario 2. Browse logs
@@ -55,6 +57,7 @@ The system:
 
 - verifies that both the ecosystem and log exist
 - validates the updated values
+- writes audit entries for changed fields
 - preserves the log ownership and timestamp
 - returns the updated record
 
@@ -63,10 +66,12 @@ The system:
 - `temperatureC` may be empty, but if present must be between -100 and 100
 - `humidityPercent` may be empty, but if present must be between 0 and 100
 - `eventType` is required
-- UI-supported values are `OBSERVATION`, `FEEDING`, and `WATERING`
+- allowed values are `OBSERVATION`, `FEEDING`, and `WATERING`
 - `notes` is optional, maximum 500 characters
+- a log must contain at least one of temperature, humidity, or notes
 - log page size is constrained to a range from 1 to 50
 - page index cannot be less than 0
+- create and update actions are recorded in `audit_logs`
 
 ## Business meaning of event types
 
@@ -93,9 +98,10 @@ The log is tightly connected to two other parts of the product:
 ## Architectural implementation
 
 - `EcosystemLogController` manages the HTTP endpoints
-- `EcosystemLogService` creates and reads log data
+- `EcosystemLogService` creates, updates, validates, and reads log data
 - `EcosystemLogRepository` supports filtering and pagination
 - `MaintenanceTaskService` is called after saving a log to create suggested tasks
+- `AuditLogService` records created and updated log events
 
 ## Role in the product
 

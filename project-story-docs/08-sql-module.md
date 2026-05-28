@@ -83,11 +83,15 @@ Those Flyway migrations create and evolve the schema:
 - `logs`
 - `maintenance_tasks`
 - `app_user`
+- `automation_rules`
+- `audit_logs`
 
 So the responsibility split is:
 
 - `sql` - PostgreSQL runtime environment
 - `application/.../db/migration` - versioned database schema
+
+The latest schema includes `V11__add_audit_logs.sql`, which adds the inventory audit trail table and indexes used by the compact home preview and the full `/audit` page.
 
 ## Architectural value of this split
 

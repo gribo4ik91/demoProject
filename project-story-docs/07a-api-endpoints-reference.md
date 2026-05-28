@@ -18,6 +18,12 @@ This file closes exactly that gap.
 - Request/response format: JSON, except form login on `/login`
 - Authentication:
   when `APP_AUTH_ENABLED=true`, almost all endpoints require authentication except the public auth routes
+- Validation:
+  request DTOs reject unsupported fixed values and malformed fields with `400 Bad Request`
+- Duplicate business data:
+  service-level duplicate checks return controlled conflict responses for duplicate user logins/emails, ecosystem names, and open manual task signatures
+- Audit:
+  ecosystem, log, task, and automation-rule mutations write entries to `audit_logs`; the SSR home page shows a compact preview and `/audit` shows the full paged history
 
 ## 1. Authentication API
 
@@ -31,13 +37,13 @@ register a new user.
 | Field | Type | Required | Constraints / allowed values |
 |---|---|---|---|
 | `displayName` | string | yes | 3-60 characters |
-| `username` | string | yes | 3-40 characters, unique |
+| `username` | string | yes | 3-40 characters, lowercase letters/numbers/dot/underscore/hyphen, unique |
 | `firstName` | string | yes | 2-60 characters |
 | `lastName` | string | yes | 2-60 characters |
-| `email` | string | yes | valid email, up to 120 characters |
+| `email` | string | yes | valid email, up to 120 characters, unique |
 | `location` | string \| null | no | up to 80 characters |
 | `bio` | string \| null | no | up to 500 characters |
-| `password` | string | yes | 6-72 characters |
+| `password` | string | yes | 8-72 characters |
 
 #### Response
 
@@ -72,7 +78,7 @@ update editable fields of the current user's profile.
 | `displayName` | string | yes | 3-60 characters |
 | `firstName` | string | yes | 2-60 characters |
 | `lastName` | string | yes | 2-60 characters |
-| `email` | string | yes | valid email, up to 120 characters |
+| `email` | string | yes | valid email, up to 120 characters, unique outside the current account |
 | `location` | string \| null | no | up to 80 characters |
 | `bio` | string \| null | no | up to 500 characters |
 
@@ -169,9 +175,9 @@ create a new ecosystem.
 
 | Field | Type | Required | Constraints / allowed values |
 |---|---|---|---|
-| `name` | string | yes | not blank, up to 100 characters |
-| `type` | string | yes | not blank, up to 50 characters; UI values: `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, `DIY_INCUBATOR` |
-| `description` | string \| null | no | up to 500 characters |
+| `name` | string | yes | not blank, up to 100 characters, unique |
+| `type` | string | yes | `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, `DIY_INCUBATOR` |
+| `description` | string | yes | not blank, up to 500 characters |
 
 #### Response
 
@@ -357,14 +363,19 @@ update the main ecosystem metadata.
 
 | Field | Type | Required | Constraints / allowed values |
 |---|---|---|---|
-| `name` | string | yes | not blank, up to 100 characters |
-| `type` | string | yes | not blank, up to 50 characters; UI values: `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, `DIY_INCUBATOR` |
-| `description` | string \| null | no | up to 500 characters |
+| `name` | string | yes | not blank, up to 100 characters, unique |
+| `type` | string | yes | `FORMICARIUM`, `FLORARIUM`, `INDOOR_PLANTS`, `DIY_INCUBATOR` |
+| `description` | string | yes | not blank, up to 500 characters |
 
 #### Response
 
 - `200 OK`
 - returns the updated `EcosystemResponse`
+
+Important behavior:
+
+- duplicate ecosystem names are rejected
+- changed fields are recorded in the audit trail
 
 ### `DELETE /api/v1/ecosystems/{id}`
 
@@ -381,6 +392,10 @@ delete the ecosystem and its related data.
 
 - `204 No Content`
 - `404 Not Found` if the ecosystem does not exist
+
+Important behavior:
+
+- deletion writes an audit entry before related logs and tasks are removed
 
 ## 3. Ecosystem Logs API
 
@@ -408,6 +423,11 @@ add a log entry to an ecosystem.
 
 - `201 Created`
 - returns `EcosystemLogResponse`
+
+Important behavior:
+
+- at least one of `temperatureC`, `humidityPercent`, or `notes` must be present
+- creation writes an inventory audit entry
 
 ### `GET /api/v1/ecosystems/{ecosystemId}/logs`
 
@@ -482,6 +502,11 @@ update an existing log entry for an ecosystem.
 - `200 OK`
 - returns the updated `EcosystemLogResponse`
 
+Important behavior:
+
+- at least one of `temperatureC`, `humidityPercent`, or `notes` must be present
+- changed fields are recorded in the audit trail
+
 ## 4. Maintenance Tasks API
 
 ### `POST /api/v1/ecosystems/{ecosystemId}/tasks`
@@ -507,6 +532,11 @@ create a manual maintenance task.
 
 - `201 Created`
 - returns `MaintenanceTaskResponse`
+
+Important behavior:
+
+- duplicate open manual tasks are rejected when the same ecosystem, title, task type, and due date already exist
+- creation writes an inventory audit entry
 
 ### `GET /api/v1/ecosystems/{ecosystemId}/tasks`
 
@@ -569,6 +599,8 @@ update a manually created maintenance task.
 
 - only manual tasks can be edited this way
 - auto-created suggested tasks cannot be edited through this endpoint
+- duplicate open manual task signatures are rejected
+- changed fields are recorded in the audit trail
 
 #### Response
 
@@ -604,6 +636,7 @@ change the status of an existing task.
 - suggested tasks cannot be edited directly; only their status can be changed
 - `dismissalReason` is mandatory for `DISMISSED`
 - `dismissalReason` must not be sent for `OPEN` or `DONE`
+- status and dismissal changes are recorded in the audit trail
 
 ## 5. Automation Rules API
 
@@ -632,6 +665,10 @@ create a configurable rule that can generate suggested maintenance tasks.
 
 - `201 Created`
 - returns `AutomationRuleResponse`
+
+Important behavior:
+
+- creation writes an audit entry with entity type `AUTOMATION_RULE`
 
 ### `GET /api/v1/automation-rules`
 
@@ -684,11 +721,16 @@ update a previously created automation rule.
 - `ecosystemType` is valid only when `scopeType = ECOSYSTEM_TYPE`
 - `delayDays` is valid only for `AFTER_EVENT`
 - `inactivityDays` is valid only for `AFTER_INACTIVITY`
+- changed fields are recorded in the audit trail with entity type `AUTOMATION_RULE`
 
 #### Response
 
 - `200 OK`
 - returns updated `AutomationRuleResponse`
+
+Important behavior:
+
+- enabled-state changes are recorded in the audit trail with entity type `AUTOMATION_RULE`
 
 ### `PATCH /api/v1/automation-rules/{id}/enabled`
 
@@ -715,6 +757,10 @@ delete an automation rule.
 
 - `204 No Content`
 - `404 Not Found` if the rule does not exist
+
+Important behavior:
+
+- deletion writes an audit entry before the automation rule is removed
 
 #### Response
 

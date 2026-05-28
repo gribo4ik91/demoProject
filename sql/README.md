@@ -43,6 +43,7 @@ run-postgres.bat
 ```
 
 Flyway will create or upgrade the schema automatically.
+The current schema includes the core inventory tables, automation rules, users, and the `audit_logs` table used by the audit preview and full audit history.
 
 ## Optional Docker PostgreSQL Setup
 
@@ -88,6 +89,8 @@ The backend connects to this database with the following defaults:
 When the application starts, Flyway applies migrations from:
 
 - `application/application/src/main/resources/db/migration`
+
+The latest migration in this documentation set is `V11__add_audit_logs.sql`, which adds audit storage for ecosystem, log, task, and automation-rule changes.
 
 The main application profile also enables automatic creation of the default bootstrap user when the user table is empty.
 If you want PostgreSQL mode without that user, change [`application/application/src/main/resources/application.yml`](C:\Endava\EndevLocal\demoProject\application\application\src\main\resources\application.yml) and set `app.auth.default-user.enabled: false`.

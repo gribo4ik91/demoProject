@@ -29,6 +29,9 @@ This helps the team understand where the documentation is considered complete an
 - [x] authentication and profile
 - [x] frontend user journey
 - [x] workspace home dashboard journey
+- [x] validation and duplicate protection
+- [x] inventory audit trail
+- [x] compact audit preview and full `/audit` history split
 
 ### API and integration
 
@@ -38,9 +41,11 @@ This helps the team understand where the documentation is considered complete an
 - [x] query parameters
 - [x] request body fields
 - [x] field requirements and constraints
+- [x] duplicate/conflict behavior for main write flows
 - [x] base response structures
 - [x] paged response usage for home workspace cards
 - [x] page routes outside `/api/v1`
+- [x] dedicated audit UI route and htmx audit fragment
 - [x] references to Swagger / OpenAPI endpoints
 
 ### Architecture and data
@@ -49,6 +54,7 @@ This helps the team understand where the documentation is considered complete an
 - [x] purpose of controller/service/repository/model/dto/config layers
 - [x] data model
 - [x] database tables
+- [x] audit log table
 - [x] Flyway migrations
 - [x] infrastructure split between `application` and `sql`
 
@@ -70,6 +76,10 @@ This helps the team understand where the documentation is considered complete an
 - [x] response delay implementation
 - [x] repository usage pattern
 - [x] workspace dashboard aggregation pattern
+- [x] validation and duplicate-protection pattern
+- [x] field-level SSR/htmx validation feedback
+- [x] login failure mapping to login/password field feedback
+- [x] audit logging pattern
 - [x] testing strategy
 
 ### Meta-documentation

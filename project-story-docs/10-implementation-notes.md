@@ -27,6 +27,7 @@ The mapper layer is responsible for converting:
 - conversion of `Ecosystem`, `EcosystemLog`, and `MaintenanceTask` to API models uses `toResponse()`
 - the mapper layer does not contain business logic
 - the mapper layer may perform only safe normalization such as `trim()`
+- stricter validation patterns live with DTO contracts rather than in mappers
 
 ### Practical rule
 
@@ -65,6 +66,8 @@ The shared error payload includes:
 ### Practical rule
 
 If new business logic must return a controlled error, it should use `ResponseStatusException` or a compatible custom approach aligned with the current `GlobalExceptionHandler`.
+Duplicate business conflicts such as reused emails, logins, ecosystem names, or open manual task signatures should use controlled conflict responses from the service layer.
+For SSR and htmx requests, `UiController` maps validation and known business errors to field-level metadata so the browser can highlight the exact invalid control.
 
 ## 3. OpenAPI and Swagger
 
@@ -131,7 +134,60 @@ The repository layer should remain a thin data access layer.
 
 New read/write behavior should first be modeled as a business use case in the service layer and only then supported by repository methods.
 
-## 6. Workspace dashboard aggregation pattern
+## 6. Validation and duplicate protection
+
+### Purpose
+
+DTO validation protects field shape at the HTTP boundary, while service-level checks protect business uniqueness.
+
+### Where it is implemented
+
+- shared patterns: `application/application/src/main/kotlin/com/example/api/dto/ValidationPatterns.kt`
+- user duplicate checks: `AuthService`
+- ecosystem duplicate-name checks: `EcosystemService`
+- open manual task duplicate checks: `MaintenanceTaskService`
+
+### Current implementation rules
+
+- enum-like values are validated with explicit patterns in request DTOs
+- username and email duplicate checks are case-insensitive
+- ecosystem name duplicate checks are case-insensitive
+- open manual task duplicate checks compare ecosystem, task type, title, and due date
+- log create/update rejects entries with no temperature, humidity, or notes
+
+### Practical rule
+
+New fields that are chosen from a fixed business set should be added to the shared validation patterns and mirrored in UI controls.
+
+## 7. Audit logging
+
+### Purpose
+
+Audit logging records user-visible inventory changes so the home page can show what changed, who did it, and what values moved.
+The home page intentionally shows only a compact preview; the detailed operational history lives on `/audit`.
+
+### Where it is implemented
+
+- `application/application/src/main/kotlin/com/example/api/service/AuditLogService.kt`
+- `application/application/src/main/kotlin/com/example/api/model/AuditLog.kt`
+- `application/application/src/main/kotlin/com/example/api/repository/AuditLogRepository.kt`
+- `application/application/src/main/resources/db/migration/V11__add_audit_logs.sql`
+- `application/application/src/main/resources/templates/pages/audit.ftlh`
+- `application/application/src/main/resources/templates/fragments/audit-list.ftlh`
+
+### Current implementation rules
+
+- create/delete events store a compact summary
+- update events store one audit row per changed field
+- actor data uses username/display-name snapshots
+- home page reads a three-entry audit preview through the SSR model
+- `/audit` reads paged audit entries through a dedicated SSR page and htmx fragment
+
+### Practical rule
+
+When a new inventory-changing workflow is added, decide explicitly whether it belongs in the audit trail and record it from the service layer.
+
+## 8. Workspace dashboard aggregation pattern
 
 ### Purpose
 
@@ -145,13 +201,14 @@ The home page workspace now needs richer cards and overview counters without reb
 - task counters are loaded in grouped form
 - card-level search, status filtering, sorting, and pagination are coordinated after the shared snapshot is assembled
 - overview reuses the same filtered workspace snapshot so counters match the visible filter context
+- compact audit preview entries are loaded separately for the home-page change feed
 
 ### Practical rule
 
 If the workspace dashboard grows further, new home page metrics should prefer shared aggregation inputs over per-ecosystem summary rebuilding.
 This keeps the home page cheaper than the detailed dashboard and reduces drift between cards and overview counters.
 
-## 7. Testing strategy
+## 9. Testing strategy
 
 ### Where it is implemented
 
@@ -173,6 +230,7 @@ This keeps the home page cheaper than the detailed dashboard and reduces drift b
 - focused integration scenarios now cover manual edit flows and richer dashboard summary analytics
 - controller coverage now also protects the workspace cards contract, including filter forwarding and paged response shape
 - auth-enabled integration scenarios now also protect the `SUPER_ADMIN` / `ADMIN` / `USER` hierarchy and role-aware user management rules
+- focused service/controller tests protect duplicate registration and duplicate ecosystem handling
 
 ### Practical rule
 
@@ -182,7 +240,7 @@ If a new business feature is added, it should ideally be checked at three levels
 - service or integration flow
 - negative error scenarios
 
-## 8. What is intentionally not documented in detail
+## 10. What is intentionally not documented in detail
 
 At this stage, a dedicated implementation document is not needed for:
 
