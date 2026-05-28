@@ -174,6 +174,74 @@
         });
     }
 
+    function cssEscape(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') {
+            return window.CSS.escape(value);
+        }
+
+        return value.replace(/"/g, '\\"');
+    }
+
+    function clearFormFieldErrors(form) {
+        if (!form) return;
+
+        form.querySelectorAll('[data-server-invalid="true"]').forEach((field) => {
+            field.classList.remove('is-invalid');
+            field.removeAttribute('data-server-invalid');
+        });
+
+        form.querySelectorAll('[data-server-field-error="true"]').forEach((error) => {
+            error.remove();
+        });
+    }
+
+    function findRequestForm(event) {
+        const detail = event.detail || {};
+        const source = detail.elt || (detail.requestConfig && detail.requestConfig.elt) || event.target;
+
+        if (!source || !source.closest) {
+            return null;
+        }
+
+        return source.matches('form') ? source : source.closest('form');
+    }
+
+    function findFieldErrorAnchor(field) {
+        const radioCard = field.closest('.radio-card, .checkbox-card');
+        if (radioCard) {
+            return radioCard;
+        }
+
+        return field;
+    }
+
+    function applyFormFieldErrors(event) {
+        const form = findRequestForm(event);
+        if (!form) return;
+
+        clearFormFieldErrors(form);
+
+        const errors = Array.from(event.target.querySelectorAll('[data-field-error]'));
+        errors.forEach((error) => {
+            const fieldName = error.dataset.field;
+            const message = error.dataset.message;
+            if (!fieldName || !message) return;
+
+            const field = form.querySelector(`[name="${cssEscape(fieldName)}"]`);
+            if (!field) return;
+
+            field.classList.add('is-invalid');
+            field.dataset.serverInvalid = 'true';
+
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback d-block';
+            feedback.dataset.serverFieldError = 'true';
+            feedback.textContent = message;
+
+            findFieldErrorAnchor(field).insertAdjacentElement('afterend', feedback);
+        });
+    }
+
     function bindGlobalEvents() {
         document.addEventListener('click', (event) => {
             const pinButton = event.target.closest('[data-pin-toggle]');
@@ -244,11 +312,13 @@
         document.body.addEventListener('htmx:afterSwap', (event) => {
             applyPinnedState(event.target);
             bindRuleFormEvents(event.target);
+            applyFormFieldErrors(event);
         });
 
         document.body.addEventListener('htmx:beforeRequest', (event) => {
             const form = event.target.closest ? event.target.closest('form') : null;
             if (!form) return;
+            clearFormFieldErrors(form);
             const feedbackTarget = form.getAttribute('hx-target');
             if (!feedbackTarget) return;
             const feedback = document.querySelector(feedbackTarget);

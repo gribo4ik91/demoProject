@@ -36,6 +36,12 @@ import org.springframework.web.util.HtmlUtils
 import java.time.LocalDate
 import java.util.UUID
 
+private data class UiFormError(
+    val field: String?,
+    val label: String,
+    val message: String
+)
+
 /**
  * Serves the SSR UI backed by Freemarker templates and htmx fragment updates.
  */
@@ -56,10 +62,9 @@ class UiController(
         @RequestParam(required = false, defaultValue = "ALL") status: String,
         @RequestParam(required = false, defaultValue = "PRIORITY") sort: String,
         @RequestParam(required = false, defaultValue = "0") page: Int,
-        @RequestParam(required = false, defaultValue = "0") auditPage: Int,
         model: Model
     ): String {
-        populateHomeModel(model, search, status, sort, page, auditPage)
+        populateHomeModel(model, search, status, sort, page)
         return "pages/home"
     }
 
@@ -98,11 +103,28 @@ class UiController(
         @RequestParam(required = false, defaultValue = "ALL") status: String,
         @RequestParam(required = false, defaultValue = "PRIORITY") sort: String,
         @RequestParam(required = false, defaultValue = "0") page: Int,
-        @RequestParam(required = false, defaultValue = "0") auditPage: Int,
         model: Model
     ): String {
-        populateHomeModel(model, search, status, sort, page, auditPage)
+        populateHomeModel(model, search, status, sort, page)
         return "fragments/workspace-panel"
+    }
+
+    @GetMapping("/audit")
+    fun auditPage(
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        model: Model
+    ): String {
+        populateAuditModel(model, page)
+        return "pages/audit"
+    }
+
+    @GetMapping("/ui/audit")
+    fun auditListFragment(
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        model: Model
+    ): String {
+        populateAuditModel(model, page)
+        return "fragments/audit-list"
     }
 
     @GetMapping("/ui/ecosystems/{id}/tasks")
@@ -295,6 +317,7 @@ class UiController(
 
     @PostMapping("/ui/automation-rules")
     fun createAutomationRule(
+        authentication: Authentication?,
         @RequestParam name: String,
         @RequestParam(defaultValue = "false") enabled: Boolean,
         @RequestParam scopeType: String,
@@ -325,11 +348,12 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { automationRuleService.createRule(request) }
+        return executeRefresh { automationRuleService.createRule(authentication?.name, request) }
     }
 
     @PatchMapping("/ui/automation-rules/{id}")
     fun updateAutomationRule(
+        authentication: Authentication?,
         @PathVariable id: UUID,
         @RequestParam name: String,
         @RequestParam(defaultValue = "false") enabled: Boolean,
@@ -361,19 +385,20 @@ class UiController(
             return okError(errors)
         }
 
-        return executeRefresh { automationRuleService.updateRule(id, request) }
+        return executeRefresh { automationRuleService.updateRule(authentication?.name, id, request) }
     }
 
     @PatchMapping("/ui/automation-rules/{id}/enabled")
     fun updateAutomationRuleEnabled(
+        authentication: Authentication?,
         @PathVariable id: UUID,
         @RequestParam enabled: Boolean
     ): ResponseEntity<String> =
-        executeRefresh { automationRuleService.setRuleEnabled(id, enabled) }
+        executeRefresh { automationRuleService.setRuleEnabled(authentication?.name, id, enabled) }
 
     @DeleteMapping("/ui/automation-rules/{id}")
-    fun deleteAutomationRule(@PathVariable id: UUID): ResponseEntity<String> =
-        executeRefresh { automationRuleService.deleteRule(id) }
+    fun deleteAutomationRule(authentication: Authentication?, @PathVariable id: UUID): ResponseEntity<String> =
+        executeRefresh { automationRuleService.deleteRule(authentication?.name, id) }
 
     @PatchMapping("/ui/ecosystems/{ecosystemId}/tasks/{taskId}")
     fun updateTask(
@@ -442,7 +467,7 @@ class UiController(
                 .header("HX-Redirect", "/login?registered=${username.trim()}")
                 .body("")
         } catch (exception: ResponseStatusException) {
-            okError(listOf(exception.reason ?: "Could not create the user."))
+            okBusinessError(exception.reason ?: "Could not create the user.")
         }
     }
 
@@ -489,8 +514,7 @@ class UiController(
         search: String,
         status: String,
         sort: String,
-        page: Int,
-        auditPage: Int
+        page: Int
     ) {
         val normalizedSearch = search.trim()
         val normalizedStatus = normalizeFilter(status, "ALL")
@@ -504,7 +528,11 @@ class UiController(
         model.addAttribute("workspacePage", pageData)
         model.addAttribute("workspaceOverview", ecosystemService.getWorkspaceOverview(normalizedSearch, normalizedStatus))
         model.addAttribute("priorityCards", cards.filter { it.status == "NEEDS_ATTENTION" || it.overdueTasks > 0 }.take(4))
-        model.addAttribute("auditPage", auditLogService.getAuditLogs(auditPage, 8))
+        model.addAttribute("auditPreview", auditLogService.getAuditLogs(0, 3))
+    }
+
+    private fun populateAuditModel(model: Model, page: Int) {
+        model.addAttribute("auditPage", auditLogService.getAuditLogs(page, 12))
     }
 
     private fun populateEcosystemModel(
@@ -566,10 +594,17 @@ class UiController(
     private fun normalizeFilter(value: String?, fallback: String): String =
         value?.trim()?.uppercase()?.takeIf { it.isNotEmpty() } ?: fallback
 
-    private fun <T : Any> validate(target: T): List<String> =
+    private fun <T : Any> validate(target: T): List<UiFormError> =
         validator.validate(target)
-            .map { it.message }
-            .distinct()
+            .map {
+                val field = it.propertyPath.toString().takeIf { path -> path.isNotBlank() }
+                UiFormError(
+                    field = field,
+                    label = fieldLabel(field),
+                    message = it.message
+                )
+            }
+            .distinctBy { it.field to it.message }
 
     private fun executeRefresh(block: () -> Any): ResponseEntity<String> =
         try {
@@ -578,7 +613,7 @@ class UiController(
                 .header("HX-Refresh", "true")
                 .body("")
         } catch (exception: ResponseStatusException) {
-            okError(listOf(exception.reason ?: "Could not complete the action."))
+            okBusinessError(exception.reason ?: "Could not complete the action.")
         }
 
     private fun executeRedirect(location: String, block: () -> Unit): ResponseEntity<String> =
@@ -588,21 +623,103 @@ class UiController(
                 .header("HX-Redirect", location)
                 .body("")
         } catch (exception: ResponseStatusException) {
-            okError(listOf(exception.reason ?: "Could not complete the action."))
+            okBusinessError(exception.reason ?: "Could not complete the action.")
         }
 
-    private fun okError(messages: List<String>): ResponseEntity<String> =
-        ResponseEntity.ok(alertHtml(messages, "danger"))
+    private fun okBusinessError(message: String): ResponseEntity<String> =
+        okError(errorsForBusinessMessage(message))
 
-    private fun alertHtml(messages: List<String>, variant: String): String {
-        val safeMessages = messages
-            .filter { it.isNotBlank() }
-            .joinToString("") { "<li>${HtmlUtils.htmlEscape(it)}</li>" }
+    private fun okError(errors: List<UiFormError>): ResponseEntity<String> =
+        ResponseEntity.ok(alertHtml(errors, "danger"))
+
+    private fun alertHtml(errors: List<UiFormError>, variant: String): String {
+        val safeMessages = errors
+            .filter { it.message.isNotBlank() }
+            .joinToString("") { error ->
+                val safeLabel = HtmlUtils.htmlEscape(error.label)
+                val safeMessage = HtmlUtils.htmlEscape(error.message)
+                if (error.field == null) "<li>$safeMessage</li>" else "<li><strong>$safeLabel</strong>: $safeMessage</li>"
+            }
+        val fieldPayload = errors
+            .filter { !it.field.isNullOrBlank() && it.message.isNotBlank() }
+            .joinToString("") { error ->
+                val field = error.field ?: return@joinToString ""
+                """
+                    <span data-field-error
+                          data-field="${HtmlUtils.htmlEscape(field)}"
+                          data-label="${HtmlUtils.htmlEscape(error.label)}"
+                          data-message="${HtmlUtils.htmlEscape(error.message)}"></span>
+                """.trimIndent()
+            }
 
         return """
             <div class="alert alert-$variant mb-0" role="alert">
                 <ul class="mb-0 ps-3">$safeMessages</ul>
             </div>
+            <div class="d-none" data-field-error-payload>$fieldPayload</div>
         """.trimIndent()
     }
+
+    private fun errorsForBusinessMessage(message: String): List<UiFormError> =
+        when (message) {
+            "Username already exists" -> listOf(fieldError("username", message))
+            "Email already exists" -> listOf(fieldError("email", message))
+            "Ecosystem name already exists" -> listOf(fieldError("name", message))
+            "Open task already exists for this ecosystem" -> listOf(fieldError("title", message))
+            "Log must include temperature, humidity, or notes" -> listOf(
+                fieldError("temperatureC", message),
+                fieldError("humidityPercent", message),
+                fieldError("notes", message)
+            )
+            "Unsupported task status" -> listOf(fieldError("status", message))
+            "Dismissal reason is required for dismissed suggestions",
+            "Unsupported dismissal reason",
+            "Dismissal reason can only be set when dismissing a suggestion" -> listOf(fieldError("dismissalReason", message))
+            "Unsupported rule scope" -> listOf(fieldError("scopeType", message))
+            "Unsupported trigger type" -> listOf(fieldError("triggerType", message))
+            "Unsupported generated task type" -> listOf(fieldError("taskType", message))
+            "Valid ecosystem type is required for this scope",
+            "Ecosystem type can only be set for type-specific scope" -> listOf(fieldError("ecosystemType", message))
+            "Event type is required" -> listOf(fieldError("eventType", message))
+            "Inactivity days are only valid for inactivity rules",
+            "Inactivity days are required for inactivity rules" -> listOf(fieldError("inactivityDays", message))
+            "Delay days are only valid for event-based rules" -> listOf(fieldError("delayDays", message))
+            else -> listOf(UiFormError(field = null, label = "Form", message = message))
+        }
+
+    private fun fieldError(field: String, message: String): UiFormError =
+        UiFormError(field = field, label = fieldLabel(field), message = message)
+
+    private fun fieldLabel(field: String?): String =
+        when (field) {
+            "displayName" -> "Display name"
+            "username" -> "Login"
+            "firstName" -> "First name"
+            "lastName" -> "Last name"
+            "email" -> "Email"
+            "location" -> "Location"
+            "bio" -> "Bio"
+            "password" -> "Password"
+            "name" -> "Name"
+            "type" -> "Type"
+            "description" -> "Description"
+            "temperatureC" -> "Temperature"
+            "humidityPercent" -> "Humidity"
+            "eventType" -> "Event type"
+            "notes" -> "Notes"
+            "title" -> "Task title"
+            "taskType" -> "Task type"
+            "dueDate" -> "Due date"
+            "status" -> "Status"
+            "dismissalReason" -> "Dismissal reason"
+            "scopeType" -> "Scope"
+            "ecosystemType" -> "Ecosystem type"
+            "triggerType" -> "Trigger"
+            "inactivityDays" -> "Inactivity days"
+            "delayDays" -> "Delay days"
+            "taskTitle" -> "Suggested task title"
+            "preventDuplicates" -> "Duplicate protection"
+            "role" -> "Role"
+            else -> "Form"
+        }
 }

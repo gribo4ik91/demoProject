@@ -12,7 +12,18 @@
 <body class="auth-page auth-page-login d-flex align-items-center py-5">
 <div class="container auth-shell-login">
     <#if loginError?? && loginError>
-        <div class="alert alert-danger mb-4" role="alert">Login failed. Check your username and password.</div>
+        <div class="alert alert-danger mb-4" role="alert">
+            <div class="fw-semibold mb-1">Login failed.</div>
+            <#if loginFieldErrors?has_content>
+                <ul class="mb-0 ps-3">
+                    <#list loginFieldErrors as fieldError>
+                        <li><strong>${fieldError.label}</strong>: ${fieldError.message}</li>
+                    </#list>
+                </ul>
+            <#else>
+                <div>Check your login and password.</div>
+            </#if>
+        </div>
     <#elseif loggedOut?? && loggedOut>
         <div class="alert alert-success mb-4" role="alert">You have been logged out.</div>
     <#elseif registeredUser?has_content>
@@ -37,11 +48,17 @@
                 <form method="post" action="/login">
                     <div class="mb-3">
                         <label for="login-username" class="form-label">Login</label>
-                        <input id="login-username" name="username" class="form-control" value="${registeredUser!""}" autocomplete="username" required>
+                        <input id="login-username" name="username" class="form-control<#if loginUsernameError?has_content> is-invalid</#if>" value="${loginUsername!""}" autocomplete="username" minlength="3" maxlength="40" pattern="[a-z0-9._-]+" required>
+                        <#if loginUsernameError?has_content>
+                            <div class="invalid-feedback">${loginUsernameError}</div>
+                        </#if>
                     </div>
                     <div class="mb-4">
                         <label for="login-password" class="form-label">Password</label>
-                        <input id="login-password" name="password" type="password" class="form-control" autocomplete="current-password" required>
+                        <input id="login-password" name="password" type="password" class="form-control<#if loginPasswordError?has_content> is-invalid</#if>" autocomplete="current-password" minlength="8" maxlength="72" required>
+                        <#if loginPasswordError?has_content>
+                            <div class="invalid-feedback">${loginPasswordError}</div>
+                        </#if>
                     </div>
                     <button type="submit" class="btn btn-success w-100 mb-4">Log In</button>
                 </form>

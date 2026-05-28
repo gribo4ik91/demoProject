@@ -60,5 +60,6 @@
         </div>
     </div>
 </div>
+<script src="/js/ssr-ui.js"></script>
 </body>
 </html>

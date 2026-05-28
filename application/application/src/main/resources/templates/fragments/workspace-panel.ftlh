@@ -17,65 +17,33 @@
     </div>
 </section>
 
-<section class="panel p-4 mt-4">
+<section class="panel p-4 mt-4 audit-preview-panel">
     <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
         <div>
             <p class="section-label mb-1">Audit</p>
-            <h3 class="h5 mb-0">Inventory Change Log</h3>
+            <h3 class="h5 mb-0">Recent Changes</h3>
         </div>
-        <div class="text-muted small">
-            <#if auditPage.totalElements == 0>
-                No changes recorded yet
-            <#else>
-                Showing ${auditPage.items?size} of ${auditPage.totalElements} changes
-            </#if>
-        </div>
+        <a href="/audit" class="btn btn-outline-success btn-sm">View All</a>
     </div>
 
-    <#if auditPage.items?size == 0>
-        <div class="border rounded-3 p-4 text-center text-muted">Changes to ecosystems, tasks, and logs will appear here.</div>
+    <#if auditPreview.items?size == 0>
+        <div class="audit-preview-empty text-muted small">Changes to ecosystems, tasks, and logs will appear here.</div>
     <#else>
-        <div class="audit-list">
-            <#list auditPage.items as audit>
-                <div class="audit-entry">
-                    <div class="audit-entry-main">
-                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                            <span class="${ui.auditActionBadgeClass(audit.action)}">${ui.auditActionLabel(audit.action)}</span>
-                            <span class="text-muted small">${ui.auditEntityTypeLabel(audit.entityType)}</span>
-                        </div>
-                        <div class="fw-semibold">${audit.entityName!"Unnamed item"}</div>
-                        <#if audit.fieldName??>
-                            <div class="audit-change-line">
-                                <span class="audit-field">${audit.fieldName}</span>
-                                <span class="audit-value">${audit.oldValue!"Empty"}</span>
-                                <span class="audit-arrow">-&gt;</span>
-                                <span class="audit-value">${audit.newValue!"Empty"}</span>
-                            </div>
-                        <#elseif audit.newValue??>
-                            <div class="audit-change-line">${audit.newValue}</div>
-                        <#elseif audit.oldValue??>
-                            <div class="audit-change-line">${audit.oldValue}</div>
-                        </#if>
+        <div class="audit-preview-list">
+            <#list auditPreview.items as audit>
+                <div class="audit-preview-row">
+                    <div class="audit-preview-main">
+                        <span class="${ui.auditActionBadgeClass(audit.action)}">${ui.auditActionLabel(audit.action)}</span>
+                        <span class="audit-preview-type">${ui.auditEntityTypeLabel(audit.entityType)}</span>
+                        <span class="audit-preview-name">${audit.entityName!"Unnamed item"}</span>
                     </div>
-                    <div class="audit-entry-meta text-muted small">
-                        <div>${ui.formatDateTime(audit.createdAt)}</div>
-                        <div>By ${ui.createdByLabel(audit.createdByDisplayName, audit.createdByUsername)}</div>
+                    <div class="audit-preview-meta text-muted small">
+                        ${ui.formatDateTime(audit.createdAt)}
                     </div>
                 </div>
             </#list>
         </div>
-
-        <#if auditPage.totalPages gt 1>
-            <div class="d-flex justify-content-between align-items-center mt-3 gap-3 flex-wrap">
-                <button class="btn btn-outline-secondary btn-sm" <#if !auditPage.hasPrevious>disabled</#if>
-                        hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page}&auditPage=${auditPage.page - 1}"
-                        hx-target="#workspace-panel" hx-swap="innerHTML">Previous audit</button>
-                <span class="text-muted small">Audit page ${auditPage.page + 1} of ${auditPage.totalPages}</span>
-                <button class="btn btn-outline-success btn-sm" <#if !auditPage.hasNext>disabled</#if>
-                        hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page}&auditPage=${auditPage.page + 1}"
-                        hx-target="#workspace-panel" hx-swap="innerHTML">Next audit</button>
-            </div>
-        </#if>
+        <div class="text-muted small mt-3">Showing latest ${auditPreview.items?size} of ${auditPreview.totalElements} changes.</div>
     </#if>
 </section>
 
@@ -230,11 +198,11 @@
     <#if workspacePage.totalPages gt 1>
         <div class="d-flex justify-content-between align-items-center mt-4 gap-3 flex-wrap">
             <button class="btn btn-outline-secondary" <#if !workspacePage.hasPrevious>disabled</#if>
-                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page - 1}&auditPage=${auditPage.page}"
+                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page - 1}"
                     hx-target="#workspace-panel" hx-swap="innerHTML">Previous</button>
             <span class="text-muted small">Page ${workspacePage.page + 1} of ${workspacePage.totalPages}</span>
             <button class="btn btn-outline-success" <#if !workspacePage.hasNext>disabled</#if>
-                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page + 1}&auditPage=${auditPage.page}"
+                    hx-get="/ui/workspace?search=${search?url}&status=${status?url}&sort=${sort?url}&page=${workspacePage.page + 1}"
                     hx-target="#workspace-panel" hx-swap="innerHTML">Next</button>
         </div>
     </#if>

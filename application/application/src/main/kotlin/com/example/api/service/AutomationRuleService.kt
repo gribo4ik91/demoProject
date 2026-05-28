@@ -4,6 +4,7 @@ import com.example.api.dto.AutomationRuleResponse
 import com.example.api.dto.CreateAutomationRuleRequest
 import com.example.api.dto.UpdateAutomationRuleRequest
 import com.example.api.mapper.toResponse
+import com.example.api.model.AuditEntityTypes
 import com.example.api.model.AutomationRule
 import com.example.api.repository.AutomationRuleRepository
 import org.slf4j.LoggerFactory
@@ -19,7 +20,9 @@ import java.util.UUID
  */
 @Service
 class AutomationRuleService(
-    private val automationRuleRepository: AutomationRuleRepository
+    private val automationRuleRepository: AutomationRuleRepository,
+    private val authService: AuthService,
+    private val auditLogService: AuditLogService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -65,7 +68,7 @@ class AutomationRuleService(
      * Creates and persists a new rule.
      */
     @Transactional
-    fun createRule(request: CreateAutomationRuleRequest): AutomationRuleResponse {
+    fun createRule(username: String?, request: CreateAutomationRuleRequest): AutomationRuleResponse {
         logger.info("Creating automation rule name={} triggerType={}", request.name.trim(), request.triggerType.trim())
         val now = LocalDateTime.now()
         val normalized = normalizePayload(
@@ -81,8 +84,9 @@ class AutomationRuleService(
             taskType = request.taskType,
             preventDuplicates = request.preventDuplicates
         )
+        val actor = authService.resolveActorSnapshot(username)
 
-        return automationRuleRepository.save(
+        val saved = automationRuleRepository.save(
             AutomationRule(
                 name = normalized.name,
                 enabled = normalized.enabled,
@@ -98,14 +102,23 @@ class AutomationRuleService(
                 createdAt = now,
                 updatedAt = now
             )
-        ).toResponse()
+        )
+        auditLogService.recordCreated(
+            entityType = AuditEntityTypes.AUTOMATION_RULE,
+            entityId = saved.id,
+            entityName = saved.name,
+            newValue = "Created ${ruleSummary(saved)}",
+            actor = actor
+        )
+
+        return saved.toResponse()
     }
 
     /**
      * Updates an existing rule.
      */
     @Transactional
-    fun updateRule(id: UUID, request: UpdateAutomationRuleRequest): AutomationRuleResponse {
+    fun updateRule(username: String?, id: UUID, request: UpdateAutomationRuleRequest): AutomationRuleResponse {
         logger.info("Updating automation rule id={}", id)
         val existing = automationRuleRepository.findById(id)
             .orElseThrow { notFound() }
@@ -123,48 +136,71 @@ class AutomationRuleService(
             preventDuplicates = request.preventDuplicates
         )
 
-        return automationRuleRepository.save(
-            existing.copy(
-                name = normalized.name,
-                enabled = normalized.enabled,
-                scopeType = normalized.scopeType,
-                ecosystemType = normalized.ecosystemType,
-                triggerType = normalized.triggerType,
-                eventType = normalized.eventType,
-                inactivityDays = normalized.inactivityDays,
-                delayDays = normalized.delayDays,
-                taskTitle = normalized.taskTitle,
-                taskType = normalized.taskType,
-                preventDuplicates = normalized.preventDuplicates,
-                updatedAt = LocalDateTime.now()
-            )
-        ).toResponse()
+        val actor = authService.resolveActorSnapshot(username)
+        val updated = existing.copy(
+            name = normalized.name,
+            enabled = normalized.enabled,
+            scopeType = normalized.scopeType,
+            ecosystemType = normalized.ecosystemType,
+            triggerType = normalized.triggerType,
+            eventType = normalized.eventType,
+            inactivityDays = normalized.inactivityDays,
+            delayDays = normalized.delayDays,
+            taskTitle = normalized.taskTitle,
+            taskType = normalized.taskType,
+            preventDuplicates = normalized.preventDuplicates,
+            updatedAt = LocalDateTime.now()
+        )
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.AUTOMATION_RULE,
+            entityId = existing.id,
+            entityName = updated.name,
+            changes = automationRuleChanges(existing, updated),
+            actor = actor
+        )
+
+        return automationRuleRepository.save(updated).toResponse()
     }
 
     /**
      * Enables or disables a rule.
      */
     @Transactional
-    fun setRuleEnabled(id: UUID, enabled: Boolean): AutomationRuleResponse {
+    fun setRuleEnabled(username: String?, id: UUID, enabled: Boolean): AutomationRuleResponse {
         val existing = automationRuleRepository.findById(id)
             .orElseThrow { notFound() }
+        val actor = authService.resolveActorSnapshot(username)
 
-        return automationRuleRepository.save(
-            existing.copy(
-                enabled = enabled,
-                updatedAt = LocalDateTime.now()
-            )
-        ).toResponse()
+        val updated = existing.copy(
+            enabled = enabled,
+            updatedAt = LocalDateTime.now()
+        )
+        auditLogService.recordUpdated(
+            entityType = AuditEntityTypes.AUTOMATION_RULE,
+            entityId = existing.id,
+            entityName = existing.name,
+            changes = listOf(AuditFieldChange("enabled", existing.enabled, updated.enabled)),
+            actor = actor
+        )
+
+        return automationRuleRepository.save(updated).toResponse()
     }
 
     /**
      * Deletes a rule.
      */
     @Transactional
-    fun deleteRule(id: UUID) {
-        if (!automationRuleRepository.existsById(id)) {
-            throw notFound()
-        }
+    fun deleteRule(username: String?, id: UUID) {
+        val existing = automationRuleRepository.findById(id)
+            .orElseThrow { notFound() }
+        val actor = authService.resolveActorSnapshot(username)
+        auditLogService.recordDeleted(
+            entityType = AuditEntityTypes.AUTOMATION_RULE,
+            entityId = existing.id,
+            entityName = existing.name,
+            oldValue = "Deleted ${ruleSummary(existing)}",
+            actor = actor
+        )
         automationRuleRepository.deleteById(id)
     }
 
@@ -195,6 +231,35 @@ class AutomationRuleService(
 
     private fun matchesTrigger(rule: AutomationRule, trigger: String): Boolean =
         trigger == "ALL" || rule.triggerType == trigger
+
+    private fun automationRuleChanges(existing: AutomationRule, updated: AutomationRule): List<AuditFieldChange> =
+        listOf(
+            AuditFieldChange("name", existing.name, updated.name),
+            AuditFieldChange("enabled", existing.enabled, updated.enabled),
+            AuditFieldChange("scopeType", existing.scopeType, updated.scopeType),
+            AuditFieldChange("ecosystemType", existing.ecosystemType, updated.ecosystemType),
+            AuditFieldChange("triggerType", existing.triggerType, updated.triggerType),
+            AuditFieldChange("eventType", existing.eventType, updated.eventType),
+            AuditFieldChange("inactivityDays", existing.inactivityDays, updated.inactivityDays),
+            AuditFieldChange("delayDays", existing.delayDays, updated.delayDays),
+            AuditFieldChange("taskTitle", existing.taskTitle, updated.taskTitle),
+            AuditFieldChange("taskType", existing.taskType, updated.taskType),
+            AuditFieldChange("preventDuplicates", existing.preventDuplicates, updated.preventDuplicates)
+        )
+
+    private fun ruleSummary(rule: AutomationRule): String {
+        val status = if (rule.enabled) "enabled" else "disabled"
+        val scope = when (rule.scopeType) {
+            SCOPE_ECOSYSTEM_TYPE -> "scope ${rule.ecosystemType ?: "unknown ecosystem type"}"
+            else -> "scope all ecosystems"
+        }
+        val trigger = when (rule.triggerType) {
+            TRIGGER_AFTER_INACTIVITY -> "after ${rule.inactivityDays ?: "unknown"} inactivity day(s)"
+            else -> "after event ${rule.eventType ?: "unknown"}"
+        }
+
+        return "automation rule ${rule.name} ($status, $scope, $trigger, creates ${rule.taskType}: ${rule.taskTitle})"
+    }
 
     private fun normalizePayload(
         name: String,

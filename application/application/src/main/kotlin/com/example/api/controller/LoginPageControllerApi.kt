@@ -1,5 +1,6 @@
 package com.example.api.controller
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.ui.Model
@@ -22,6 +23,7 @@ interface LoginPageControllerApi {
         @RequestParam(required = false) error: String?,
         @RequestParam(required = false) logout: String?,
         @RequestParam(required = false) registered: String?,
+        request: HttpServletRequest,
         model: Model
     ): String
 }

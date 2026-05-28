@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -48,7 +49,7 @@ interface AutomationRuleControllerApi {
             )
         ]
     )
-    fun createRule(@Valid @RequestBody request: CreateAutomationRuleRequest): AutomationRuleResponse
+    fun createRule(authentication: Authentication?, @Valid @RequestBody request: CreateAutomationRuleRequest): AutomationRuleResponse
 
     /**
      * Updates an existing automation rule.
@@ -71,6 +72,7 @@ interface AutomationRuleControllerApi {
         ]
     )
     fun updateRule(
+        authentication: Authentication?,
         @Parameter(description = "Automation rule identifier", example = "6f6fcb24-bfd7-4ab6-9f9d-1f8a0c4f6401")
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateAutomationRuleRequest
@@ -133,6 +135,7 @@ interface AutomationRuleControllerApi {
         ]
     )
     fun updateRuleEnabled(
+        authentication: Authentication?,
         @Parameter(description = "Automation rule identifier", example = "6f6fcb24-bfd7-4ab6-9f9d-1f8a0c4f6401")
         @PathVariable id: UUID,
         @RequestBody request: UpdateAutomationRuleEnabledRequest
@@ -155,6 +158,7 @@ interface AutomationRuleControllerApi {
         ]
     )
     fun deleteRule(
+        authentication: Authentication?,
         @Parameter(description = "Automation rule identifier", example = "6f6fcb24-bfd7-4ab6-9f9d-1f8a0c4f6401")
         @PathVariable id: UUID
     )

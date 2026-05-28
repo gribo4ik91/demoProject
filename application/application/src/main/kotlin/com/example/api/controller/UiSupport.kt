@@ -189,6 +189,7 @@ class UiSupport(
             "ECOSYSTEM" -> "Ecosystem"
             "TASK" -> "Task"
             "LOG" -> "Log"
+            "AUTOMATION_RULE" -> "Automation Rule"
             else -> value ?: "Item"
         }
 

@@ -19,6 +19,7 @@ object AuditEntityTypes {
     const val ECOSYSTEM = "ECOSYSTEM"
     const val LOG = "LOG"
     const val TASK = "TASK"
+    const val AUTOMATION_RULE = "AUTOMATION_RULE"
 }
 
 /**

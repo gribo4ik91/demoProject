@@ -48,6 +48,7 @@ class SecurityConfig {
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
+        loginAuthenticationFailureHandler: LoginAuthenticationFailureHandler,
         @Value("\${app.auth.enabled:false}") authEnabled: Boolean
     ): SecurityFilterChain {
         http.csrf { it.disable() }
@@ -86,7 +87,7 @@ class SecurityConfig {
                 it.loginPage("/login")
                     .loginProcessingUrl("/login")
                     .defaultSuccessUrl("/", true)
-                    .failureUrl("/login?error")
+                    .failureHandler(loginAuthenticationFailureHandler)
                     .permitAll()
             }
             .logout {

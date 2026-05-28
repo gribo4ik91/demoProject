@@ -1,6 +1,7 @@
 package com.example.api.integration
 
 import com.example.api.repository.AppUserRepository
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import java.util.UUID
 
 /**
@@ -59,6 +61,29 @@ class AuthEnabledIntegrationTest : PostgresIntegrationTest() {
     fun `login page stays public when auth is enabled`() {
         mockMvc.perform(get("/login"))
             .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `login page shows field error when password is incorrect`() {
+        registerUser("demo-user", "Demo Gardener", "demo-user@example.com")
+
+        val failedLogin = mockMvc.perform(
+            formLogin("/login")
+                .user("demo-user")
+                .password("wrongpass")
+        )
+            .andExpect(status().is3xxRedirection)
+            .andExpect(redirectedUrl("/login?error"))
+            .andReturn()
+
+        val session = failedLogin.request.session as? MockHttpSession
+            ?: error("Expected failed login mock session")
+
+        mockMvc.perform(get("/login?error").session(session))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("Password is incorrect for this login.")))
+            .andExpect(content().string(containsString("login-password")))
+            .andExpect(content().string(containsString("is-invalid")))
     }
 
     @Test
